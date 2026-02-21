@@ -1,18 +1,25 @@
 # Installation
 
-You need nodejs. The code is using Angular 18, so the oldest nodejs supported is 16.x. You can install it
-whatever way works for you. A simple installation is:
+You need **Node.js 18.19+**, 20.x, or 22.x (LTS recommended). The project uses Angular 19.
 
-```curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -```
+- **Linux (Debian/Ubuntu):**
+  `curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -`
+  then install Node as usual for your distro.
 
-After getting the sources, you need to install all dependencies: `npm install`. Once installed, the code can be
-run with `ng serve`. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any
-of the source files. `ng` is a command line tool from angular. If it's missing, use the following
-trick: `export PATH=$PATH:./node_modules/.bin`.
+- **Windows:** See [Windows setup](windows.md) for installing Node, Chrome (for tests), and running the project.
+
+After installing Node, install dependencies and run the app:
+
+```bash
+npm install
+npx ng serve
+```
+
+Navigate to `http://localhost:4200/`. The app will reload when you change source files. If `ng` is not in your PATH, use `npx ng` or add `./node_modules/.bin` to your PATH (e.g. `export PATH=$PATH:./node_modules/.bin` on Linux/macOS).
 
 # Deployment
 
-You need to have hevelius backend running. See https://github.com/tomaszmrugalski/hevelius-backend for details.
+You need to have hevelius backend running. See https://github.com/borowka-obs/hevelius-backend for details.
 
 Edit `src/hevelius.ts` to point to your running backend, e.g.
 
