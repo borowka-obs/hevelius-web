@@ -13,25 +13,24 @@ Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app w
 
 ## Build and deployment
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use `ng build --configuration=production` for a production build.
 
 ## Running tests
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io). On many deployments,
-it requires pointing to Chrome binary:
+Run unit tests via [Karma](https://karma-runner.github.io). **Chrome** (or Chromium) must be installed so Karma can run the browser.
 
-```
-export CHROME_BIN=`which chromium-browser`
-npm test
-```
+- **Linux:** If Chrome is not the default, set the binary:
+  `export CHROME_BIN=$(which chromium-browser)` (or `google-chrome`) then `npm test`.
+- **Windows:** See [Windows setup](windows.md). If Chrome is installed in a standard location, no extra config is needed.
 
-Other potentially useful options are:
+Useful commands:
 
-- `ng test --browsers ChromeHeadlessCI --watch false`
-- `npm test --no-watch --no-progress --browsers=ChromeHeadlessCI`
+- Run tests once (CI-style):
+  `npm test -- --no-watch --no-progress --browsers=ChromeHeadlessCI`
+- Or: `npx ng test --no-watch --no-progress --browsers=ChromeHeadlessCI`
+- Interactive (watch mode): `ng test` or `npm test`
 
-`watch false` causes the tests to be run once, rather than sit in the background
-and watch the files to be updated and run tests again.
+`--no-watch` runs the suite once and exits; without it, Karma keeps watching and re-runs tests on changes.
 
 ## Running linter (eslint)
 
@@ -42,7 +41,7 @@ and watch the files to be updated and run tests again.
 
 - `npm update` (updates available dependencies in package-lock.json)
 - `npm explain foo` (explains why foo is in the dependencies)
-- `npm install --save core-js@^3` (upgrade corej-js to version 3.x)
+- `npm install --save core-js@^3` (upgrade core-js to version 3.x)
 
 ## Angular upgrade
 

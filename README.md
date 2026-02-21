@@ -30,6 +30,7 @@ The interface is responsive and should work on any device. It was tested on desk
 ## Documentation
 
 - [Installation](doc/install.md)
+- [Windows setup](doc/windows.md) - Node, Chrome, and running the project on Windows
 - [Example NGINX deployment](doc/nginx-deploy.md)
 - [Developer's Guide](doc/devel.md)
   - [Queries](doc/queries.md)
