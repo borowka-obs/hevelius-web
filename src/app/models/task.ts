@@ -1,5 +1,5 @@
 // Represents a single date and time as returned by the backend.
-interface Date {
+export interface Date {
     year: number;
     month: number;
     day: number;
@@ -10,7 +10,7 @@ interface Date {
 
 // This structure represents a task as returned by the backend
 // from /api/tasks endpoint. See tasks() in flask/app.py in the
-// github.com/tomaszmrugala/hevelius-backend repository.
+// github.com/borowka-obs/hevelius-backend repository.
 export interface Task {
     task_id: number;
     user_id: number;
@@ -47,6 +47,6 @@ export interface Task {
 }
 
 // For an array of these observations:
-interface TaskList {
+export interface TaskList {
     tasks: Task[];
 }
