@@ -1,0 +1,19 @@
+.about-status-list {
+  margin: 0;
+  min-width: 280px;
+}
+
+.about-status-list dt {
+  font-weight: 500;
+  margin-top: 0.75em;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.about-status-list dt:first-child {
+  margin-top: 0;
+}
+
+.about-status-list dd {
+  margin-left: 0;
+  margin-bottom: 0;
+}
