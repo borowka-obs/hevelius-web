@@ -45,14 +45,13 @@ Useful commands:
 
 ## Angular upgrade
 
-Upgrading one specific package: npm install @angular/material@^9.0.0
+ - `npm install @angular/material@^9.0.0` (Upgrading one specific package: )
+ - `ng update @angular/core@20 @angular/cli@20` (upgrade whole angular and cli)
 
 ^ - means major version must much, minor and patch can be updated.
 
 If dependencies are missing (e.g. after git clean -fxd), install them: `npm
-install`. When trying to run ancient Angular 7, I had to upgrade to the latest
-versions in 7 first: `npm install --force @angular/cdk@~7.3.7
-@angular/material@7.3.7`.
+install`.
 
 
 - `npm list` - list installed packages
