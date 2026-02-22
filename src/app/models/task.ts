@@ -1,5 +1,5 @@
 // Represents a single date and time as returned by the backend.
-export interface Date {
+interface Date {
     year: number;
     month: number;
     day: number;
@@ -47,6 +47,6 @@ export interface Task {
 }
 
 // For an array of these observations:
-export interface TaskList {
+interface TaskList {
     tasks: Task[];
 }

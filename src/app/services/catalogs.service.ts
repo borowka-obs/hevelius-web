@@ -23,7 +23,7 @@ export interface CatalogObject {
   catalog: string;
 }
 
-export interface CatalogListResponse {
+interface CatalogListResponse {
   objects: CatalogObject[];
   total: number;
   page: number;

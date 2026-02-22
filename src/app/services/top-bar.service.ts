@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-export interface TopBarState {
+interface TopBarState {
   title: string;
   showFilter: boolean;
   filterVisible: boolean;
