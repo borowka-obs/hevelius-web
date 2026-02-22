@@ -86,8 +86,8 @@ Run `ng generate component component-name` to generate a new component. You can 
 Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
 This is currently not used in Hevelius.
 
-## Obsolete tips
+## Linter: knip
 
-Experienced `error:03000086:digital envelope routines::initialization error`.
-This was worked around with `export NODE_OPTIONS=--openssl-legacy-provider`.
-This was fixed by migration to a more modern Angular.
+Knip is a cool tool that lists unused dependencies, unused exports and such.
+
+To run it: `npx knip`
