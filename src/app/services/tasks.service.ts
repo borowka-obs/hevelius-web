@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Task } from '../models/task';
 import { TaskParams } from '../models/task-response';
@@ -19,6 +19,9 @@ export interface TasksParams {
 })
 
 export class TasksService implements DataSource<Task> {
+	private http = inject(HttpClient);
+	private login = inject(LoginService);
+
 
 	private tasks = new BehaviorSubject<Task[]>([]);
 	public states = new TaskStatesService();
@@ -33,10 +36,6 @@ export class TasksService implements DataSource<Task> {
 	private totalTasks = new BehaviorSubject<number>(0);
 	private currentPage = new BehaviorSubject<number>(1);
 	private totalPages = new BehaviorSubject<number>(1);
-
-    constructor(private http: HttpClient,
-                private login: LoginService) {
-    }
 
     // Getters for pagination info
     getTotalTasks(): Observable<number> {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskViewComponent } from '../task-view/task-view.component';
 import { Router, RouterModule } from '@angular/router';
@@ -34,19 +34,19 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 ]
 })
 export class LayoutComponent implements OnInit, OnDestroy {
+  private dialog = inject(MatDialog);
+  private router = inject(Router);
+  private nightPlanService = inject(NightPlanService);
+  private loginService = inject(LoginService);
+  private topBarService = inject(TopBarService);
+
   title = 'Hevelius';
   showFilter = false;
   filterVisible = false;
   onFilterToggle?: () => void;
   private subscription: Subscription;
 
-  constructor(
-    private dialog: MatDialog,
-    private router: Router,
-    private nightPlanService: NightPlanService,
-    private loginService: LoginService,
-    private topBarService: TopBarService
-  ) {
+  constructor() {
     this.subscription = this.topBarService.state$.subscribe(state => {
       this.title = state.title;
       this.showFilter = state.showFilter;

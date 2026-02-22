@@ -1,5 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, inject } from '@angular/core';
 import { LoginService } from '../../services/login.service';
 import { TasksService } from '../../services/tasks.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
@@ -64,6 +63,14 @@ import { MatSelectModule } from '@angular/material/select';
 ]
 })
 export class TasksComponent implements OnInit, OnDestroy {
+  private loginService = inject(LoginService);
+  private coordFormatter = inject(CoordsFormatterService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+  private fb = inject(FormBuilder);
+  private topBarService = inject(TopBarService);
+  private cdr = inject(ChangeDetectorRef);
+
   @ViewChild(MatSort) sort: MatSort;
 
   currentSort: {
@@ -74,7 +81,7 @@ export class TasksComponent implements OnInit, OnDestroy {
     sort_order: 'desc'
   };
 
-  dataSource: TasksService;
+  dataSource = inject(TasksService);
   displayedColumns: string[] = ['task_id', 'user_id', 'state', 'object', 'ra', 'decl', 'exposure'];
   totalTasks = 0;
   currentPage = 1;
@@ -92,17 +99,8 @@ export class TasksComponent implements OnInit, OnDestroy {
     { value: 5, label: 'Done' }
   ];
 
-  constructor(
-    private loginService: LoginService,
-    private http: HttpClient,
-    private coordFormatter: CoordsFormatterService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private fb: FormBuilder,
-    private topBarService: TopBarService,
-    private cdr: ChangeDetectorRef
-  ) {
-    this.dataSource = new TasksService(this.http, this.loginService);
+  constructor() {
+    this.dataSource = new TasksService();
     this.initFilterForm();
 
     // Set initial state for top bar in constructor

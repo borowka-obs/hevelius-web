@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LoginService } from './login.service';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -35,14 +35,12 @@ export interface CatalogListResponse {
   providedIn: 'root'
 })
 export class CatalogsService {
+  private http = inject(HttpClient);
+  private loginService = inject(LoginService);
+
   private baseUrl = Hevelius.apiUrl+'/catalogs';
   private totalObjects = new BehaviorSubject<number>(0);
   private currentPage = new BehaviorSubject<number>(1);
-
-  constructor(
-    private http: HttpClient,
-    private loginService: LoginService
-  ) {}
 
   searchObjects(query: string, limit: number = 10): Observable<CatalogObject[]> {
     return this.http.get<{ objects: CatalogObject[] }>(

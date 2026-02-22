@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, inject } from '@angular/core';
 import { CatalogsService, CatalogObject } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
@@ -57,6 +57,12 @@ interface LoadObjectsParams {
 ]
 })
 export class CatalogsComponent implements OnInit, OnDestroy {
+  private catalogsService = inject(CatalogsService);
+  private coordFormatter = inject(CoordsFormatterService);
+  private fb = inject(FormBuilder);
+  private topBarService = inject(TopBarService);
+  private cdr = inject(ChangeDetectorRef);
+
   @ViewChild(MatSort) sort: MatSort;
 
   currentSort: {
@@ -76,13 +82,7 @@ export class CatalogsComponent implements OnInit, OnDestroy {
   filterForm: FormGroup;
   isFilterVisible = false;
 
-  constructor(
-    private catalogsService: CatalogsService,
-    private coordFormatter: CoordsFormatterService,
-    private fb: FormBuilder,
-    private topBarService: TopBarService,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor() {
     this.initFilterForm();
 
     // Set initial state for top bar in constructor

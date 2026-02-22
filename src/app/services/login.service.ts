@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -33,13 +33,13 @@ interface CurrentUser {
     providedIn: 'root'
 })
 export class LoginService {
+    private http = inject(HttpClient);
+    private router = inject(Router);
+
     private currentUser = new BehaviorSubject<CurrentUser | null>(null);
     private tokenKey = 'jwt_token';
 
-    constructor(
-        private http: HttpClient,
-        private router: Router
-    ) {
+    constructor() {
         const token = localStorage.getItem(this.tokenKey);
         if (token) {
             this.currentUser.next({ token });

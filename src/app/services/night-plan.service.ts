@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { DataSource } from '@angular/cdk/collections';
@@ -17,11 +17,11 @@ interface NightPlanResponse {
     providedIn: 'root'
 })
 export class NightPlanService implements DataSource<Task> {
+    private http = inject(HttpClient);
+
     private tasks = new BehaviorSubject<Task[]>([]);
     private defaultScopeId = 3;
     private taskCount = new BehaviorSubject<number>(0);
-
-    constructor(private http: HttpClient) {}
 
     connect(): Observable<Task[]> {
         return this.tasks.asObservable();
