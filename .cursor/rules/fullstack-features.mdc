@@ -1,0 +1,17 @@
+---
+description: Keep frontend and backend in sync when implementing API-backed features
+globs: "src/app/services/**/*.ts,src/app/models/**/*.ts"
+alwaysApply: false
+---
+
+# Full-stack feature development
+
+This app uses an Angular frontend and a Flask backend (separate repo). When adding or changing API-backed behaviour:
+
+1. **One feature, both sides**: Implement or update the backend endpoint and the Angular service/model in the same flow so request/response shapes stay aligned.
+2. **Contract first**: Define method, path, and request/response shape; then implement backend route and frontend types in `src/app/models/` and the call in `src/app/services/`.
+3. **Naming and types**: Use the same field names and types (string, number, boolean, arrays) in Flask JSON and TypeScript interfaces.
+4. **Document backend source**: In `src/app/models/*.ts`, add a short comment referencing the backend route (e.g. "See tasks() in flask/app.py in hevelius-backend").
+5. **API base**: All URLs use `Hevelius.apiUrl` from `src/hevelius.ts` (e.g. `Hevelius.apiUrl + '/your-path'`).
+
+See project root **AGENTS.md** for the full API overview and workflow.
