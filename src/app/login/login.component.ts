@@ -8,7 +8,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
-import { CommonModule } from '@angular/common';
+
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,16 +20,15 @@ import { MatIconModule } from '@angular/material/icon';
     styleUrls: ['./login.component.css'],
     standalone: true,
     imports: [
-        CommonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        MatInputModule,
-        MatButtonModule,
-        MatSnackBarModule,
-        MatToolbarModule,
-        MatCardModule,
-        MatIconModule
-    ]
+    FormsModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSnackBarModule,
+    MatToolbarModule,
+    MatCardModule,
+    MatIconModule
+]
 })
 export class LoginComponent implements OnInit {
 

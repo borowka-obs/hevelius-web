@@ -13,7 +13,7 @@ import { Subject } from 'rxjs';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { SearchResultsComponent } from './search-results.component';
-import { CommonModule } from '@angular/common';
+
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
@@ -31,16 +31,15 @@ interface DialogData {
     templateUrl: './task-view.component.html',
     styleUrls: ['./task-view.component.css'],
     imports: [
-        CommonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        MatInputModule,
-        MatButtonModule,
-        MatSelectModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatCheckboxModule,
-    ]
+    FormsModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatCheckboxModule
+]
 })
 export class TaskViewComponent implements OnInit, OnDestroy {
   @ViewChild('objectInput') objectInput: ElementRef;

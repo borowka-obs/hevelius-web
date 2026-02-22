@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { LayoutComponent } from './components/layout/layout.component';
 
@@ -9,10 +9,9 @@ import { LayoutComponent } from './components/layout/layout.component';
     styleUrls: ['./app.component.css'],
     standalone: true,
     imports: [
-        CommonModule,
-        RouterModule,
-        LayoutComponent
-    ]
+    RouterModule,
+    LayoutComponent
+]
 })
 export class AppComponent {
   title = 'hevelius';

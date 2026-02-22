@@ -14,7 +14,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
     selector: 'app-layout',
@@ -22,17 +22,16 @@ import { CommonModule } from '@angular/common';
     styleUrls: ['./layout.component.css'],
     standalone: true,
     imports: [
-        CommonModule,
-        RouterModule,
-        MatMenuModule,
-        MatIconModule,
-        MatToolbarModule,
-        MatButtonModule,
-        MatDividerModule,
-        MatListModule,
-        MatSidenavModule,
-        MatTooltipModule
-    ]
+    RouterModule,
+    MatMenuModule,
+    MatIconModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatDividerModule,
+    MatListModule,
+    MatSidenavModule,
+    MatTooltipModule
+]
 })
 export class LayoutComponent implements OnInit, OnDestroy {
   title = 'Hevelius';
