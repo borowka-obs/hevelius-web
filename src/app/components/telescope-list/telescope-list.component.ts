@@ -3,7 +3,7 @@ import { TelescopeService, Telescope } from '../../services/telescope.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
@@ -11,12 +11,11 @@ import { MatIconModule } from '@angular/material/icon';
     templateUrl: './telescope-list.component.html',
     styleUrls: ['./telescope-list.component.css'],
     imports: [
-        CommonModule,
-        MatTableModule,
-        MatSortModule,
-        MatPaginatorModule,
-        MatIconModule
-    ]
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
+    MatIconModule
+]
 })
 export class TelescopeListComponent implements OnInit {
   dataSource = new MatTableDataSource<Telescope>();

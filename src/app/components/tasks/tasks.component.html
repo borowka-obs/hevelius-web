@@ -14,9 +14,11 @@
       <mat-form-field class="filter-field">
         <mat-label>State</mat-label>
         <mat-select formControlName="state">
-          <mat-option *ngFor="let state of states" [value]="state.value">
-            {{state.label}}
-          </mat-option>
+          @for (state of states; track state) {
+            <mat-option [value]="state.value">
+              {{state.label}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
@@ -86,9 +88,9 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-          appLongPress
-          (longPress)="onTaskLongPress(row)"
-          (dblclick)="onTaskLongPress(row)"></tr>
+        appLongPress
+        (longPress)="onTaskLongPress(row)"
+      (dblclick)="onTaskLongPress(row)"></tr>
     </table>
 
     <mat-paginator

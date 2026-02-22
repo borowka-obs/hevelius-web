@@ -22,7 +22,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { CommonModule } from '@angular/common';
+
 import { LongPressDirective } from '../../directives/long-press.directive';
 import { MatSelectModule } from '@angular/material/select';
 
@@ -49,20 +49,19 @@ import { MatSelectModule } from '@angular/material/select';
     ],
     standalone: true,
     imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatTableModule,
-        MatPaginatorModule,
-        MatSortModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatIconModule,
-        MatDialogModule,
-        MatSnackBarModule,
-        MatSelectModule,
-        LongPressDirective
-    ]
+    ReactiveFormsModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatSelectModule,
+    LongPressDirective
+]
 })
 export class TasksComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort) sort: MatSort;

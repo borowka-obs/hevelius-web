@@ -1,9 +1,11 @@
 <mat-toolbar color="primary">
   <span>{{ title }}</span>
   <span class="spacer"></span>
-  <button *ngIf="showFilter" mat-icon-button (click)="toggleFilter()" [matTooltip]="filterVisible ? 'Hide filters' : 'Show filters'">
-    <mat-icon>filter_list</mat-icon>
-  </button>
+  @if (showFilter) {
+    <button mat-icon-button (click)="toggleFilter()" [matTooltip]="filterVisible ? 'Hide filters' : 'Show filters'">
+      <mat-icon>filter_list</mat-icon>
+    </button>
+  }
   <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menu">
     <mat-icon>menu</mat-icon>
   </button>

@@ -6,9 +6,11 @@
       <mat-form-field>
         <mat-label>Scope</mat-label>
         <mat-select formControlName="scope_id" required>
-          <mat-option *ngFor="let telescope of telescopes" [value]="telescope.scope_id">
-            {{telescope.name}}
-          </mat-option>
+          @for (telescope of telescopes; track telescope) {
+            <mat-option [value]="telescope.scope_id">
+              {{telescope.name}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
@@ -20,15 +22,23 @@
       <mat-form-field>
         <mat-label>Right Ascension (0-24)</mat-label>
         <input matInput type="number" formControlName="ra" required>
-        <mat-error *ngIf="taskForm.get('ra')?.errors?.min">Must be ≥ 0</mat-error>
-        <mat-error *ngIf="taskForm.get('ra')?.errors?.max">Must be ≤ 24</mat-error>
+        @if (taskForm.get('ra')?.errors?.min) {
+          <mat-error>Must be ≥ 0</mat-error>
+        }
+        @if (taskForm.get('ra')?.errors?.max) {
+          <mat-error>Must be ≤ 24</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field>
         <mat-label>Declination (-90 to 90)</mat-label>
         <input matInput type="number" formControlName="decl" required>
-        <mat-error *ngIf="taskForm.get('decl')?.errors?.min">Must be ≥ -90</mat-error>
-        <mat-error *ngIf="taskForm.get('decl')?.errors?.max">Must be ≤ 90</mat-error>
+        @if (taskForm.get('decl')?.errors?.min) {
+          <mat-error>Must be ≥ -90</mat-error>
+        }
+        @if (taskForm.get('decl')?.errors?.max) {
+          <mat-error>Must be ≤ 90</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field>
