@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Hevelius } from 'src/hevelius';
 import { Task } from '../models/task';
 
-export interface TaskResponse {
+interface TaskResponse {
   status: boolean;
   task_id?: number;
   task?: Task;

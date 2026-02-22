@@ -5,7 +5,7 @@ import { DataSource } from '@angular/cdk/collections';
 import { Task } from '../models/task';
 import { Hevelius } from 'src/hevelius';
 
-export interface NightPlanParams {
+interface NightPlanParams {
     scope_id?: number;
 }
 

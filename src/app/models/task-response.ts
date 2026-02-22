@@ -1,13 +1,5 @@
 import { Task } from './task';
 
-export interface TaskResponse {
-  tasks: Task[];
-  total: number;
-  page: number;
-  per_page: number;
-  pages: number;
-}
-
 export interface TaskParams {
   page?: number;
   per_page?: number;
@@ -19,4 +11,12 @@ export interface TaskParams {
   decl_max?: number;
   performed_after?: string;
   performed_before?: string;
+}
+
+export interface TaskResponse {
+  tasks: Task[];
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
 }

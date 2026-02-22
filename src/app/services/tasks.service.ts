@@ -1,14 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Task } from '../models/task';
-import { TaskParams } from '../models/task-response';
+import { TaskParams, TaskResponse } from '../models/task-response';
 import { LoginService } from './login.service';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { DataSource } from '@angular/cdk/collections';
 import { TaskStatesService } from './task-states.service';
 import { Hevelius } from 'src/hevelius';
 
-export interface TasksParams {
+interface TasksParams {
     limit?: number;    // number of tasks to be returned
     user_id?: number;
     password?: string;
@@ -59,7 +59,7 @@ export class TasksService implements DataSource<Task> {
     }
 
     // This method is called when data is returned by backend
-    parseTasks(data: import('../models/task-response').TaskResponse) {
+    parseTasks(data: TaskResponse) {
         if (data && data.tasks) {
             // Ensure all required fields are present in each task
             const processedTasks = data.tasks.map(task => ({
@@ -92,7 +92,7 @@ export class TasksService implements DataSource<Task> {
         // - user_id
         // - limit (number of tasks to be returned)
 
-        this.http.post<import('../models/task-response').TaskResponse>(Hevelius.apiUrl + '/tasks', params)
+        this.http.post<TaskResponse>(Hevelius.apiUrl + '/tasks', params)
             .subscribe({
                 next: (data) => {
                     this.parseTasks(data);
@@ -122,7 +122,7 @@ export class TasksService implements DataSource<Task> {
             }
         });
 
-        this.http.get<import('../models/task-response').TaskResponse>(Hevelius.apiUrl + '/tasks', { params: httpParams })
+        this.http.get<TaskResponse>(Hevelius.apiUrl + '/tasks', { params: httpParams })
             .subscribe({
                 next: (response) => {
                     this.tasks.next(response.tasks);
