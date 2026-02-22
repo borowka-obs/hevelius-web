@@ -40,7 +40,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private loginService = inject(LoginService);
   private topBarService = inject(TopBarService);
 
-  title = 'Hevelius';
+  title = '';
   showFilter = false;
   filterVisible = false;
   onFilterToggle?: () => void;
