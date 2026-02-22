@@ -14,7 +14,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
-
+import { AboutDialogComponent } from '../about/about-dialog.component';
 
 @Component({
     selector: 'app-layout',
@@ -77,6 +77,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
       data: {
         mode: 'add'
       }
+    });
+  }
+
+  openAboutDialog() {
+    this.dialog.open(AboutDialogComponent, {
+      width: '360px'
     });
   }
 

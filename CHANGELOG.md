@@ -2,7 +2,10 @@
 
 0.4.0 (unreleased)
 
-- Upgraded to Angular 19
+- Upgraded to Angular 19, then 20, then 21
+- Removed old test runner (Karma/Jasmine), migrated to vitest
+- Removed lots of old dependencies
+- Added About panel
 
 0.3.0 (2025-04-22)
 

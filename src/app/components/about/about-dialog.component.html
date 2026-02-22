@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>About</h2>
+<mat-dialog-content>
+  <dl class="about-status-list">
+    @for (entry of statusEntries; track entry.label) {
+      <dt>{{ entry.label }}</dt>
+      <dd>{{ entry.value }}</dd>
+    }
+  </dl>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>
