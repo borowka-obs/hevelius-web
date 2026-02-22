@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -38,12 +38,10 @@ interface TelescopesResponse {
   providedIn: 'root'
 })
 export class TelescopeService {
-  private apiUrl = `${Hevelius.apiUrl}/scopes`;
+  private http = inject(HttpClient);
+  private loginService = inject(LoginService);
 
-  constructor(
-    private http: HttpClient,
-    private loginService: LoginService
-  ) { }
+  private apiUrl = `${Hevelius.apiUrl}/scopes`;
 
   getTelescopes(): Observable<Telescope[]> {
     return this.http.get<TelescopesResponse>(this.apiUrl).pipe(

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { UntypedFormGroup, Validators, UntypedFormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
@@ -31,6 +31,11 @@ import { MatIconModule } from '@angular/material/icon';
 ]
 })
 export class LoginComponent implements OnInit {
+    private loginService = inject(LoginService);
+    private router = inject(Router);
+    private snackBar = inject(MatSnackBar);
+    private formBuilder = inject(UntypedFormBuilder);
+
 
     title: string;
     version: string;
@@ -39,10 +44,7 @@ export class LoginComponent implements OnInit {
 
     loginForm: UntypedFormGroup;
 
-  constructor(private loginService: LoginService,
-              private router: Router,
-              private snackBar: MatSnackBar,
-              private formBuilder: UntypedFormBuilder) {
+  constructor() {
 
         this.hide = true;
         this.version = Hevelius.version;

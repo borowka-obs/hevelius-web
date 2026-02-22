@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { NightPlanService } from '../../services/night-plan.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 
@@ -18,14 +18,16 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 ]
 })
 export class NightPlanComponent implements OnInit {
+    private nightPlanService = inject(NightPlanService);
+    private coordFormatter = inject(CoordsFormatterService);
+
     dataSource: NightPlanService;
     displayedColumns: string[] = ['task_id', 'user_id', 'state', 'object', 'ra', 'decl', 'exposure'];
     taskCount = 0;
 
-    constructor(
-        private nightPlanService: NightPlanService,
-        private coordFormatter: CoordsFormatterService
-    ) {
+    constructor() {
+        const nightPlanService = this.nightPlanService;
+
         this.dataSource = nightPlanService;
     }
 

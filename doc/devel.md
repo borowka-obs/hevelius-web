@@ -66,6 +66,17 @@ smart enough to find `ng` locally.
 
 You can also use @latest: `npm i typescript@latest --save-dev`
 
+
+## Addressing eslint linter complaints:
+
+- `ng generate @angular/core:inject` - addressed issues reported by `ng lint`
+
+Example problem:
+````
+/home/thomson/devel/hevelius-web/src/app/components/telescope-list/telescope-list.component.ts
+  33:15  error  Prefer using the inject() function over constructor parameter injection. Use Angular's migration schematic to automatically refactor: ng generate @angular/core:inject  @angular-eslint/prefer-inject
+```
+
 ## Code scaffolding
 
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.

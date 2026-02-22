@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { TelescopeService, Telescope } from '../../services/telescope.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -18,6 +18,8 @@ import { MatIconModule } from '@angular/material/icon';
 ]
 })
 export class TelescopeListComponent implements OnInit {
+  private telescopeService = inject(TelescopeService);
+
   dataSource = new MatTableDataSource<Telescope>();
   displayedColumns: string[] = [
     'name',
@@ -29,8 +31,6 @@ export class TelescopeListComponent implements OnInit {
     'sensor',
     'active'
   ];
-
-  constructor(private telescopeService: TelescopeService) { }
 
   ngOnInit(): void {
     this.loadTelescopes();

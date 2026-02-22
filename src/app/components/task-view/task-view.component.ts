@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, Optional, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -42,6 +42,16 @@ interface DialogData {
 ]
 })
 export class TaskViewComponent implements OnInit, OnDestroy {
+  private fb = inject(FormBuilder);
+  private taskService = inject(TaskService);
+  private loginService = inject(LoginService);
+  private telescopeService = inject(TelescopeService);
+  private catalogsService = inject(CatalogsService);
+  private dialogRef = inject<MatDialogRef<TaskViewComponent>>(MatDialogRef);
+  private snackBar = inject(MatSnackBar);
+  private overlay = inject(Overlay);
+  data = inject<DialogData | null>(MAT_DIALOG_DATA, { optional: true });
+
   @ViewChild('objectInput') objectInput: ElementRef;
 
   taskForm: FormGroup;
@@ -52,17 +62,9 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private overlayRef: OverlayRef | null = null;
 
-  constructor(
-    private fb: FormBuilder,
-    private taskService: TaskService,
-    private loginService: LoginService,
-    private telescopeService: TelescopeService,
-    private catalogsService: CatalogsService,
-    private dialogRef: MatDialogRef<TaskViewComponent>,
-    private snackBar: MatSnackBar,
-    private overlay: Overlay,
-    @Optional() @Inject(MAT_DIALOG_DATA) public data: DialogData | null
-  ) {
+  constructor() {
+    const data = this.data;
+
     if (data) {
       this.mode = data.mode;
       this.originalTask = data.task;

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Hevelius } from 'src/hevelius';
@@ -40,7 +40,8 @@ export interface TaskRequest {
   providedIn: 'root'
 })
 export class TaskService {
-  constructor(private http: HttpClient) { }
+  private http = inject(HttpClient);
+
 
   addTask(task: TaskRequest): Observable<TaskResponse> {
     return this.http.post<TaskResponse>(`${Hevelius.apiUrl}/task-add`, task);
