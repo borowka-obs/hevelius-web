@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TelescopeListComponent } from './telescope-list.component';
 import { TelescopeService } from '../../services/telescope.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -76,17 +76,14 @@ describe('TelescopeListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display telescopes in the table', fakeAsync(() => {
-    // Spy on the service and return mock data
-    spyOn(telescopeService, 'getTelescopes').and.returnValue(of(mockTelescopes));
+  it('should display telescopes in the table', async () => {
+    vi.spyOn(telescopeService, 'getTelescopes').mockReturnValue(of(mockTelescopes));
 
     // Initial change detection
     fixture.detectChanges();
+    await fixture.whenStable();
 
-    // Wait for async data
-    tick();
-
-    // Verify data is loaded after tick
+    // Verify data is loaded
     expect(component.dataSource.data).toEqual(mockTelescopes);
 
     // Update view
@@ -94,13 +91,13 @@ describe('TelescopeListComponent', () => {
 
     // Find the table
     const table = fixture.nativeElement.querySelector('table.mat-mdc-table');
-    expect(table).toBeTruthy('Table should be present');
+    expect(table).toBeTruthy();
 
     // Find the rows using MDC class names
     const tableRows = fixture.nativeElement.querySelectorAll('tr.mat-mdc-row');
 
     // Verify row count
-    expect(tableRows.length).toBe(2, 'Should have 2 data rows');
+    expect(tableRows.length).toBe(2);
 
     // Only proceed with cell checks if we found the rows
     if (tableRows.length > 0) {
@@ -125,7 +122,7 @@ describe('TelescopeListComponent', () => {
       expect(secondRowCells[6].textContent.trim()).toBe('-');
       expect(secondRowCells[7].querySelector('mat-icon').textContent.trim()).toBe('cancel');
     }
-  }));
+  });
 
   it('should have correct column definitions', () => {
     expect(component.displayedColumns).toEqual([

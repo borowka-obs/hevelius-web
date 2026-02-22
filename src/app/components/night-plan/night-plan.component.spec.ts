@@ -9,13 +9,20 @@ import { Task } from '../../models/task';
 describe('NightPlanComponent', () => {
   let component: NightPlanComponent;
   let fixture: ComponentFixture<NightPlanComponent>;
-  let nightPlanService: jasmine.SpyObj<NightPlanService>;
+  let nightPlanService: {
+    loadNightPlan: ReturnType<typeof vi.fn>;
+    connect: ReturnType<typeof vi.fn>;
+    disconnect: ReturnType<typeof vi.fn>;
+  };
   let tasksSubject: BehaviorSubject<Task[]>;
 
   beforeEach(async () => {
     tasksSubject = new BehaviorSubject<Task[]>([]);
-    nightPlanService = jasmine.createSpyObj('NightPlanService', ['loadNightPlan', 'connect']);
-    nightPlanService.connect.and.returnValue(tasksSubject.asObservable());
+    nightPlanService = {
+      loadNightPlan: vi.fn(),
+      connect: vi.fn().mockReturnValue(tasksSubject.asObservable()),
+      disconnect: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [ MatTableModule,

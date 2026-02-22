@@ -21,11 +21,12 @@ describe('LayoutComponent', () => {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   let router: Router;
   /* eslint-enable @typescript-eslint/no-unused-vars */
-  let nightPlanService: jasmine.SpyObj<NightPlanService>;
+  let nightPlanService: { getTaskCount: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    nightPlanService = jasmine.createSpyObj('NightPlanService', ['getTaskCount']);
-    nightPlanService.getTaskCount.and.returnValue(new BehaviorSubject(0));
+    nightPlanService = {
+      getTaskCount: vi.fn().mockReturnValue(new BehaviorSubject(0)),
+    };
 
     await TestBed.configureTestingModule({
       imports: [
