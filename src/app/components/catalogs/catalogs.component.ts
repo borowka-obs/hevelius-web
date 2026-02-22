@@ -105,10 +105,10 @@ export class CatalogsComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.subscriptions.push(
       this.catalogsService.getTotalObjects().subscribe(total => {
-        // Only update title if we have actual data (not 0)
+        // Only update title if we have actual data (not 0). Defer to avoid NG0100.
         if (total > 0) {
           this.totalObjects = total;
-          this.updateTitle();
+          setTimeout(() => this.updateTitle(), 0);
         }
       }),
       this.catalogsService.getCurrentPage().subscribe(page => {

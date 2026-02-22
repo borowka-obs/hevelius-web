@@ -6,6 +6,7 @@
 - Removed old test runner (Karma/Jasmine), migrated to vitest
 - Removed lots of old dependencies
 - Added About panel
+- Fixed ExpressionChangedAfterItHasBeenCheckedError exception
 
 0.3.0 (2025-04-22)
 

@@ -13,7 +13,7 @@ interface TopBarState {
 })
 export class TopBarService {
   private state = new BehaviorSubject<TopBarState>({
-    title: 'Hevelius',
+    title: '',
     showFilter: false,
     filterVisible: false
   });
@@ -29,7 +29,7 @@ export class TopBarService {
 
   resetState() {
     this.state.next({
-      title: 'Hevelius',
+      title: '',
       showFilter: false,
       filterVisible: false
     });

@@ -59,7 +59,8 @@ describe('LayoutComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement;
     const spanElement = compiled.querySelector('span');
-    expect(spanElement.textContent).toContain('Hevelius');
+    expect(spanElement).toBeTruthy();
+    expect(spanElement!.textContent?.trim()).toBe('');
   });
 
 });
