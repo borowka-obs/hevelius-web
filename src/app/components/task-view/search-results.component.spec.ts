@@ -48,27 +48,28 @@ describe('SearchResultsComponent', () => {
   });
 
   it('should emit selected object on click', () => {
-    spyOn(component.selected, 'emit');
+    const emitSpy = vi.spyOn(component.selected, 'emit');
     const resultElement = fixture.nativeElement.querySelector('.search-result-item');
     resultElement.click();
-    expect(component.selected.emit).toHaveBeenCalledWith(mockCatalogObject);
+    expect(emitSpy).toHaveBeenCalledWith(mockCatalogObject);
   });
 
   it('should emit selected object on enter key', () => {
-    spyOn(component.selected, 'emit');
+    const emitSpy = vi.spyOn(component.selected, 'emit');
     const resultElement = fixture.nativeElement.querySelector('.search-result-item');
     const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
     resultElement.dispatchEvent(enterEvent);
-    expect(component.selected.emit).toHaveBeenCalledWith(mockCatalogObject);
+    expect(emitSpy).toHaveBeenCalledWith(mockCatalogObject);
   });
 
   it('should emit selected object on space key and prevent default', () => {
-    spyOn(component.selected, 'emit');
+    const emitSpy = vi.spyOn(component.selected, 'emit');
     const resultElement = fixture.nativeElement.querySelector('.search-result-item');
     const spaceEvent = new KeyboardEvent('keydown', { key: ' ' });
-    spyOn(spaceEvent, 'preventDefault');
+    const preventDefaultSpy = vi.spyOn(spaceEvent, 'preventDefault');
     resultElement.dispatchEvent(spaceEvent);
-    expect(component.selected.emit).toHaveBeenCalledWith(mockCatalogObject);
+    expect(emitSpy).toHaveBeenCalledWith(mockCatalogObject);
+    expect(preventDefaultSpy).toHaveBeenCalled();
   });
 
   it('should have proper ARIA attributes', () => {

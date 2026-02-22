@@ -1,4 +1,4 @@
-import { waitForAsync, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -20,19 +20,19 @@ import { Hevelius } from '../../hevelius';
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
-  let loginService: jasmine.SpyObj<LoginService>;
-  let snackBar: jasmine.SpyObj<MatSnackBar>;
-  let router: jasmine.SpyObj<Router>;
+  let loginService: { login: ReturnType<typeof vi.fn>; getBackendVersion: ReturnType<typeof vi.fn> };
+  let snackBar: { open: ReturnType<typeof vi.fn> };
+  let router: { navigateByUrl: ReturnType<typeof vi.fn> };
 
-  beforeEach(waitForAsync(() => {
-    loginService = jasmine.createSpyObj('LoginService', ['login', 'getBackendVersion']);
-    // Set up default response for getBackendVersion
-    loginService.getBackendVersion.and.returnValue(of('0.1.0'));
+  beforeEach(async () => {
+    loginService = {
+      login: vi.fn(),
+      getBackendVersion: vi.fn().mockReturnValue(of('0.1.0')),
+    };
+    snackBar = { open: vi.fn() };
+    router = { navigateByUrl: vi.fn() };
 
-    snackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
-    router = jasmine.createSpyObj('Router', ['navigateByUrl']);
-
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [
         MatToolbarModule,
         ReactiveFormsModule,
@@ -52,7 +52,7 @@ describe('LoginComponent', () => {
         { provide: Router, useValue: router }
       ]
     }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(LoginComponent);
@@ -78,30 +78,24 @@ describe('LoginComponent', () => {
     expect(spanElement.textContent).toContain(Hevelius.version);
   });
 
-  it('should fetch backend version on init', fakeAsync(() => {
-    // Arrange
-    loginService.getBackendVersion.and.returnValue(of('1.2.3'));
+  it('should fetch backend version on init', async () => {
+    loginService.getBackendVersion.mockReturnValue(of('1.2.3'));
 
-    // Act
-    fixture.detectChanges(); // This triggers ngOnInit
-    tick(); // Wait for async operations
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    // Assert
     expect(loginService.getBackendVersion).toHaveBeenCalled();
     expect(component.backendVersion).toBe('1.2.3');
-  }));
+  });
 
-  it('should handle backend version fetch error', fakeAsync(() => {
-    // Arrange
+  it('should handle backend version fetch error', async () => {
     const error = new HttpErrorResponse({ status: 0 });
-    loginService.getBackendVersion.and.returnValue(throwError(() => error));
+    loginService.getBackendVersion.mockReturnValue(throwError(() => error));
 
-    // Act
-    fixture.detectChanges(); // This triggers ngOnInit
-    tick(); // Wait for async operations
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    // Assert
     expect(loginService.getBackendVersion).toHaveBeenCalled();
     expect(component.backendVersion).toBe('Unresponsive');
-  }));
+  });
 });

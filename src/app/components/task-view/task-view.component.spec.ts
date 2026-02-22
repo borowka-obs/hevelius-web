@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TaskViewComponent } from './task-view.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -20,7 +20,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 describe('TaskViewComponent', () => {
   let component: TaskViewComponent;
   let fixture: ComponentFixture<TaskViewComponent>;
-  let catalogsService: jasmine.SpyObj<CatalogsService>;
+  let catalogsService: { searchObjects: ReturnType<typeof vi.fn> };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let telescopeSubject: BehaviorSubject<any[]>;
@@ -49,13 +49,14 @@ describe('TaskViewComponent', () => {
     active: true
   };
 
-  beforeEach(fakeAsync(() => {
+  beforeEach(async () => {
     console.log('Setting up test environment');
     telescopeSubject = new BehaviorSubject([mockTelescope]);
-    const catalogsServiceSpy = jasmine.createSpyObj('CatalogsService', ['searchObjects']);
-    catalogsServiceSpy.searchObjects.and.returnValue(of([mockCatalogObject]));
+    const catalogsServiceSpy = {
+      searchObjects: vi.fn().mockReturnValue(of([mockCatalogObject])),
+    };
 
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [
         TaskViewComponent,
         ReactiveFormsModule,
@@ -77,130 +78,93 @@ describe('TaskViewComponent', () => {
         {
           provide: TelescopeService,
           useValue: {
-            getTelescopes: () => {
-              console.log('getTelescopes called');
-              return telescopeSubject.asObservable();
-            }
+            getTelescopes: () => telescopeSubject.asObservable()
           }
         },
         { provide: CatalogsService, useValue: catalogsServiceSpy },
         Overlay
       ]
-    });
+    }).compileComponents();
 
     console.log('Creating component');
     fixture = TestBed.createComponent(TaskViewComponent);
     component = fixture.componentInstance;
-    catalogsService = TestBed.inject(CatalogsService) as jasmine.SpyObj<CatalogsService>;
+    catalogsService = TestBed.inject(CatalogsService) as unknown as { searchObjects: ReturnType<typeof vi.fn> };
 
-    // Initialize the component
     console.log('Detecting changes');
     fixture.detectChanges();
+    await fixture.whenStable();
 
-    // Wait for the form to be initialized
-    console.log('Waiting for form initialization');
-    tick();
-
-    // Ensure telescopes are loaded and form is updated
-    console.log('Ensuring telescopes are loaded');
     telescopeSubject.next([mockTelescope]);
-    tick();
+    fixture.detectChanges();
+    await fixture.whenStable();
 
     console.log('Component initialized');
-  }));
+  });
 
-  afterEach(fakeAsync(() => {
-    console.log('Starting cleanup');
+  afterEach(() => {
     try {
-      if (component) {
-        console.log('Destroying component');
-        if (component.taskForm) {
-          // Clean up any form subscriptions
-          component.taskForm.reset();
-        }
-        component.ngOnDestroy();
+      if (component?.taskForm) {
+        component.taskForm.reset();
       }
-      if (fixture) {
-        console.log('Destroying fixture');
-        fixture.destroy();
-      }
-      // Clean up any remaining async operations
-      tick();
-      discardPeriodicTasks();
+      component?.ngOnDestroy();
+      fixture?.destroy();
     } catch (e) {
       console.error('Error during cleanup:', e);
     }
-    console.log('Cleanup complete');
-  }));
+  });
 
-  it('should create', fakeAsync(() => {
+  it('should create', () => {
     expect(component).toBeTruthy();
     expect(component.taskForm).toBeDefined();
-    tick();
-    discardPeriodicTasks();
-  }));
+  });
 
   describe('Object Search', () => {
-    beforeEach(fakeAsync(() => {
-      console.log('Resetting spy');
-      catalogsService.searchObjects.calls.reset();
-      // Ensure form is ready
-      tick();
-      discardPeriodicTasks();
-    }));
+    beforeEach(() => {
+      catalogsService.searchObjects.mockClear();
+    });
 
-    afterEach(fakeAsync(() => {
-      tick();
-      discardPeriodicTasks();
-    }));
-
-    it('should not search when input is less than 3 characters', fakeAsync(() => {
+    it('should not search when input is less than 3 characters', async () => {
       component.onObjectSearch('ng');
-      tick(300);
+      await new Promise((r) => setTimeout(r, 350));
       expect(catalogsService.searchObjects).not.toHaveBeenCalled();
-      discardPeriodicTasks();
-    }));
+    });
 
-    it('should search when input is 3 or more characters', fakeAsync(() => {
+    it('should search when input is 3 or more characters', async () => {
       component.onObjectSearch('ngc');
-      tick(300);
+      await new Promise((r) => setTimeout(r, 350));
       expect(catalogsService.searchObjects).toHaveBeenCalledWith('ngc');
-      discardPeriodicTasks();
-    }));
+    });
 
-    it('should update form values when object is selected', fakeAsync(() => {
+    it('should update form values when object is selected', () => {
       component.selectObject(mockCatalogObject);
-      tick();
       const formValue = component.taskForm.value;
       expect(formValue.object).toBe('NGC7000');
       expect(formValue.ra).toBe(315.7);
       expect(formValue.decl).toBe(44.3);
-      discardPeriodicTasks();
-    }));
+    });
 
-    it('should debounce search requests', fakeAsync(() => {
+    it('should debounce search requests', async () => {
       component.onObjectSearch('n');
       component.onObjectSearch('ng');
       component.onObjectSearch('ngc');
       component.onObjectSearch('ngc7');
 
-      tick(100); // Not enough time passed
+      await new Promise((r) => setTimeout(r, 100));
       expect(catalogsService.searchObjects).not.toHaveBeenCalled();
 
-      tick(200); // Now the debounce time has passed
+      await new Promise((r) => setTimeout(r, 250));
       expect(catalogsService.searchObjects).toHaveBeenCalledWith('ngc7');
       expect(catalogsService.searchObjects).toHaveBeenCalledTimes(1);
-      discardPeriodicTasks();
-    }));
+    });
 
-    it('should not make duplicate searches for the same term', fakeAsync(() => {
+    it('should not make duplicate searches for the same term', async () => {
       component.onObjectSearch('ngc7');
-      tick(300);
+      await new Promise((r) => setTimeout(r, 350));
       component.onObjectSearch('ngc7');
-      tick(300);
+      await new Promise((r) => setTimeout(r, 350));
 
       expect(catalogsService.searchObjects).toHaveBeenCalledTimes(1);
-      discardPeriodicTasks();
-    }));
+    });
   });
 });

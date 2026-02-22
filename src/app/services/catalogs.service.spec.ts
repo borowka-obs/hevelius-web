@@ -9,8 +9,9 @@ describe('CatalogsService', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
-    const loginServiceSpy = jasmine.createSpyObj('LoginService', ['getAuthHeaders']);
-    loginServiceSpy.getAuthHeaders.and.returnValue({ 'Authorization': 'Bearer test-token' });
+    const loginServiceSpy = {
+      getAuthHeaders: vi.fn().mockReturnValue({ 'Authorization': 'Bearer test-token' }),
+    };
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
