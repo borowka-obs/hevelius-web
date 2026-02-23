@@ -11,26 +11,28 @@ jobs:
     name: Analyze with CodeQL
     runs-on: ubuntu-latest
     permissions:
+      actions: read
+      contents: read
       security-events: write
 
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript-typescript' ]
+        language: [ 'typescript' ]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
 
       - name: Install dependencies
         run: npm ci
@@ -40,3 +42,5 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
