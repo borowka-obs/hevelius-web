@@ -16,9 +16,9 @@
         <input matInput formControlName="constellation" type="text"
                [matAutocomplete]="constAuto">
         <mat-autocomplete #constAuto="matAutocomplete">
-          <mat-option *ngFor="let abbr of filteredConstellations$ | async" [value]="abbr">
-            {{ abbr }}
-          </mat-option>
+          @for (abbr of filteredConstellations$ | async; track abbr) {
+            <mat-option [value]="abbr">{{ abbr }}</mat-option>
+          }
         </mat-autocomplete>
       </mat-form-field>
 
