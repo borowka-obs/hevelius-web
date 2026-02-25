@@ -8,7 +8,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angul
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
 import { MatTableModule } from '@angular/material/table';
-import { AsyncPipe, NgForOf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
@@ -68,7 +68,6 @@ interface LoadObjectsParams {
     MatSelectModule,
     MatCheckboxModule,
     MatAutocompleteModule,
-    NgForOf,
     AsyncPipe,
     FormsModule,
     ReactiveFormsModule
