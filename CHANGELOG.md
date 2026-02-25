@@ -7,6 +7,7 @@
 - Removed lots of old dependencies
 - Added About panel
 - Fixed ExpressionChangedAfterItHasBeenCheckedError exception
+- The footer on login page now has links to a ChangeLog
 
 0.3.0 (2025-04-22)
 
