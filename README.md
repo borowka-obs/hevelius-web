@@ -1,6 +1,6 @@
 [![NodeJS 20](https://github.com/borowka-obs/hevelius-web/actions/workflows/node-20.yml/badge.svg)](https://github.com/borowka-obs/hevelius-web/actions/workflows/node-20.yml)
 [![NodeJS 22](https://github.com/borowka-obs/hevelius-web/actions/workflows/node-22.yml/badge.svg)](https://github.com/borowka-obs/hevelius-web/actions/workflows/node-22.yml)
-[![CodeQL](https://github.com/tomaszmrugalski/hevelius-web/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/tomaszmrugalski/hevelius-web/actions/workflows/github-code-scanning/codeql)
+[![CodeQL](https://github.com/borowka-obs/hevelius-web/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/borowka-obs/hevelius-web/actions/workflows/github-code-scanning/codeql)
 
 # Hevelius
 
