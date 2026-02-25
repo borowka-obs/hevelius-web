@@ -1,0 +1,7 @@
+# CodeQL config: exclude generated build artifacts from analysis
+# See: https://docs.github.com/en/code-security/code-scanning
+paths-ignore:
+  - "dist/**"
+  - "**/dist/**"
+  - "build/**"
+  - "**/build/**"
