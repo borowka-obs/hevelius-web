@@ -57,6 +57,7 @@ export class CatalogsService {
     );
   }
 
+  /** GET /catalogs/list. Backend should accept optional query params: catalog, name, constellation (IAU 3-letter, e.g. Cyg, Sgr). */
   listObjects(params: {
     page?: number;
     per_page?: number;
@@ -64,6 +65,7 @@ export class CatalogsService {
     sort_order?: string;
     catalog?: string;
     name?: string;
+    constellation?: string;
   } = {}): Observable<CatalogListResponse> {
     return this.http.get<CatalogListResponse>(
       `${this.baseUrl}/list`,

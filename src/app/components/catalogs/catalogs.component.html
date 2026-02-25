@@ -1,19 +1,30 @@
 <div class="container">
   <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
-    <form [formGroup]="filterForm" class="filter-form">
+    <form [formGroup]="filterForm" class="filter-form" (ngSubmit)="onFilterSubmit($event)">
       <mat-form-field class="filter-field">
-        <mat-label>Catalog</mat-label>
-        <input matInput formControlName="catalog">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" type="text">
       </mat-form-field>
 
       <mat-form-field class="filter-field">
-        <mat-label>Object Name</mat-label>
-        <input matInput formControlName="name">
+        <mat-label>Catalog</mat-label>
+        <input matInput formControlName="catalog" type="text">
+      </mat-form-field>
+
+      <mat-form-field class="filter-field">
+        <mat-label>Constellation</mat-label>
+        <input matInput formControlName="constellation" type="text"
+               [matAutocomplete]="constAuto">
+        <mat-autocomplete #constAuto="matAutocomplete">
+          <mat-option *ngFor="let abbr of filteredConstellations$ | async" [value]="abbr">
+            {{ abbr }}
+          </mat-option>
+        </mat-autocomplete>
       </mat-form-field>
 
       <div class="filter-actions">
-        <button mat-button (click)="clearFilters()">Clear</button>
-        <button mat-raised-button color="primary" (click)="applyFilters()">Apply</button>
+        <button type="button" mat-button (click)="clearFilters()">Clear</button>
+        <button type="submit" mat-raised-button color="primary">Apply</button>
       </div>
     </form>
   </div>
