@@ -38,7 +38,7 @@ This project has an **Angular 20** frontend (this repo) and a **Flask** backend 
 
 - Auth: `POST /login`, `GET /version` (and token usage via interceptor).
 - Tasks: `GET/POST /tasks`, `POST /task-add`, `POST /task-update`, `GET /task-get`.
-- Catalogs: `GET /catalogs/search`, `GET /catalogs/list`.
+- Catalogs: `GET /catalogs/search`, `GET /catalogs/list`. List accepts optional query params: `page`, `per_page`, `sort_by`, `sort_order`, `catalog`, `name`, `constellation` (IAU 3-letter abbreviation, e.g. Cyg, Sgr). Backend must filter by these when provided.
 - Other: `GET /scopes` (telescopes), `POST /night-plan`.
 
 When adding a new endpoint, add the route and DTOs on the backend, then add or update the Angular model and a service method that calls `Hevelius.apiUrl + '/your-path'` with the same contract.

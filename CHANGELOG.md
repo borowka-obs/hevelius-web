@@ -8,6 +8,7 @@
 - Added About panel
 - Fixed ExpressionChangedAfterItHasBeenCheckedError exception
 - The footer on login page now has links to a ChangeLog
+- Fixed catalog sorting and filtering
 
 0.3.0 (2025-04-22)
 

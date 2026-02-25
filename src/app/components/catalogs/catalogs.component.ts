@@ -8,18 +8,33 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angul
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
 import { MatTableModule } from '@angular/material/table';
+import { AsyncPipe, NgForOf } from '@angular/common';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+
+/** IAU 88 constellation three-letter abbreviations (official). */
+export const CONSTELLATION_ABBREVIATIONS: string[] = [
+  'And', 'Ant', 'Aps', 'Aqr', 'Aql', 'Ara', 'Ari', 'Aur', 'Boo', 'Cae', 'Cam', 'Cnc', 'CVn', 'CMa', 'CMi',
+  'Cap', 'Car', 'Cas', 'Cen', 'Cep', 'Cet', 'Cha', 'Cir', 'Col', 'Com', 'CrA', 'CrB', 'Crv', 'Crt', 'Cru',
+  'Cyg', 'Del', 'Dor', 'Dra', 'Equ', 'Eri', 'For', 'Gem', 'Gru', 'Her', 'Hor', 'Hya', 'Hyi', 'Ind', 'Lac',
+  'Leo', 'LMi', 'Lep', 'Lib', 'Lup', 'Lyn', 'Lyr', 'Men', 'Mic', 'Mon', 'Mus', 'Nor', 'Oct', 'Oph', 'Ori',
+  'Pav', 'Peg', 'Per', 'Phe', 'Pic', 'Psc', 'PsA', 'Pup', 'Pyx', 'Ret', 'Sge', 'Sgr', 'Sco', 'Scl', 'Sct',
+  'Ser', 'Sex', 'Tau', 'Tel', 'Tri', 'TrA', 'Tuc', 'UMa', 'UMi', 'Vel', 'Vir', 'Vol', 'Vul'
+];
 
 interface LoadObjectsParams {
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
   catalog?: string;
   name?: string;
+  constellation?: string;
 }
 
 @Component({
@@ -52,6 +67,9 @@ interface LoadObjectsParams {
     MatButtonModule,
     MatSelectModule,
     MatCheckboxModule,
+    MatAutocompleteModule,
+    NgForOf,
+    AsyncPipe,
     FormsModule,
     ReactiveFormsModule
 ]
@@ -81,9 +99,14 @@ export class CatalogsComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   filterForm: FormGroup;
   isFilterVisible = false;
+  filteredConstellations$: Observable<string[]>;
 
   constructor() {
     this.initFilterForm();
+    this.filteredConstellations$ = this.filterForm.get('constellation')!.valueChanges.pipe(
+      startWith(''),
+      map((v: string | null) => this.filterConstellations(v ?? ''))
+    );
 
     // Set initial state for top bar in constructor
     setTimeout(() => {
@@ -97,9 +120,22 @@ export class CatalogsComponent implements OnInit, OnDestroy {
 
   private initFilterForm() {
     this.filterForm = this.fb.group({
+      name: [null],
       catalog: [null],
-      name: [null]
+      constellation: [null]
     });
+  }
+
+  private filterConstellations(value: string): string[] {
+    const v = (value || '').trim().toLowerCase();
+    if (!v) return CONSTELLATION_ABBREVIATIONS;
+    return CONSTELLATION_ABBREVIATIONS.filter(c => c.toLowerCase().startsWith(v) || c.toLowerCase().includes(v));
+  }
+
+  /** Prevent native form submit (which would reload and clear fields); apply filters on Enter. */
+  onFilterSubmit(event: Event) {
+    event.preventDefault();
+    this.applyFilters();
   }
 
   ngOnInit() {
@@ -128,23 +164,28 @@ export class CatalogsComponent implements OnInit, OnDestroy {
     });
   }
 
-  applyFilters() {
-    const filters = this.filterForm.value;
-    Object.keys(filters).forEach(key => {
-      if (filters[key] === null || filters[key] === '') {
-        delete filters[key];
-      }
-    });
+  /** Current filter params from form (non-empty only). Used so pagination/sort keep filters. */
+  private getFilterParams(): Partial<LoadObjectsParams> {
+    const v = this.filterForm.value;
+    const out: Partial<LoadObjectsParams> = {};
+    if (v.name != null && v.name !== '') out.name = String(v.name).trim();
+    if (v.catalog != null && v.catalog !== '') out.catalog = String(v.catalog).trim();
+    if (v.constellation != null && v.constellation !== '') out.constellation = String(v.constellation).trim();
+    return out;
+  }
 
+  applyFilters() {
+    this.currentPage = 1;
     this.loadObjects({
-      ...filters,
+      ...this.getFilterParams(),
       sort_by: this.currentSort.sort_by,
       sort_order: this.currentSort.sort_order
     });
   }
 
   clearFilters() {
-    this.filterForm.reset();
+    this.filterForm.reset({ name: null, catalog: null, constellation: null });
+    this.currentPage = 1;
     this.loadObjects({
       sort_by: this.currentSort.sort_by,
       sort_order: this.currentSort.sort_order
@@ -173,6 +214,7 @@ export class CatalogsComponent implements OnInit, OnDestroy {
     this.currentPage = event.pageIndex + 1;
     this.pageSize = event.pageSize;
     this.loadObjects({
+      ...this.getFilterParams(),
       sort_by: this.currentSort.sort_by,
       sort_order: this.currentSort.sort_order
     });
@@ -185,6 +227,7 @@ export class CatalogsComponent implements OnInit, OnDestroy {
     };
 
     this.loadObjects({
+      ...this.getFilterParams(),
       sort_by: this.currentSort.sort_by,
       sort_order: this.currentSort.sort_order
     });
