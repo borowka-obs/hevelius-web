@@ -1,6 +1,6 @@
 {
   "name": "hevelius",
-  "version": "0.3.0",
+  "version": "0.4.0-git",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

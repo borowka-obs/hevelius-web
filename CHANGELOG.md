@@ -9,6 +9,7 @@
 - Fixed ExpressionChangedAfterItHasBeenCheckedError exception
 - The footer on login page now has links to a ChangeLog
 - Fixed catalog sorting and filtering
+- dev: OpenAPI synchronization with backend
 
 0.3.0 (2025-04-22)
 
