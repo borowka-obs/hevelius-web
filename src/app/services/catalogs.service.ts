@@ -38,7 +38,7 @@ export class CatalogsService {
   private http = inject(HttpClient);
   private loginService = inject(LoginService);
 
-  private baseUrl = Hevelius.apiUrl+'/catalogs';
+  private baseUrl = Hevelius.apiUrl + '/catalogs';
   private totalObjects = new BehaviorSubject<number>(0);
   private currentPage = new BehaviorSubject<number>(1);
 
