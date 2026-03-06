@@ -91,11 +91,12 @@ export class CatalogsService {
   }
 
   /* eslint-disable  @typescript-eslint/no-explicit-any */
-  private sanitizeParams(params: any): any {
-    const sanitized: any = {};
+  private sanitizeParams(params: any): { [key: string]: string } {
+    const sanitized: { [key: string]: string } = {};
     Object.keys(params).forEach(key => {
-      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
-        sanitized[key] = params[key].toString();
+      const value = params[key];
+      if (value !== undefined && value !== null && value !== '') {
+        sanitized[key] = String(value);
       }
     });
     return sanitized;
