@@ -40,6 +40,9 @@ yarn-error.log
 testem.log
 /typings
 
+# OpenAPI spec (synced from backend repo, not committed)
+/api/openapi.yaml
+
 # System Files
 .DS_Store
 Thumbs.db
