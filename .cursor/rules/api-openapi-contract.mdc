@@ -1,0 +1,39 @@
+---
+description: Use the OpenAPI spec as the source of truth for backend API calls; do not assume or invent endpoints or payloads.
+alwaysApply: true
+---
+
+# API contract: OpenAPI spec (frontend)
+
+When implementing features that call the Hevelius backend API, use the **OpenAPI spec as the single source of truth**.
+
+## Rules
+
+1. **Do not assume** endpoints, request bodies, or response shapes. Use the provided `openapi.yaml` (or the spec shared from the backend repo).
+
+2. **Paths and methods**: Use exactly the paths and HTTP methods defined in the spec (e.g. `GET /api/tasks`, `POST /api/tasks`).
+
+3. **Request/response shapes**: Match request body schemas and response schemas from `components/schemas` and path definitions. Use the same field names (e.g. `user_id`, `firstname`) and types.
+
+4. **Auth**: If the spec marks an operation with `security: [bearerAuth]`, send the JWT in the `Authorization: Bearer <token>` header.
+
+5. **When the spec is updated**: If you receive an updated `openapi.yaml` from the backend, prefer it over any existing types or API client code; update types/calls to match the new spec.
+
+## Getting the spec
+
+- The canonical spec lives in the backend repo: `api/openapi.yaml`.
+- For cross-repo work, the backend agent updates the spec; use the latest version when implementing or changing API calls.
+
+## Syncing the spec (frontend repo)
+
+The frontend does **not** commit `openapi.yaml`; it is gitignored. To get or update the spec from the backend repo:
+
+1. **Same machine, both repos checked out**
+   From the frontend repo root run:
+   - `npm run sync-openapi`
+   Copies from `../hevelius-backend/openapi.yaml` into `api/openapi.yaml` (or set `HEVELIUS_BACKEND_PATH` to the backend repo path).
+
+2. **Sync from a specific branch** (e.g. while a feature is in development):
+   - `npm run sync-openapi -- main`
+   - `npm run sync-openapi -- feature/my-api`
+   Uses `git show <branch>:openapi.yaml` from the backend repo; no need to checkout that branch locally.

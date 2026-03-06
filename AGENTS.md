@@ -34,7 +34,13 @@ This project has an **Angular 20** frontend (this repo) and a **Flask** backend 
 - **Document the source of truth**: In `src/app/models/*.ts`, add a short comment pointing to the backend route or module (e.g. “See `app.py` in hevelius-backend”).
 - **Optional**: Maintain a small API overview (e.g. in `doc/api.md` or in this file) listing endpoints, methods, and main DTOs so agents (and humans) can see the contract in one place.
 
-### 5. Quick reference: existing API surface
+### 5. OpenAPI spec (frontend)
+
+- The API contract is defined in the backend repo’s `openapi.yaml`. The frontend does **not** commit a copy.
+- To get or update the spec: run `npm run sync-openapi` (copies from `../hevelius-backend` by default; set `HEVELIUS_BACKEND_PATH` if needed). To sync from a backend branch: `npm run sync-openapi -- <branch>`.
+- See `.cursor/rules/api-openapi-contract.mdc` for how to use the spec when implementing API calls.
+
+### 6. Quick reference: existing API surface
 
 - Auth: `POST /login`, `GET /version` (and token usage via interceptor).
 - Tasks: `GET/POST /tasks`, `POST /task-add`, `POST /task-update`, `GET /task-get`.
