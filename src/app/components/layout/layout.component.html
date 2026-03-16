@@ -6,6 +6,11 @@
       <mat-icon>filter_list</mat-icon>
     </button>
   }
+  @if (showAdd) {
+    <button mat-icon-button (click)="onAddClickHandler()" [matTooltip]="addTooltip" aria-label="Add">
+      <mat-icon>add</mat-icon>
+    </button>
+  }
   <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menu">
     <mat-icon>menu</mat-icon>
   </button>
@@ -14,10 +19,6 @@
       <mat-icon>list</mat-icon>
       <span>Tasks</span>
     </button>
-    <button mat-menu-item (click)="openAddTaskDialog()">
-      <mat-icon>add</mat-icon>
-      <span>Add New Task</span>
-    </button>
     <button mat-menu-item routerLink="/night-plan">
       <mat-icon>nightlight</mat-icon>
       <span>Night Plan</span>
@@ -25,6 +26,14 @@
     <button mat-menu-item routerLink="/scopes">
       <mat-icon>visibility</mat-icon>
       <span>Telescopes</span>
+    </button>
+    <button mat-menu-item routerLink="/sensors">
+      <mat-icon>photo_camera</mat-icon>
+      <span>Sensors</span>
+    </button>
+    <button mat-menu-item routerLink="/projects">
+      <mat-icon>folder</mat-icon>
+      <span>Projects</span>
     </button>
     <button mat-menu-item routerLink="/catalogs">
       <mat-icon>star</mat-icon>
