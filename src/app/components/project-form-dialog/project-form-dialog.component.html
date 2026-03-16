@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>New project</h2>
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" required>
+      <mat-hint>Object name; if in catalog, RA/Dec are resolved automatically.</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Telescope</mat-label>
+      <mat-select formControlName="scope_id" required>
+        @for (s of scopes; track s.scope_id) {
+          <mat-option [value]="s.scope_id">{{ s.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="2"></textarea>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>RA (hours)</mat-label>
+      <input matInput type="number" formControlName="ra" min="0" max="24" step="0.001" placeholder="Optional">
+      <mat-hint>Required if name is not in catalog.</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Dec (degrees)</mat-label>
+      <input matInput type="number" formControlName="decl" min="-90" max="90" step="0.001" placeholder="Optional">
+      <mat-hint>Required if name is not in catalog.</mat-hint>
+    </mat-form-field>
+    <mat-checkbox formControlName="active">Active</mat-checkbox>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()">Create</button>
+</mat-dialog-actions>

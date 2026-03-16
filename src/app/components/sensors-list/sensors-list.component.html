@@ -1,0 +1,70 @@
+<div class="container">
+  <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+    <form [formGroup]="filterForm" class="filter-form">
+      <mat-button-toggle-group formControlName="activeFilter" class="filter-field">
+        @for (opt of activeFilterOptions; track opt.value) {
+          <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+      <div class="filter-actions">
+        <button mat-button (click)="clearFilters()">Clear</button>
+        <button mat-raised-button color="primary" (click)="applyFilters()">Apply</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="table-container">
+    <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z8">
+      <ng-container matColumnDef="sensor_id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by ID">ID</th>
+        <td mat-cell *matCellDef="let s">{{ s.sensor_id }}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by name">Name</th>
+        <td mat-cell *matCellDef="let s">{{ s.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="vendor">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by vendor">Vendor</th>
+        <td mat-cell *matCellDef="let s">{{ s.vendor ?? '-' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="resx">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by resolution X">Res X</th>
+        <td mat-cell *matCellDef="let s">{{ s.resx }}</td>
+      </ng-container>
+      <ng-container matColumnDef="resy">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by resolution Y">Res Y</th>
+        <td mat-cell *matCellDef="let s">{{ s.resy }}</td>
+      </ng-container>
+      <ng-container matColumnDef="pixel_x">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by pixel X">Pixel X (µm)</th>
+        <td mat-cell *matCellDef="let s">{{ s.pixel_x }}</td>
+      </ng-container>
+      <ng-container matColumnDef="pixel_y">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by pixel Y">Pixel Y (µm)</th>
+        <td mat-cell *matCellDef="let s">{{ s.pixel_y }}</td>
+      </ng-container>
+      <ng-container matColumnDef="width">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by width">Width (mm)</th>
+        <td mat-cell *matCellDef="let s">{{ s.width ?? '-' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="height">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by height">Height (mm)</th>
+        <td mat-cell *matCellDef="let s">{{ s.height ?? '-' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="bits">
+        <th mat-header-cell *matHeaderCellDef>Bits</th>
+        <td mat-cell *matCellDef="let s">{{ s.bits ?? '-' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="active">
+        <th mat-header-cell *matHeaderCellDef>Active</th>
+        <td mat-cell *matCellDef="let s">
+          <mat-icon [style.color]="s.active ? 'green' : 'red'">
+            {{ s.active ? 'check_circle' : 'cancel' }}
+          </mat-icon>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+</div>

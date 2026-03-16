@@ -34,30 +34,3 @@
 table {
   width: 100%;
 }
-
-.mat-column-name {
-  width: 15%;
-}
-
-.mat-column-descr {
-  width: 25%;
-}
-
-.mat-column-focal,
-.mat-column-aperture {
-  width: 10%;
-}
-
-.mat-column-min_dec,
-.mat-column-max_dec {
-  width: 8%;
-}
-
-.mat-column-sensor {
-  width: 12%;
-}
-
-.mat-column-active {
-  width: 12%;
-  text-align: center;
-}

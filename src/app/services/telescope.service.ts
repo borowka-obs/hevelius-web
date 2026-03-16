@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Hevelius } from 'src/hevelius';
@@ -30,6 +30,11 @@ export interface Telescope {
   active: boolean;
 }
 
+export interface TelescopesListParams {
+  sort_by?: 'scope_id' | 'name' | 'focal' | 'active';
+  sort_order?: 'asc' | 'desc';
+}
+
 interface TelescopesResponse {
   telescopes: Telescope[];
 }
@@ -43,8 +48,17 @@ export class TelescopeService {
 
   private apiUrl = `${Hevelius.apiUrl}/scopes`;
 
-  getTelescopes(): Observable<Telescope[]> {
-    return this.http.get<TelescopesResponse>(this.apiUrl).pipe(
+  getTelescopes(params?: TelescopesListParams): Observable<Telescope[]> {
+    let httpParams = new HttpParams();
+    if (params) {
+      if (params.sort_by) {
+        httpParams = httpParams.set('sort_by', params.sort_by);
+      }
+      if (params.sort_order) {
+        httpParams = httpParams.set('sort_order', params.sort_order);
+      }
+    }
+    return this.http.get<TelescopesResponse>(this.apiUrl, { params: httpParams }).pipe(
       map(response => response.telescopes)
     );
   }

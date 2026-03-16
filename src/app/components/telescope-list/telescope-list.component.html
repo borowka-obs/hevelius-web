@@ -1,59 +1,58 @@
 <div class="container">
-  <h1>Telescopes</h1>
-  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
-    <!-- Name Column -->
-    <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef>Name</th>
-      <td mat-cell *matCellDef="let telescope">{{telescope.name}}</td>
-    </ng-container>
+  <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+    <form [formGroup]="filterForm" class="filter-form">
+      <mat-checkbox formControlName="activeOnly" class="filter-field">Show only active</mat-checkbox>
+      <div class="filter-actions">
+        <button mat-button (click)="clearFilters()">Clear</button>
+        <button mat-raised-button color="primary" (click)="applyFilters()">Apply</button>
+      </div>
+    </form>
+  </div>
 
-    <!-- Description Column -->
-    <ng-container matColumnDef="descr">
-      <th mat-header-cell *matHeaderCellDef>Description</th>
-      <td mat-cell *matCellDef="let telescope">{{telescope.descr}}</td>
-    </ng-container>
-
-    <!-- Focal Length Column -->
-    <ng-container matColumnDef="focal">
-      <th mat-header-cell *matHeaderCellDef>Focal Length (mm)</th>
-      <td mat-cell *matCellDef="let telescope">{{telescope.focal || '-'}}</td>
-    </ng-container>
-
-    <!-- Aperture Column -->
-    <ng-container matColumnDef="aperture">
-      <th mat-header-cell *matHeaderCellDef>Aperture (mm)</th>
-      <td mat-cell *matCellDef="let telescope">{{telescope.aperture || '-'}}</td>
-    </ng-container>
-
-    <!-- Min Dec Column -->
-    <ng-container matColumnDef="min_dec">
-      <th mat-header-cell *matHeaderCellDef>Min Dec</th>
-      <td mat-cell *matCellDef="let telescope">{{telescope.min_dec}}</td>
-    </ng-container>
-
-    <!-- Max Dec Column -->
-    <ng-container matColumnDef="max_dec">
-      <th mat-header-cell *matHeaderCellDef>Max Dec</th>
-      <td mat-cell *matCellDef="let telescope">{{telescope.max_dec}}</td>
-    </ng-container>
-
-    <!-- Sensor Column -->
-    <ng-container matColumnDef="sensor">
-      <th mat-header-cell *matHeaderCellDef>Sensor</th>
-      <td mat-cell *matCellDef="let telescope">{{telescope.sensor?.name || '-'}}</td>
-    </ng-container>
-
-    <!-- Active Column -->
-    <ng-container matColumnDef="active">
-      <th mat-header-cell *matHeaderCellDef>Active</th>
-      <td mat-cell *matCellDef="let telescope">
-        <mat-icon [style.color]="telescope.active ? 'green' : 'red'">
-          {{telescope.active ? 'check_circle' : 'cancel'}}
-        </mat-icon>
-      </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
+  <div class="table-container">
+    <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z8">
+      <ng-container matColumnDef="scope_id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by ID">ID</th>
+        <td mat-cell *matCellDef="let telescope">{{telescope.scope_id}}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by name">Name</th>
+        <td mat-cell *matCellDef="let telescope">{{telescope.name}}</td>
+      </ng-container>
+      <ng-container matColumnDef="descr">
+        <th mat-header-cell *matHeaderCellDef>Description</th>
+        <td mat-cell *matCellDef="let telescope">{{telescope.descr}}</td>
+      </ng-container>
+      <ng-container matColumnDef="focal">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by focal length">Focal (mm)</th>
+        <td mat-cell *matCellDef="let telescope">{{telescope.focal ?? '-'}}</td>
+      </ng-container>
+      <ng-container matColumnDef="aperture">
+        <th mat-header-cell *matHeaderCellDef>Aperture (mm)</th>
+        <td mat-cell *matCellDef="let telescope">{{telescope.aperture ?? '-'}}</td>
+      </ng-container>
+      <ng-container matColumnDef="min_dec">
+        <th mat-header-cell *matHeaderCellDef>Min Dec</th>
+        <td mat-cell *matCellDef="let telescope">{{telescope.min_dec}}</td>
+      </ng-container>
+      <ng-container matColumnDef="max_dec">
+        <th mat-header-cell *matHeaderCellDef>Max Dec</th>
+        <td mat-cell *matCellDef="let telescope">{{telescope.max_dec}}</td>
+      </ng-container>
+      <ng-container matColumnDef="sensor">
+        <th mat-header-cell *matHeaderCellDef>Sensor</th>
+        <td mat-cell *matCellDef="let telescope">{{telescope.sensor?.name ?? '-'}}</td>
+      </ng-container>
+      <ng-container matColumnDef="active">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by active">Active</th>
+        <td mat-cell *matCellDef="let telescope">
+          <mat-icon [style.color]="telescope.active ? 'green' : 'red'">
+            {{telescope.active ? 'check_circle' : 'cancel'}}
+          </mat-icon>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
 </div>

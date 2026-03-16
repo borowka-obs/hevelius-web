@@ -108,8 +108,24 @@ export class TasksComponent implements OnInit, OnDestroy {
       this.topBarService.updateState({
         showFilter: true,
         filterVisible: false,
-        onFilterToggle: () => this.toggleFilters()
+        onFilterToggle: () => this.toggleFilters(),
+        showAdd: true,
+        addTooltip: 'Add task',
+        onAddClick: () => this.openAddTaskDialog()
       });
+    });
+  }
+
+  openAddTaskDialog(): void {
+    const dialogRef = this.dialog.open(TaskViewComponent, {
+      width: '800px',
+      disableClose: true,
+      data: { mode: 'add' }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.dataSource.loadTasks();
+      }
     });
   }
 

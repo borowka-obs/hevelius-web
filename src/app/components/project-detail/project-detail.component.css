@@ -1,0 +1,27 @@
+.container {
+  padding: 20px;
+}
+
+.project-card {
+  margin: 1rem 0;
+  max-width: 600px;
+}
+
+.subframes-section {
+  margin-top: 2rem;
+}
+
+.subframes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.subframes-header h2 {
+  margin: 0;
+}
+
+table {
+  width: 100%;
+}

@@ -44,6 +44,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
   showFilter = false;
   filterVisible = false;
   onFilterToggle?: () => void;
+  showAdd = false;
+  onAddClick?: () => void;
+  addTooltip = '';
   private subscription: Subscription;
 
   constructor() {
@@ -52,6 +55,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.showFilter = state.showFilter;
       this.filterVisible = state.filterVisible;
       this.onFilterToggle = state.onFilterToggle;
+      this.showAdd = state.showAdd ?? false;
+      this.onAddClick = state.onAddClick;
+      this.addTooltip = state.addTooltip ?? 'Add';
     });
   }
 
@@ -67,6 +73,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
   toggleFilter() {
     if (this.onFilterToggle) {
       this.onFilterToggle();
+    }
+  }
+
+  onAddClickHandler() {
+    if (this.onAddClick) {
+      this.onAddClick();
     }
   }
 
