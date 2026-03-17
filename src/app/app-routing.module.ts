@@ -7,6 +7,7 @@ import { TelescopeListComponent } from './components/telescope-list/telescope-li
 import { SensorsListComponent } from './components/sensors-list/sensors-list.component';
 import { ProjectsListComponent } from './components/projects-list/projects-list.component';
 import { ProjectDetailComponent } from './components/project-detail/project-detail.component';
+import { FiltersListComponent } from './components/filters-list/filters-list.component';
 import { CatalogsComponent } from './components/catalogs/catalogs.component';
 import { AuthGuard } from './guards/auth.guard';
 
@@ -21,6 +22,7 @@ export const routes: Routes = [
       { path: 'night-plan', component: NightPlanComponent },
       { path: 'scopes', component: TelescopeListComponent },
       { path: 'sensors', component: SensorsListComponent },
+      { path: 'filters', component: FiltersListComponent },
       { path: 'projects', component: ProjectsListComponent },
       { path: 'projects/:id', component: ProjectDetailComponent },
       { path: 'catalogs', component: CatalogsComponent },

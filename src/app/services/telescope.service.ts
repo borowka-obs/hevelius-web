@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Hevelius } from 'src/hevelius';
 import { LoginService } from './login.service';
+import { Filter } from '../models/filter';
 
 export interface Telescope {
   scope_id: number;
@@ -27,6 +28,7 @@ export interface Telescope {
     width: number;
     height: number;
   } | null;
+  filters?: Filter[];
   active: boolean;
 }
 
@@ -62,4 +64,51 @@ export class TelescopeService {
       map(response => response.telescopes)
     );
   }
+
+  getTelescope(scopeId: number): Observable<Telescope> {
+    return this.http.get<{ status: boolean; scope: Telescope }>(`${this.apiUrl}/${scopeId}`).pipe(
+      map(res => res.scope)
+    );
+  }
+
+  createTelescope(body: ScopeCreate): Observable<{ scope_id: number; scope: Telescope }> {
+    return this.http.post<{ status: boolean; scope_id: number; scope: Telescope }>(this.apiUrl, body).pipe(
+      map(res => ({ scope_id: res.scope_id, scope: res.scope }))
+    );
+  }
+
+  updateTelescope(scopeId: number, body: ScopeUpdate): Observable<Telescope> {
+    return this.http.patch<{ status: boolean; scope: Telescope }>(`${this.apiUrl}/${scopeId}`, body).pipe(
+      map(res => res.scope)
+    );
+  }
+}
+
+export interface ScopeCreate {
+  name: string;
+  scope_id?: number;
+  descr?: string;
+  min_dec?: number;
+  max_dec?: number;
+  focal?: number;
+  aperture?: number;
+  lon?: number;
+  lat?: number;
+  alt?: number;
+  sensor_id?: number;
+  active?: boolean;
+}
+
+export interface ScopeUpdate {
+  name?: string;
+  descr?: string;
+  min_dec?: number;
+  max_dec?: number;
+  focal?: number;
+  aperture?: number;
+  lon?: number;
+  lat?: number;
+  alt?: number;
+  sensor_id?: number;
+  active?: boolean;
 }
