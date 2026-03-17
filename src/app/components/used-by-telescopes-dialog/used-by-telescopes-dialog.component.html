@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Telescopes using {{ filter.short_name }}</h2>
+<mat-dialog-content>
+  @if (telescopes.length === 0) {
+    <p>No telescopes use this filter.</p>
+  } @else {
+    <ul class="telescope-list">
+      @for (t of telescopes; track t.scope_id) {
+        <li>{{ t.name }}</li>
+      }
+    </ul>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

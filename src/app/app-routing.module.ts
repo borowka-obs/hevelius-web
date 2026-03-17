@@ -4,6 +4,7 @@ import { LayoutComponent } from './components/layout/layout.component';
 import { TasksComponent } from './components/tasks/tasks.component';
 import { NightPlanComponent } from './components/night-plan/night-plan.component';
 import { TelescopeListComponent } from './components/telescope-list/telescope-list.component';
+import { TelescopeDetailComponent } from './components/telescope-detail/telescope-detail.component';
 import { SensorsListComponent } from './components/sensors-list/sensors-list.component';
 import { ProjectsListComponent } from './components/projects-list/projects-list.component';
 import { ProjectDetailComponent } from './components/project-detail/project-detail.component';
@@ -21,6 +22,7 @@ export const routes: Routes = [
       { path: 'tasks', component: TasksComponent },
       { path: 'night-plan', component: NightPlanComponent },
       { path: 'scopes', component: TelescopeListComponent },
+      { path: 'scopes/:id', component: TelescopeDetailComponent },
       { path: 'sensors', component: SensorsListComponent },
       { path: 'filters', component: FiltersListComponent },
       { path: 'projects', component: ProjectsListComponent },

@@ -11,10 +11,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
 import { FilterFormDialogComponent } from '../filter-form-dialog/filter-form-dialog.component';
+import { UsedByTelescopesDialogComponent } from '../used-by-telescopes-dialog/used-by-telescopes-dialog.component';
 import { FiltersListParams } from '../../services/filters.service';
 
 type ActiveFilter = 'active' | 'inactive' | 'all';
@@ -39,7 +41,8 @@ type ActiveFilter = 'active' | 'inactive' | 'all';
     MatSelectModule,
     MatFormFieldModule,
     MatButtonToggleModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule
   ]
 })
 export class FiltersListComponent implements OnInit, OnDestroy {
@@ -52,7 +55,7 @@ export class FiltersListComponent implements OnInit, OnDestroy {
   dataSource = new MatTableDataSource<Filter>();
   allFilters: Filter[] = [];
   telescopes: Telescope[] = [];
-  displayedColumns: string[] = ['filter_id', 'short_name', 'full_name', 'url', 'active'];
+  displayedColumns: string[] = ['filter_id', 'short_name', 'full_name', 'url', 'active', 'used_by', 'actions'];
 
   currentSort: { sort_by: FiltersListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
     sort_by: 'filter_id',
@@ -149,7 +152,38 @@ export class FiltersListComponent implements OnInit, OnDestroy {
   }
 
   openAddFilter(): void {
-    const ref = this.dialog.open(FilterFormDialogComponent, { width: '440px' });
+    const ref = this.dialog.open(FilterFormDialogComponent, { width: '440px', data: { mode: 'add' } });
     ref.afterClosed().subscribe(created => { if (created) this.loadFilters(); });
+  }
+
+  openEditFilter(filter: Filter): void {
+    const ref = this.dialog.open(FilterFormDialogComponent, {
+      width: '440px',
+      data: { filter, mode: 'edit' }
+    });
+    ref.afterClosed().subscribe(updated => { if (updated) this.loadFilters(); });
+  }
+
+  /** Telescopes that have this filter assigned */
+  getTelescopesForFilter(filter: Filter): Telescope[] {
+    return this.telescopes.filter(t => t.filters?.some(f => f.filter_id === filter.filter_id)) ?? [];
+  }
+
+  /** Short summary for table cell: first few names + "and N more" if needed */
+  getUsedBySummary(filter: Filter, maxShow = 3): { names: string[]; more: number } {
+    const scopes = this.getTelescopesForFilter(filter);
+    const names = scopes.map(t => t.name);
+    if (names.length <= maxShow) {
+      return { names, more: 0 };
+    }
+    return { names: names.slice(0, maxShow), more: names.length - maxShow };
+  }
+
+  openUsedByModal(filter: Filter): void {
+    const scopes = this.getTelescopesForFilter(filter);
+    this.dialog.open(UsedByTelescopesDialogComponent, {
+      width: '360px',
+      data: { filter, telescopes: scopes }
+    });
   }
 }
