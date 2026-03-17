@@ -6,8 +6,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
+import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope-form-dialog.component';
 
 @Component({
   selector: 'app-telescope-list',
@@ -37,13 +40,15 @@ import { TopBarService } from '../../services/top-bar.service';
     MatSortModule,
     MatCheckboxModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule
   ]
 })
 export class TelescopeListComponent implements OnInit, OnDestroy {
   private telescopeService = inject(TelescopeService);
   private fb = inject(FormBuilder);
   private topBarService = inject(TopBarService);
+  private dialog = inject(MatDialog);
 
   dataSource = new MatTableDataSource<Telescope>();
   allTelescopes: Telescope[] = [];
@@ -56,7 +61,8 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
     'min_dec',
     'max_dec',
     'sensor',
-    'active'
+    'active',
+    'actions'
   ];
 
   currentSort: { sort_by: TelescopesListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
@@ -74,9 +80,25 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
       this.topBarService.updateState({
         showFilter: true,
         filterVisible: false,
-        onFilterToggle: () => this.toggleFilters()
+        onFilterToggle: () => this.toggleFilters(),
+        showAdd: true,
+        addTooltip: 'Add telescope',
+        onAddClick: () => this.openAddTelescope()
       });
     });
+  }
+
+  openAddTelescope(): void {
+    const ref = this.dialog.open(TelescopeFormDialogComponent, { width: '480px', data: { mode: 'add' } });
+    ref.afterClosed().subscribe(created => { if (created) this.loadTelescopes(); });
+  }
+
+  openEditTelescope(telescope: Telescope): void {
+    const ref = this.dialog.open(TelescopeFormDialogComponent, {
+      width: '480px',
+      data: { telescope, mode: 'edit' }
+    });
+    ref.afterClosed().subscribe(updated => { if (updated) this.loadTelescopes(); });
   }
 
   ngOnInit(): void {

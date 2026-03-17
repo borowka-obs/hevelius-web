@@ -9,8 +9,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
+import { SensorFormDialogComponent } from '../sensor-form-dialog/sensor-form-dialog.component';
 
 /** Filter by active status: active only, inactive only, or all. */
 export type ActiveFilter = 'active' | 'inactive' | 'all';
@@ -44,13 +47,15 @@ export type ActiveFilter = 'active' | 'inactive' | 'all';
     MatButtonModule,
     MatButtonToggleModule,
     MatFormFieldModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule
   ]
 })
 export class SensorsListComponent implements OnInit, OnDestroy {
   private sensorsService = inject(SensorsService);
   private fb = inject(FormBuilder);
   private topBarService = inject(TopBarService);
+  private dialog = inject(MatDialog);
 
   dataSource = new MatTableDataSource<Sensor>();
   displayedColumns: string[] = [
@@ -64,7 +69,8 @@ export class SensorsListComponent implements OnInit, OnDestroy {
     'width',
     'height',
     'bits',
-    'active'
+    'active',
+    'actions'
   ];
 
   currentSort: { sort_by: SensorsListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
@@ -88,9 +94,25 @@ export class SensorsListComponent implements OnInit, OnDestroy {
       this.topBarService.updateState({
         showFilter: true,
         filterVisible: false,
-        onFilterToggle: () => this.toggleFilters()
+        onFilterToggle: () => this.toggleFilters(),
+        showAdd: true,
+        addTooltip: 'Add sensor',
+        onAddClick: () => this.openAddSensor()
       });
     });
+  }
+
+  openAddSensor(): void {
+    const ref = this.dialog.open(SensorFormDialogComponent, { width: '440px', data: { mode: 'add' } });
+    ref.afterClosed().subscribe(created => { if (created) this.loadSensors(); });
+  }
+
+  openEditSensor(sensor: Sensor): void {
+    const ref = this.dialog.open(SensorFormDialogComponent, {
+      width: '440px',
+      data: { sensor, mode: 'edit' }
+    });
+    ref.afterClosed().subscribe(updated => { if (updated) this.loadSensors(); });
   }
 
   ngOnInit(): void {

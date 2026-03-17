@@ -9,3 +9,17 @@ export interface Filter {
   url?: string;
   active: boolean;
 }
+
+export interface FilterCreate {
+  short_name: string;
+  full_name?: string;
+  url?: string;
+  active?: boolean;
+}
+
+export interface FilterUpdate {
+  short_name?: string;
+  full_name?: string;
+  url?: string;
+  active?: boolean;
+}

@@ -9,6 +9,41 @@ interface SensorsResponse {
   sensors: Sensor[];
 }
 
+interface SensorResponse {
+  status: boolean;
+  sensor_id?: number;
+  sensor: Sensor;
+  msg?: string;
+}
+
+export interface SensorCreate {
+  name: string;
+  resx: number;
+  resy: number;
+  pixel_x: number;
+  pixel_y: number;
+  bits?: number;
+  width?: number;
+  height?: number;
+  vendor?: string;
+  url?: string;
+  active?: boolean;
+}
+
+export interface SensorUpdate {
+  name?: string;
+  resx?: number;
+  resy?: number;
+  pixel_x?: number;
+  pixel_y?: number;
+  bits?: number;
+  width?: number;
+  height?: number;
+  vendor?: string;
+  url?: string;
+  active?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -31,6 +66,24 @@ export class SensorsService {
     }
     return this.http.get<SensorsResponse>(this.apiUrl, { params: httpParams }).pipe(
       map(res => res.sensors ?? [])
+    );
+  }
+
+  getSensor(sensorId: number): Observable<Sensor> {
+    return this.http.get<SensorResponse>(`${this.apiUrl}/${sensorId}`).pipe(
+      map(res => res.sensor)
+    );
+  }
+
+  createSensor(body: SensorCreate): Observable<Sensor> {
+    return this.http.post<SensorResponse>(this.apiUrl, body).pipe(
+      map(res => res.sensor)
+    );
+  }
+
+  updateSensor(sensorId: number, body: SensorUpdate): Observable<Sensor> {
+    return this.http.patch<SensorResponse>(`${this.apiUrl}/${sensorId}`, body).pipe(
+      map(res => res.sensor)
     );
   }
 }
