@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Hevelius } from 'src/hevelius';
-import { Filter, FilterCreate } from '../models/filter';
+import { Filter, FilterCreate, FilterUpdate } from '../models/filter';
 
 interface FiltersResponse {
   filters: Filter[];
@@ -47,8 +47,20 @@ export class FiltersService {
     );
   }
 
+  getFilter(filterId: number): Observable<Filter> {
+    return this.http.get<FilterResponse>(`${this.apiUrl}/${filterId}`).pipe(
+      map(res => res.filter)
+    );
+  }
+
   createFilter(body: FilterCreate): Observable<Filter> {
     return this.http.post<FilterResponse>(this.apiUrl, body).pipe(
+      map(res => res.filter)
+    );
+  }
+
+  updateFilter(filterId: number, body: FilterUpdate): Observable<Filter> {
+    return this.http.patch<FilterResponse>(`${this.apiUrl}/${filterId}`, body).pipe(
       map(res => res.filter)
     );
   }

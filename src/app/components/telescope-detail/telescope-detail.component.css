@@ -1,0 +1,7 @@
+.container { padding: 20px; }
+.scope-card { margin: 1rem 0; max-width: 640px; }
+.filters-section { margin-top: 2rem; }
+.filters-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.filters-header h2 { margin: 0; }
+.muted { color: #666; }
+table { width: 100%; }

@@ -82,6 +82,18 @@ export class TelescopeService {
       map(res => res.scope)
     );
   }
+
+  addFilterToScope(scopeId: number, filterId: number): Observable<void> {
+    return this.http.post<{ status: boolean }>(`${this.apiUrl}/${scopeId}/filters`, { filter_id: filterId }).pipe(
+      map(() => undefined)
+    );
+  }
+
+  removeFilterFromScope(scopeId: number, filterId: number): Observable<void> {
+    return this.http.delete<{ status: boolean }>(`${this.apiUrl}/${scopeId}/filters/${filterId}`).pipe(
+      map(() => undefined)
+    );
+  }
 }
 
 export interface ScopeCreate {

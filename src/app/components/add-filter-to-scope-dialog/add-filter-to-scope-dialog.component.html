@@ -1,0 +1,25 @@
+<h2 mat-dialog-title>Add filter to telescope</h2>
+<mat-dialog-content>
+  @if (loading) {
+    <p>Loading filters…</p>
+  } @else if (availableFilters.length === 0) {
+    <p>All filters are already assigned to this telescope.</p>
+  } @else {
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Filter</mat-label>
+      <mat-select [value]="selectedFilterId" (selectionChange)="selectedFilterId = $event.value">
+        @for (f of availableFilters; track f.filter_id) {
+          <mat-option [value]="f.filter_id">{{ f.short_name }} – {{ f.full_name || '—' }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  @if (availableFilters.length > 0) {
+    <button mat-raised-button color="primary" (click)="add()" [disabled]="selectedFilterId == null || saving">
+      {{ saving ? 'Adding…' : 'Add' }}
+    </button>
+  }
+</mat-dialog-actions>

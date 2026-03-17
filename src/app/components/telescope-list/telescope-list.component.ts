@@ -8,6 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
+import { RouterModule } from '@angular/router';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
 import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope-form-dialog.component';
@@ -35,6 +36,7 @@ import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope
   ],
   standalone: true,
   imports: [
+    RouterModule,
     ReactiveFormsModule,
     MatTableModule,
     MatSortModule,

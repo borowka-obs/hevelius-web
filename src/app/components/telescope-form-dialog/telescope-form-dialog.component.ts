@@ -60,7 +60,7 @@ export class TelescopeFormDialogComponent {
       sensor_id: [t?.sensor?.sensor_id ?? null],
       active: [t?.active ?? true]
     });
-    this.sensorsService.getSensors({}).subscribe({
+    this.sensorsService.getSensors({ active: true }).subscribe({
       next: list => { this.sensors = list; }
     });
   }
