@@ -13,9 +13,21 @@
       </mat-card-header>
       <mat-card-content>
         <p><strong>Description:</strong> {{ project.description || '–' }}</p>
-        <p><strong>Scope ID:</strong> {{ project.scope_id }}</p>
+        <p>
+          <strong>Telescope:</strong>
+          <a [routerLink]="['/scopes', project.scope_id]">{{ getScopeName() }}</a>
+          (<strong>ID:</strong>
+          <a [routerLink]="['/scopes', project.scope_id]">{{ project.scope_id }}</a>)
+        </p>
         <p><strong>RA:</strong> {{ formatRA(project.ra) }} <strong>Dec:</strong> {{ formatDec(project.decl) }}</p>
         <p><strong>Active:</strong> {{ project.active ? 'Yes' : 'No' }}</p>
+
+        <div class="project-actions">
+          <button mat-button color="primary" (click)="editProject()" type="button">
+            <mat-icon>edit</mat-icon>
+            Edit coordinates / telescope
+          </button>
+        </div>
       </mat-card-content>
     </mat-card>
 

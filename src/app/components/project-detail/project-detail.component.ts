@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
 import { FiltersService } from '../../services/filters.service';
 import { Project, ProjectSubframe } from '../../models/project';
+import { Telescope, TelescopeService } from '../../services/telescope.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +13,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SubframeFormDialogComponent } from '../subframe-form-dialog/subframe-form-dialog.component';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
+import { ProjectEditDialogComponent } from '../project-edit-dialog/project-edit-dialog.component';
 
 @Component({
   selector: 'app-project-detail',
@@ -35,8 +37,10 @@ export class ProjectDetailComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private coordsFormatter = inject(CoordsFormatterService);
+  private telescopeService = inject(TelescopeService);
 
   project: Project | null = null;
+  telescope: Telescope | null = null;
   subframesColumns: string[] = ['id', 'filter', 'exposure_time', 'goal_count', 'active', 'actions'];
 
   ngOnInit(): void {
@@ -50,10 +54,22 @@ export class ProjectDetailComponent implements OnInit {
     this.projectsService.getProject(projectId).subscribe({
       next: p => {
         this.project = p;
+        this.loadScope(p.scope_id);
       },
       error: () => {
         this.snackBar.open('Project not found', 'Close', { duration: 3000 });
         this.router.navigate(['/projects']);
+      }
+    });
+  }
+
+  private loadScope(scopeId: number): void {
+    this.telescopeService.getTelescope(scopeId).subscribe({
+      next: t => {
+        this.telescope = t;
+      },
+      error: () => {
+        this.telescope = null;
       }
     });
   }
@@ -74,6 +90,28 @@ export class ProjectDetailComponent implements OnInit {
   formatDec(dec: number | undefined): string {
     if (dec == null) return '–';
     return this.coordsFormatter.formatDec(dec);
+  }
+
+  getScopeName(): string {
+    return this.telescope?.name ?? '—';
+  }
+
+  editProject(): void {
+    if (!this.project) return;
+    const ref = this.dialog.open(ProjectEditDialogComponent, {
+      width: '480px',
+      data: {
+        projectId: this.project.project_id,
+        initialScopeId: this.project.scope_id,
+        initialRa: this.project.ra,
+        initialDecl: this.project.decl
+      }
+    });
+    ref.afterClosed().subscribe((updated: boolean | undefined) => {
+      if (updated) {
+        this.loadProject(this.project!.project_id);
+      }
+    });
   }
 
   addSubframe(): void {
