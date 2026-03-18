@@ -49,13 +49,35 @@
         <th mat-header-cell *matHeaderCellDef>Used by</th>
         <td mat-cell *matCellDef="let f">
           @let summary = getUsedBySummary(f);
-          @if (summary.names.length === 0) {
+          @if (summary.items.length === 0) {
             <span class="muted">—</span>
           } @else if (summary.more === 0) {
-            {{ summary.names.join(', ') }}
+            <div class="used-by-links">
+              @for (it of summary.items; track it.scope_id) {
+                <button
+                  mat-button
+                  type="button"
+                  class="scope-link-button"
+                  [routerLink]="['/scopes', it.scope_id]">
+                  {{ it.name }}
+                </button>
+              }
+            </div>
           } @else {
-            {{ summary.names.join(', ') }}
-            <button mat-button color="primary" (click)="openUsedByModal(f)" class="more-link">+{{ summary.more }} more</button>
+            <div class="used-by-links">
+              @for (it of summary.items; track it.scope_id) {
+                <button
+                  mat-button
+                  type="button"
+                  class="scope-link-button"
+                  [routerLink]="['/scopes', it.scope_id]">
+                  {{ it.name }}
+                </button>
+              }
+            </div>
+            <button mat-button color="primary" (click)="openUsedByModal(f)" class="more-link">
+              +{{ summary.more }} more
+            </button>
           }
         </td>
       </ng-container>
