@@ -10,6 +10,9 @@
 - The footer on login page now has links to a ChangeLog
 - Fixed catalog sorting and filtering
 - dev: OpenAPI synchronization with backend
+- Filters support added
+- Telescopes list can now be sorted, edited
+- Sensors support added
 
 0.3.0 (2025-04-22)
 
