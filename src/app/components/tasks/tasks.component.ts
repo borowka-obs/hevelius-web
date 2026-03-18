@@ -21,6 +21,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { LongPressDirective } from '../../directives/long-press.directive';
 import { MatSelectModule } from '@angular/material/select';
@@ -59,6 +60,7 @@ import { MatSelectModule } from '@angular/material/select';
     MatDialogModule,
     MatSnackBarModule,
     MatSelectModule,
+    MatTooltipModule,
     LongPressDirective
 ]
 })
@@ -82,7 +84,7 @@ export class TasksComponent implements OnInit, OnDestroy {
   };
 
   dataSource = inject(TasksService);
-  displayedColumns: string[] = ['task_id', 'user_id', 'state', 'object', 'ra', 'decl', 'exposure'];
+  displayedColumns: string[] = ['task_id', 'user_id', 'state', 'object', 'ra', 'decl', 'exposure', 'actions'];
   totalTasks = 0;
   currentPage = 1;
   pageSize = 50;
@@ -221,24 +223,43 @@ export class TasksComponent implements OnInit, OnDestroy {
   // This is used to open the task view dialog when the user long presses on a task
   // It's also called when the user double clicks on a task
   onTaskLongPress(task: Task) {
-    const user = this.loginService.getUser();
-    if (!user || user.user_id !== task.user_id) {
-      this.snackBar.open('You can only edit your own tasks', 'Close', { duration: 3000 });
-      return;
-    }
+    this.onTaskEditAttempt(task);
+  }
 
+  isTaskEditable(task: Task): boolean {
+    return this.getTaskEditReason(task) === null;
+  }
+
+  /**
+   * Returns:
+   * - `null` when editable
+   * - a human-friendly reason string when editing is blocked
+   */
+  getTaskEditReason(task: Task): string | null {
+    const user = this.loginService.getUser();
+    if (!user) {
+      return 'Login required';
+    }
+    if (user.user_id !== task.user_id) {
+      return 'You can only edit your own tasks';
+    }
     if (![0, 1, 2].includes(task.state)) {
-      this.snackBar.open('This task cannot be modified in its current state', 'Close', { duration: 3000 });
+      return 'This task cannot be modified in its current state';
+    }
+    return null;
+  }
+
+  onTaskEditAttempt(task: Task): void {
+    const reason = this.getTaskEditReason(task);
+    if (reason) {
+      this.snackBar.open(reason, 'Close', { duration: 3000 });
       return;
     }
 
     const dialogRef = this.dialog.open(TaskViewComponent, {
       width: '800px',
       disableClose: true,
-      data: {
-        mode: 'edit',
-        task: task
-      }
+      data: { mode: 'edit', task }
     });
 
     dialogRef.afterClosed().subscribe(result => {
