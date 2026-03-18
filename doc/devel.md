@@ -113,5 +113,7 @@ echo "Token: $TOKEN"
 
 And then use one of the API points, e.g.
 
+```
 curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:5000/api/sensors?active=false"
+```
 
