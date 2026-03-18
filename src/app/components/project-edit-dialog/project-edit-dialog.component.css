@@ -1,0 +1,12 @@
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.full-width {
+  width: 100%;
+}
+

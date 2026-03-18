@@ -25,3 +25,7 @@
 table {
   width: 100%;
 }
+
+.project-actions {
+  margin-top: 0.75rem;
+}
