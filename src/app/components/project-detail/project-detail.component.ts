@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
 import { FiltersService } from '../../services/filters.service';
-import { Project, ProjectSubframe, ProjectSubframeUpdate } from '../../models/project';
+import { Project, ProjectSubframe } from '../../models/project';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';

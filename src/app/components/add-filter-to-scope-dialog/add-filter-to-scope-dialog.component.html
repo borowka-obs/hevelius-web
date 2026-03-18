@@ -18,7 +18,7 @@
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancel()">Cancel</button>
   @if (availableFilters.length > 0) {
-    <button mat-raised-button color="primary" (click)="add()" [disabled]="selectedFilterId == null || saving">
+    <button mat-raised-button color="primary" (click)="add()" [disabled]="selectedFilterId === null || saving">
       {{ saving ? 'Adding…' : 'Add' }}
     </button>
   }
