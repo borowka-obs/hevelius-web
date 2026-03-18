@@ -7,3 +7,15 @@
 table { width: 100%; }
 .muted { color: #666; }
 .more-link { padding: 0 4px; min-width: auto; vertical-align: baseline; }
+
+.used-by-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.scope-link-button {
+  padding: 0;
+  min-width: auto;
+  line-height: 1.2;
+}

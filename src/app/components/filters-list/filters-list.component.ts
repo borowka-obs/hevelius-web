@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { FiltersService } from '../../services/filters.service';
 import { TelescopeService } from '../../services/telescope.service';
 import { Filter } from '../../models/filter';
@@ -34,6 +35,7 @@ type ActiveFilter = 'active' | 'inactive' | 'all';
   ],
   standalone: true,
   imports: [
+    RouterModule,
     ReactiveFormsModule,
     MatTableModule,
     MatSortModule,
@@ -169,14 +171,14 @@ export class FiltersListComponent implements OnInit, OnDestroy {
     return this.telescopes.filter(t => t.filters?.some(f => f.filter_id === filter.filter_id)) ?? [];
   }
 
-  /** Short summary for table cell: first few names + "and N more" if needed */
-  getUsedBySummary(filter: Filter, maxShow = 3): { names: string[]; more: number } {
+  /** Short summary for table cell: first few telescope names + "and N more" if needed */
+  getUsedBySummary(filter: Filter, maxShow = 3): { items: { scope_id: number; name: string }[]; more: number } {
     const scopes = this.getTelescopesForFilter(filter);
-    const names = scopes.map(t => t.name);
-    if (names.length <= maxShow) {
-      return { names, more: 0 };
+    const items = scopes.map(t => ({ scope_id: t.scope_id, name: t.name }));
+    if (items.length <= maxShow) {
+      return { items, more: 0 };
     }
-    return { names: names.slice(0, maxShow), more: names.length - maxShow };
+    return { items: items.slice(0, maxShow), more: items.length - maxShow };
   }
 
   openUsedByModal(filter: Filter): void {
