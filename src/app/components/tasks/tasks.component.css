@@ -86,3 +86,7 @@ mat-paginator {
 .mat-column-exposure {
   flex: 1;
 }
+
+.mat-column-actions {
+  flex: 0 0 48px;
+}
