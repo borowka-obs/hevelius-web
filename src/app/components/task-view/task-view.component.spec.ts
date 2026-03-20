@@ -7,8 +7,9 @@ import { TaskService } from '../../services/task.service';
 import { LoginService } from '../../services/login.service';
 import { TelescopeService } from '../../services/telescope.service';
 import { CatalogsService } from '../../services/catalogs.service';
+import { ProjectsService } from '../../services/projects.service';
 import { Overlay } from '@angular/cdk/overlay';
-import { BehaviorSubject, of } from 'rxjs';
+import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -21,9 +22,6 @@ describe('TaskViewComponent', () => {
   let component: TaskViewComponent;
   let fixture: ComponentFixture<TaskViewComponent>;
   let catalogsService: { searchObjects: ReturnType<typeof vi.fn> };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let telescopeSubject: BehaviorSubject<any[]>;
 
   const mockCatalogObject = {
     object_id: 1,
@@ -44,14 +42,29 @@ describe('TaskViewComponent', () => {
   };
 
   const mockTelescope = {
-    scope_id: 'test-scope',
+    scope_id: 1,
     name: 'Test Telescope',
     active: true
   };
 
+  const mockScopeDetail = {
+    scope_id: 1,
+    name: 'Test Telescope',
+    descr: '',
+    min_dec: -90,
+    max_dec: 90,
+    focal: null as number | null,
+    aperture: null as number | null,
+    lon: null as number | null,
+    lat: null as number | null,
+    alt: null as number | null,
+    sensor: null,
+    active: true,
+    filters: [{ filter_id: 1, short_name: 'L', full_name: 'Lum', active: true }]
+  };
+
   beforeEach(async () => {
     console.log('Setting up test environment');
-    telescopeSubject = new BehaviorSubject([mockTelescope]);
     const catalogsServiceSpy = {
       searchObjects: vi.fn().mockReturnValue(of([mockCatalogObject])),
     };
@@ -73,12 +86,29 @@ describe('TaskViewComponent', () => {
         { provide: MatDialogRef, useValue: { close: () => {} } },
         { provide: MAT_DIALOG_DATA, useValue: { mode: 'add' } },
         { provide: MatSnackBar, useValue: { open: () => {} } },
-        { provide: TaskService, useValue: {} },
-        { provide: LoginService, useValue: { getAuthHeaders: () => ({}) } },
+        {
+          provide: TaskService,
+          useValue: {
+            addTask: vi.fn().mockReturnValue(of({ status: true, task_id: 1 })),
+            updateTask: vi.fn().mockReturnValue(of({ status: true })),
+            getTask: vi.fn().mockReturnValue(of({ status: true, task: { task_id: 1, user_id: 1, scope_id: 1, object: 'X', ra: 1, decl: 1, exposure: 1, state: 1, aavso_id: '' } }))
+          }
+        },
+        { provide: LoginService, useValue: { getUser: () => ({ user_id: 1 }), getAuthHeaders: () => ({}) } },
         {
           provide: TelescopeService,
           useValue: {
-            getTelescopes: () => telescopeSubject.asObservable()
+            getTelescopes: () => of([mockTelescope]),
+            getTelescope: () => of(mockScopeDetail)
+          }
+        },
+        {
+          provide: ProjectsService,
+          useValue: {
+            getProjects: () =>
+              of({ projects: [], total: 0, page: 1, per_page: 500, pages: 0 }),
+            addTaskToProject: vi.fn().mockReturnValue(of({ status: true })),
+            removeTaskFromProject: vi.fn().mockReturnValue(of({ status: true }))
           }
         },
         { provide: CatalogsService, useValue: catalogsServiceSpy },
@@ -92,10 +122,6 @@ describe('TaskViewComponent', () => {
     catalogsService = TestBed.inject(CatalogsService) as unknown as { searchObjects: ReturnType<typeof vi.fn> };
 
     console.log('Detecting changes');
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    telescopeSubject.next([mockTelescope]);
     fixture.detectChanges();
     await fixture.whenStable();
 

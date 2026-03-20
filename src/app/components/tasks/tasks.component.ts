@@ -98,14 +98,9 @@ export class TasksComponent implements OnInit, OnDestroy {
   filterForm: FormGroup;
   isFilterVisible = false;
 
-  states = [
-    { value: 0, label: 'Template' },
-    { value: 1, label: 'New' },
-    { value: 2, label: 'Activated' },
-    { value: 3, label: 'In Queue' },
-    { value: 4, label: 'Executed' },
-    { value: 5, label: 'Done' }
-  ];
+  get stateFilterOptions(): { value: number; label: string }[] {
+    return this.dataSource.states.getStateFilterOptions();
+  }
 
   constructor() {
     this.dataSource = new TasksService();
@@ -126,11 +121,13 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   getStateLabel(state: number): string {
-    if (state === undefined || state === null) {
-      return 'Unknown';
-    }
-    const stateObj = this.states.find(s => s.value === state);
-    return stateObj ? stateObj.label : 'Unknown';
+    return this.dataSource.states.getState(state);
+  }
+
+  onFilterFieldEnter(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.applyFilters();
   }
 
   private initFilterForm() {
@@ -183,7 +180,7 @@ export class TasksComponent implements OnInit, OnDestroy {
     if (pid != null) {
       loadParams.project_id = pid;
     }
-    this.dataSource.loadTasks(loadParams);
+    this.dataSource.loadTasks(loadParams, { replace: true });
   }
 
   private updateTitle() {
@@ -193,29 +190,70 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   applyFilters() {
-    const filters = this.filterForm.value;
-
-    // Remove null values
-    Object.keys(filters).forEach(key => {
-      if (filters[key] === null || filters[key] === '') {
-        delete filters[key];
-      }
-    });
-
-    // Load tasks with current sort and filters
-    this.dataSource.loadTasks({
-      ...filters,
+    const f = this.filterForm.value;
+    const params: Partial<TaskParams> = {
+      page: 1,
+      per_page: this.pageSize,
       sort_by: this.currentSort.sort_by,
       sort_order: this.currentSort.sort_order
-    });
+    };
+    const pid = this.projectId();
+    if (pid != null) {
+      params.project_id = pid;
+    }
+
+    if (f.task_id !== null && f.task_id !== undefined && String(f.task_id).trim() !== '') {
+      const n = Number(f.task_id);
+      if (!Number.isNaN(n)) {
+        params.task_id = n;
+      }
+    }
+    if (f.owner !== null && f.owner !== undefined && String(f.owner).trim() !== '') {
+      const n = Number(f.owner);
+      if (!Number.isNaN(n)) {
+        params.user_id = n;
+      }
+    }
+    if (f.state !== null && f.state !== undefined && f.state !== '') {
+      params.state = Number(f.state);
+    }
+    if (f.object !== null && f.object !== undefined && String(f.object).trim() !== '') {
+      params.object = String(f.object).trim();
+    }
+    if (f.ra !== null && f.ra !== undefined && String(f.ra).trim() !== '') {
+      const n = Number(f.ra);
+      if (!Number.isNaN(n)) {
+        params.ra_min = n;
+      }
+    }
+    if (f.decl !== null && f.decl !== undefined && String(f.decl).trim() !== '') {
+      const n = Number(f.decl);
+      if (!Number.isNaN(n)) {
+        params.decl_min = n;
+      }
+    }
+    if (f.exposure !== null && f.exposure !== undefined && String(f.exposure).trim() !== '') {
+      const n = Number(f.exposure);
+      if (!Number.isNaN(n)) {
+        params.exposure = n;
+      }
+    }
+
+    this.dataSource.loadTasks(params, { replace: true });
   }
 
   clearFilters() {
     this.filterForm.reset();
-    this.dataSource.loadTasks({
+    const params: Partial<TaskParams> = {
+      page: 1,
+      per_page: this.pageSize,
       sort_by: this.currentSort.sort_by,
       sort_order: this.currentSort.sort_order
-    });
+    };
+    if (this.projectId() != null) {
+      params.project_id = this.projectId();
+    }
+    this.dataSource.loadTasks(params, { replace: true });
   }
 
   formatRA(ra: number): string {
@@ -268,10 +306,15 @@ export class TasksComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const pid = this.embedded() ? this.projectId() : undefined;
     const dialogRef = this.dialog.open(TaskViewComponent, {
       width: '800px',
       disableClose: true,
-      data: { mode: 'edit', task }
+      data: {
+        mode: 'edit',
+        task,
+        ...(pid != null ? { contextProjectId: pid } : {})
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -282,6 +325,7 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   onPageChange(event: PageEvent) {
+    this.pageSize = event.pageSize;
     this.dataSource.loadTasks({
       page: event.pageIndex + 1,
       per_page: event.pageSize
