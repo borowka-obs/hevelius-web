@@ -2,15 +2,20 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TelescopeService } from '../../services/telescope.service';
 import { Telescope } from '../../services/telescope.service';
+import { ProjectsService } from '../../services/projects.service';
+import { Project } from '../../models/project';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
+import { MatSortModule, Sort } from '@angular/material/sort';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AddFilterToScopeDialogComponent } from '../add-filter-to-scope-dialog/add-filter-to-scope-dialog.component';
 import { Filter } from '../../models/filter';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 @Component({
   selector: 'app-telescope-detail',
@@ -23,6 +28,9 @@ import { Filter } from '../../models/filter';
     MatButtonModule,
     MatIconModule,
     MatTableModule,
+    MatSortModule,
+    ReactiveFormsModule,
+    MatButtonToggleModule,
     MatTooltipModule
   ]
 })
@@ -30,11 +38,29 @@ export class TelescopeDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private telescopeService = inject(TelescopeService);
+  private projectsService = inject(ProjectsService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private fb = inject(FormBuilder);
 
   telescope: Telescope | null = null;
   filterColumns = ['short_name', 'full_name', 'actions'];
+
+  private allProjects: Project[] = [];
+  projectsFilterForm: FormGroup;
+  isProjectsLoading = true;
+  projectsDisplayedColumns: string[] = ['project_id', 'name', 'description', 'active'];
+  projectsData: Project[] = [];
+  projectsCurrentSort: { active: string; direction: 'asc' | 'desc' } = {
+    active: 'project_id',
+    direction: 'asc'
+  };
+
+  readonly projectsActiveFilterOptions = [
+    { value: 'active', label: 'Active only' },
+    { value: 'inactive', label: 'Inactive only' },
+    { value: 'all', label: 'All' }
+  ] as const;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -43,14 +69,80 @@ export class TelescopeDetailComponent implements OnInit {
     }
   }
 
+  constructor() {
+    this.projectsFilterForm = this.fb.group({
+      activeState: ['active']
+    });
+  }
+
   loadTelescope(scopeId: number): void {
     this.telescopeService.getTelescope(scopeId).subscribe({
-      next: t => { this.telescope = t; },
+      next: t => {
+        this.telescope = t;
+        this.loadProjects(scopeId);
+      },
       error: () => {
         this.snackBar.open('Telescope not found', 'Close', { duration: 3000 });
         this.router.navigate(['/scopes']);
       }
     });
+  }
+
+  private loadProjects(scopeId: number): void {
+    this.isProjectsLoading = true;
+    // ProjectsService currently supports server-side filtering by scope_id,
+    // so we fetch a larger page and apply active/inactive filtering client-side.
+    this.projectsService.getProjects({ per_page: 500, scope_id: scopeId }).subscribe({
+      next: res => {
+        this.allProjects = res.projects ?? [];
+        this.applyProjectsFilterAndSort();
+        this.isProjectsLoading = false;
+      },
+      error: () => {
+        this.allProjects = [];
+        this.projectsData = [];
+        this.isProjectsLoading = false;
+      }
+    });
+  }
+
+  private applyProjectsFilterAndSort(): void {
+    const state = this.projectsFilterForm?.get('activeState')?.value as 'active' | 'inactive' | 'all' | null;
+    const filtered = state === 'inactive'
+      ? this.allProjects.filter(p => !p.active)
+      : state === 'all'
+        ? this.allProjects
+        : this.allProjects.filter(p => p.active);
+
+    const { active, direction } = this.projectsCurrentSort;
+    const sorted = [...filtered].sort((a, b) => {
+      const aVal = (a as unknown as Record<string, unknown>)[active];
+      const bVal = (b as unknown as Record<string, unknown>)[active];
+      if (aVal === bVal) return 0;
+      // Normalize booleans / strings for stable comparisons
+      const aa = typeof aVal === 'string' ? aVal.toLowerCase() : aVal;
+      const bb = typeof bVal === 'string' ? bVal.toLowerCase() : bVal;
+      const cmp = aa < bb ? -1 : 1;
+      return direction === 'asc' ? cmp : -cmp;
+    });
+
+    this.projectsData = sorted;
+  }
+
+  onProjectsFilterChange(): void {
+    this.applyProjectsFilterAndSort();
+  }
+
+  onProjectsSortChange(sort: Sort): void {
+    this.projectsCurrentSort = {
+      active: sort.active,
+      direction: (sort.direction as 'asc' | 'desc') || 'asc'
+    };
+    this.applyProjectsFilterAndSort();
+  }
+
+  openProject(project: Project): void {
+    this.router.navigate(['/projects', project.project_id]);
   }
 
   backToList(): void {
