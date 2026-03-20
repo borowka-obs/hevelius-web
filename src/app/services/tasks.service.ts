@@ -37,6 +37,17 @@ export class TasksService implements DataSource<Task> {
 	private currentPage = new BehaviorSubject<number>(1);
 	private totalPages = new BehaviorSubject<number>(1);
 
+    /** Drop null/undefined/'' so they are not sent as query params. */
+    private stripEmptyQueryFields(p: TaskParams): TaskParams {
+        const out: TaskParams = {};
+        (Object.entries(p) as [keyof TaskParams, TaskParams[keyof TaskParams]][]).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                (out as Record<string, unknown>)[key as string] = value;
+            }
+        });
+        return out;
+    }
+
     // Getters for pagination info
     getTotalTasks(): Observable<number> {
         return this.totalTasks.asObservable();
@@ -64,7 +75,7 @@ export class TasksService implements DataSource<Task> {
             // Ensure all required fields are present in each task
             const processedTasks = data.tasks.map(task => ({
                 ...task,
-                state: task.state || 0, // Default to Template state if not set
+                state: task.state ?? 0, // Default to Template state if not set (0 is valid)
                 object: task.object || '',
                 ra: task.ra || 0,
                 decl: task.decl || 0,
@@ -103,10 +114,27 @@ export class TasksService implements DataSource<Task> {
             });
     }
 
-    // Update params and load tasks
-    loadTasks(params?: Partial<TaskParams>): void {
+    /**
+     * Load tasks from GET /api/tasks.
+     * @param replace When true, drop all previous query params; only keys present in `params` (after defaults) are sent.
+     */
+    loadTasks(params?: Partial<TaskParams>, options?: { replace?: boolean }): void {
         if (params) {
-            this.currentParams = { ...this.currentParams, ...params };
+            if (options?.replace) {
+                const merged: TaskParams = {
+                    ...params,
+                    page: params.page ?? 1,
+                    per_page: params.per_page ?? this.currentParams.per_page ?? 50,
+                    sort_by: params.sort_by ?? this.currentParams.sort_by ?? 'task_id',
+                    sort_order: params.sort_order ?? this.currentParams.sort_order ?? 'desc'
+                };
+                this.currentParams = this.stripEmptyQueryFields(merged);
+            } else {
+                this.currentParams = this.stripEmptyQueryFields({
+                    ...this.currentParams,
+                    ...params
+                });
+            }
         }
 
         const user = this.login.getUser();
@@ -117,8 +145,8 @@ export class TasksService implements DataSource<Task> {
         // Convert params to HttpParams
         let httpParams = new HttpParams();
         Object.entries(this.currentParams).forEach(([key, value]) => {
-            if (value !== undefined) {
-                httpParams = httpParams.set(key, value.toString());
+            if (value !== undefined && value !== null && value !== '') {
+                httpParams = httpParams.set(key, String(value));
             }
         });
 

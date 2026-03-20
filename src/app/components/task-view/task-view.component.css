@@ -49,3 +49,57 @@ textarea {
 .search-result-item:last-child {
   border-bottom: none;
 }
+
+.subsection-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  grid-column: 1 / -1;
+}
+
+.hint {
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+  grid-column: 1 / -1;
+}
+
+.filter-opt-full {
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: normal;
+}
+
+.project-membership {
+  grid-column: 1 / -1;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding-top: 16px;
+  margin-top: 8px;
+}
+
+.assigned-projects {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.assigned-project-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.assign-project-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.assign-project-field {
+  flex: 1 1 220px;
+  min-width: 200px;
+}

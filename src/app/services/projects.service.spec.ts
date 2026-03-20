@@ -53,6 +53,25 @@ describe('ProjectsService', () => {
     });
   });
 
+  it('should add task to project', () => {
+    service.addTaskToProject(5, 99).subscribe(res => {
+      expect(res.status).toBe(true);
+    });
+    const req = httpMock.expectOne(`${Hevelius.apiUrl}/projects/5/tasks/99`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({ status: true });
+  });
+
+  it('should remove task from project', () => {
+    service.removeTaskFromProject(5, 99).subscribe(res => {
+      expect(res.status).toBe(true);
+    });
+    const req = httpMock.expectOne(`${Hevelius.apiUrl}/projects/5/tasks/99`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ status: true });
+  });
+
   it('should add subframe and map subframe_id', () => {
     service.addSubframe(11, { filter_id: 2, exposure_time: 120 }).subscribe(result => {
       expect(result.subframe_id).toBe(44);

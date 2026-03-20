@@ -4,14 +4,20 @@
   <mat-dialog-content>
     <div class="form-grid">
       <mat-form-field>
-        <mat-label>Scope</mat-label>
+        <mat-label>Telescope</mat-label>
         <mat-select formControlName="scope_id" required>
-          @for (telescope of telescopes; track telescope) {
+          @if (telescopes.length === 0) {
+            <mat-option disabled [value]="null">No active telescopes</mat-option>
+          }
+          @for (telescope of telescopes; track telescope.scope_id) {
             <mat-option [value]="telescope.scope_id">
-              {{telescope.name}}
+              {{ telescope.name }}
             </mat-option>
           }
         </mat-select>
+        @if (taskForm.get('scope_id')?.invalid && taskForm.get('scope_id')?.touched) {
+          <mat-error>Telescope is required</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -48,7 +54,17 @@
 
       <mat-form-field>
         <mat-label>Filter</mat-label>
-        <input matInput formControlName="filter">
+        <mat-select formControlName="filter">
+          <mat-option [value]="''">— None —</mat-option>
+          @if (scopeFilters.length === 0 && (taskForm.get('scope_id')?.value)) {
+            <mat-option disabled [value]="''">No active filters on this telescope</mat-option>
+          }
+          @for (f of filterSelectOptions(); track f.short_name) {
+            <mat-option [value]="f.short_name">
+              {{ f.short_name }}<span class="filter-opt-full">{{ f.full_name ? ' — ' + f.full_name : '' }}</span>
+            </mat-option>
+          }
+        </mat-select>
       </mat-form-field>
 
       <mat-form-field>
@@ -101,6 +117,46 @@
         <mat-label>Comment</mat-label>
         <textarea matInput formControlName="comment"></textarea>
       </mat-form-field>
+
+      @if (mode === 'edit' && originalTask) {
+        <div class="project-membership">
+          <h3 class="subsection-title">Projects</h3>
+          @if (assignedProjectIds.length === 0) {
+            <p class="hint">Not assigned to any project.</p>
+          } @else {
+            <ul class="assigned-projects">
+              @for (pid of assignedProjectIds; track pid) {
+                <li class="assigned-project-row">
+                  <span>{{ projectNameById(pid) }}</span>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="removeTaskFromProject(pid)"
+                    aria-label="Remove from project"
+                    matTooltip="Remove from project">
+                    <mat-icon>link_off</mat-icon>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+          <div class="assign-project-row">
+            <mat-form-field class="assign-project-field" subscriptSizing="dynamic">
+              <mat-label>Add to project</mat-label>
+              <mat-select [(ngModel)]="assignProjectId" [ngModelOptions]="{standalone: true}">
+                <mat-option [value]="null">— Select project —</mat-option>
+                @for (p of assignableProjects; track p.project_id) {
+                  <mat-option [value]="p.project_id">{{ projectLabel(p) }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button mat-stroked-button color="primary" type="button" (click)="assignTaskToProject()">
+              Assign
+            </button>
+          </div>
+          <p class="hint">Only active projects for this task’s telescope are shown.</p>
+        </div>
+      }
     </div>
   </mat-dialog-content>
 

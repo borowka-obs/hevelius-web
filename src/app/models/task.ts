@@ -20,6 +20,10 @@ export interface Task {
     decl: number;
     exposure: number;
     state: number;
+    /** Telescope ID (see OpenAPI Task schema). */
+    scope_id?: number;
+    /** Projects this task belongs to (when returned by API). */
+    project_ids?: number[];
     activated?: string;
     auto_center?: boolean;
     binning?: number;

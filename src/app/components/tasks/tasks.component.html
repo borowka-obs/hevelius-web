@@ -4,20 +4,20 @@
     <form [formGroup]="filterForm" class="filter-form">
       <mat-form-field class="filter-field">
         <mat-label>Task ID</mat-label>
-        <input matInput formControlName="task_id">
+        <input matInput formControlName="task_id" (keydown.enter)="onFilterFieldEnter($event)">
       </mat-form-field>
 
       <mat-form-field class="filter-field">
         <mat-label>Owner</mat-label>
-        <input matInput formControlName="owner">
+        <input matInput formControlName="owner" (keydown.enter)="onFilterFieldEnter($event)">
       </mat-form-field>
 
       <mat-form-field class="filter-field">
         <mat-label>State</mat-label>
         <mat-select formControlName="state">
-          @for (state of states; track state) {
-            <mat-option [value]="state.value">
-              {{state.label}}
+          @for (opt of stateFilterOptions; track opt.value) {
+            <mat-option [value]="opt.value">
+              {{ opt.label }}
             </mat-option>
           }
         </mat-select>
@@ -25,27 +25,27 @@
 
       <mat-form-field class="filter-field">
         <mat-label>Object</mat-label>
-        <input matInput formControlName="object">
+        <input matInput formControlName="object" (keydown.enter)="onFilterFieldEnter($event)">
       </mat-form-field>
 
       <mat-form-field class="filter-field">
         <mat-label>RA</mat-label>
-        <input matInput formControlName="ra">
+        <input matInput formControlName="ra" (keydown.enter)="onFilterFieldEnter($event)">
       </mat-form-field>
 
       <mat-form-field class="filter-field">
         <mat-label>Dec</mat-label>
-        <input matInput formControlName="decl">
+        <input matInput formControlName="decl" (keydown.enter)="onFilterFieldEnter($event)">
       </mat-form-field>
 
       <mat-form-field class="filter-field">
         <mat-label>Exposure</mat-label>
-        <input matInput formControlName="exposure">
+        <input matInput formControlName="exposure" (keydown.enter)="onFilterFieldEnter($event)">
       </mat-form-field>
 
       <div class="filter-actions">
-        <button mat-button (click)="clearFilters()">Clear</button>
-        <button mat-raised-button color="primary" (click)="applyFilters()">Apply</button>
+        <button type="button" mat-button (click)="clearFilters()">Clear</button>
+        <button type="button" mat-raised-button color="primary" (click)="applyFilters()">Apply</button>
       </div>
     </form>
   </div>
