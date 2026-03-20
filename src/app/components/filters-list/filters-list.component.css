@@ -14,8 +14,22 @@ table { width: 100%; }
   gap: 4px;
 }
 
-.scope-link-button {
-  padding: 0;
+/* Scope names in "Used by" — match project chips on telescope detail (subtle rounded rect) */
+button.scope-link-button.mat-mdc-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: auto;
-  line-height: 1.2;
+  padding: 4px 10px;
+  line-height: 1.25;
+  border-radius: 6px;
+  border: 1px solid rgba(25, 118, 210, 0.35);
+  background-color: rgba(25, 118, 210, 0.14);
+  color: #1976d2;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+button.scope-link-button.mat-mdc-button:hover {
+  background-color: rgba(25, 118, 210, 0.22);
 }

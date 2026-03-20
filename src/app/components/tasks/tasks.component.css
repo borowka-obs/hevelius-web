@@ -90,3 +90,11 @@ mat-paginator {
 .mat-column-actions {
   flex: 0 0 48px;
 }
+
+.container.tasks-embedded {
+  padding: 0;
+}
+
+.container.tasks-embedded .table-container {
+  margin-top: 0;
+}

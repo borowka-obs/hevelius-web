@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SubframeFormDialogComponent } from '../subframe-form-dialog/subframe-form-dialog.component';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { ProjectEditDialogComponent } from '../project-edit-dialog/project-edit-dialog.component';
+import { TasksComponent } from '../tasks/tasks.component';
 
 @Component({
   selector: 'app-project-detail',
@@ -26,7 +27,8 @@ import { ProjectEditDialogComponent } from '../project-edit-dialog/project-edit-
     MatTableModule,
     MatButtonModule,
     MatIconModule,
-    MatTooltipModule
+    MatTooltipModule,
+    TasksComponent
   ]
 })
 export class ProjectDetailComponent implements OnInit {
