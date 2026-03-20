@@ -5,6 +5,8 @@ export interface TaskParams {
   per_page?: number;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
+  /** Filter tasks assigned to this project (GET /api/tasks per OpenAPI). */
+  project_id?: number;
   ra_min?: number;
   ra_max?: number;
   decl_min?: number;
