@@ -82,5 +82,10 @@
         </tr>
       </table>
     </div>
+
+    <div class="tasks-section">
+      <h2 class="tasks-heading">Tasks</h2>
+      <app-tasks [embedded]="true" [projectId]="project.project_id" />
+    </div>
   </div>
 }

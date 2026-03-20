@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, inject, input } from '@angular/core';
 import { LoginService } from '../../services/login.service';
 import { TasksService } from '../../services/tasks.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
@@ -25,6 +25,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { LongPressDirective } from '../../directives/long-press.directive';
 import { MatSelectModule } from '@angular/material/select';
+import { TaskParams } from '../../models/task-response';
 
 @Component({
     selector: 'app-tasks',
@@ -65,6 +66,11 @@ import { MatSelectModule } from '@angular/material/select';
 ]
 })
 export class TasksComponent implements OnInit, OnDestroy {
+  /** When true, hide filters and do not touch the global top bar (e.g. embedded on project detail). */
+  embedded = input(false);
+  /** When set, load only tasks for this project (server-side filter). */
+  projectId = input<number | undefined>(undefined);
+
   private loginService = inject(LoginService);
   private coordFormatter = inject(CoordsFormatterService);
   private dialog = inject(MatDialog);
@@ -104,18 +110,6 @@ export class TasksComponent implements OnInit, OnDestroy {
   constructor() {
     this.dataSource = new TasksService();
     this.initFilterForm();
-
-    // Set initial state for top bar in constructor
-    setTimeout(() => {
-      this.topBarService.updateState({
-        showFilter: true,
-        filterVisible: false,
-        onFilterToggle: () => this.toggleFilters(),
-        showAdd: true,
-        addTooltip: 'Add task',
-        onAddClick: () => this.openAddTaskDialog()
-      });
-    });
   }
 
   openAddTaskDialog(): void {
@@ -152,6 +146,18 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    if (!this.embedded()) {
+      setTimeout(() => {
+        this.topBarService.updateState({
+          showFilter: true,
+          filterVisible: false,
+          onFilterToggle: () => this.toggleFilters(),
+          showAdd: true,
+          addTooltip: 'Add task',
+          onAddClick: () => this.openAddTaskDialog()
+        });
+      });
+    }
 
     // Subscribe to pagination info first
     this.subscriptions.push(
@@ -159,7 +165,9 @@ export class TasksComponent implements OnInit, OnDestroy {
         // Only update title if we have actual data (not 0)
         if (total > 0) {
           this.totalTasks = total;
-          this.updateTitle();
+          if (!this.embedded()) {
+            this.updateTitle();
+          }
         }
       }),
       this.dataSource.getCurrentPage().subscribe(page => {
@@ -167,11 +175,15 @@ export class TasksComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Initial load with default sorting
-    this.dataSource.loadTasks({
+    const loadParams: Partial<TaskParams> = {
       sort_by: this.currentSort.sort_by,
       sort_order: this.currentSort.sort_order
-    });
+    };
+    const pid = this.projectId();
+    if (pid != null) {
+      loadParams.project_id = pid;
+    }
+    this.dataSource.loadTasks(loadParams);
   }
 
   private updateTitle() {
@@ -289,6 +301,9 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   toggleFilters() {
+    if (this.embedded()) {
+      return;
+    }
     this.isFilterVisible = !this.isFilterVisible;
 
     // Use setTimeout to defer the state update
@@ -301,6 +316,8 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    this.topBarService.resetState();
+    if (!this.embedded()) {
+      this.topBarService.resetState();
+    }
   }
 }

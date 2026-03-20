@@ -1,4 +1,5 @@
-<div class="container">
+<div class="container" [class.tasks-embedded]="embedded()">
+  @if (!embedded()) {
   <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
     <form [formGroup]="filterForm" class="filter-form">
       <mat-form-field class="filter-field">
@@ -48,6 +49,7 @@
       </div>
     </form>
   </div>
+  }
 
   <div class="table-container">
     <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z8">
