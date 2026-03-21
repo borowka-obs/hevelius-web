@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TaskService, TaskRequest } from '../../services/task.service';
@@ -25,12 +25,24 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 interface DialogData {
   task?: Task;
   mode: 'add' | 'edit';
   /** When opening from a project’s task list, pre-select this project in “Add to project”. */
   contextProjectId?: number;
+}
+
+/** Require a non-empty object name after trim (blocks whitespace-only). */
+function objectNameRequired(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const v = control.value;
+    if (v == null || (typeof v === 'string' && v.trim() === '')) {
+      return { required: true };
+    }
+    return null;
+  };
 }
 
 @Component({
@@ -40,6 +52,7 @@ interface DialogData {
     imports: [
     FormsModule,
     ReactiveFormsModule,
+    MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
@@ -73,7 +86,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   telescopes: Telescope[] = [];
   scopeFilters: Filter[] = [];
   projectsForScope: Project[] = [];
-  /** Project selected in “Add to project” (edit mode). */
+  /** Project selected for add (after create) or in edit “Add to project”. */
   assignProjectId: number | null = null;
   searchResults: CatalogObject[] = [];
   private searchSubject = new Subject<string>();
@@ -149,9 +162,9 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
     this.taskForm = this.fb.group({
       scope_id: [null, [Validators.required]],
-      object: ['', [Validators.maxLength(64)]],
-      ra: ['12.34', [Validators.required, Validators.min(0), Validators.max(24)]],
-      decl: ['56.78', [Validators.required, Validators.min(-90), Validators.max(90)]],
+      object: ['', [objectNameRequired(), Validators.maxLength(64)]],
+      ra: [0, [Validators.required, Validators.min(0), Validators.max(24)]],
+      decl: [0, [Validators.required, Validators.min(-90), Validators.max(90)]],
       exposure: ['60', [Validators.min(0)]],
       descr: ['', [Validators.maxLength(1024)]],
       filter: ['', [Validators.maxLength(16)]],
@@ -273,9 +286,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
   private onScopeIdChanged(scopeId: number | null): void {
     this.loadScopeFilters(scopeId);
-    if (this.mode === 'edit') {
-      this.loadProjectsForScope();
-    }
+    this.loadProjectsForScope();
   }
 
   private loadScopeFilters(scopeId: number | null): void {
@@ -307,17 +318,20 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   }
 
   private loadProjectsForScope(): void {
-    if (this.mode !== 'edit' || !this.originalTask) {
-      return;
-    }
-    const sid = this.taskForm.get('scope_id')?.value ?? this.originalTask.scope_id;
-    if (sid == null) {
+    const sid = this.taskForm.get('scope_id')?.value ?? this.originalTask?.scope_id;
+    if (sid == null || sid === '') {
       this.projectsForScope = [];
       return;
     }
     this.projectsService.getProjects({ scope_id: Number(sid), per_page: 500 }).subscribe({
       next: res => {
         this.projectsForScope = (res.projects ?? []).filter(p => p.active);
+        if (
+          this.assignProjectId != null &&
+          !this.assignableProjects.some(p => p.project_id === this.assignProjectId)
+        ) {
+          this.assignProjectId = null;
+        }
         if (
           this.assignProjectId == null &&
           this.contextProjectId != null &&
@@ -398,9 +412,28 @@ export class TaskViewComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Close search overlay first; otherwise close the dialog. Used for Escape. */
+  onEscapeKey(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.overlayRef) {
+      this.closeOverlay();
+      return;
+    }
+    this.dialogRef.close(false);
+  }
+
   onSubmit() {
+    const objectCtrl = this.taskForm.get('object');
+    if (typeof objectCtrl?.value === 'string') {
+      objectCtrl.setValue(objectCtrl.value.trim(), { emitEvent: false });
+    }
+
     if (this.taskForm.valid) {
       const formValue = { ...this.taskForm.value };
+      if (typeof formValue.object === 'string') {
+        formValue.object = formValue.object.trim();
+      }
       if (formValue.filter === '' || formValue.filter == null) {
         delete formValue.filter;
       }
@@ -457,17 +490,40 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
         this.taskService.addTask(taskData).subscribe({
           next: (response) => {
-            if (response.status) {
-              this.showMessage(`Task created successfully with ID: ${response.task_id}`);
-              this.dialogRef.close(true);
-            } else {
+            if (!response.status || response.task_id == null) {
               this.showMessage(response.msg || 'Failed to create task');
+              return;
+            }
+            const taskId = response.task_id;
+            const projectId = this.assignProjectId;
+            if (projectId != null) {
+              this.projectsService.addTaskToProject(projectId, taskId).subscribe({
+                next: assignRes => {
+                  if (assignRes.status) {
+                    this.showMessage(`Task created (ID ${taskId}) and added to project`);
+                  } else {
+                    this.showMessage(
+                      `Task created (ID ${taskId}); could not add to project: ${assignRes.msg || 'unknown'}`
+                    );
+                  }
+                  this.dialogRef.close(true);
+                },
+                error: err => {
+                  this.showMessage(`Task created (ID ${taskId}) but adding to project failed`);
+                  this.dialogRef.close(true);
+                  this.handleError(err);
+                }
+              });
+            } else {
+              this.showMessage(`Task created successfully with ID: ${taskId}`);
+              this.dialogRef.close(true);
             }
           },
           error: this.handleError.bind(this)
         });
       }
     } else {
+      this.taskForm.markAllAsTouched();
       this.showMessage('Please correct the form errors before submitting');
     }
   }

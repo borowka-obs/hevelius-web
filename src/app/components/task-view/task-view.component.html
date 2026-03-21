@@ -1,167 +1,207 @@
 <h2 mat-dialog-title>{{ mode === 'add' ? 'Add New' : 'Edit' }} Observation Task</h2>
 
-<form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+<form [formGroup]="taskForm" (ngSubmit)="onSubmit()" (keydown.escape)="onEscapeKey($event)">
   <mat-dialog-content>
-    <div class="form-grid">
-      <mat-form-field>
-        <mat-label>Telescope</mat-label>
-        <mat-select formControlName="scope_id" required>
-          @if (telescopes.length === 0) {
-            <mat-option disabled [value]="null">No active telescopes</mat-option>
-          }
-          @for (telescope of telescopes; track telescope.scope_id) {
-            <mat-option [value]="telescope.scope_id">
-              {{ telescope.name }}
-            </mat-option>
-          }
-        </mat-select>
-        @if (taskForm.get('scope_id')?.invalid && taskForm.get('scope_id')?.touched) {
-          <mat-error>Telescope is required</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Object</mat-label>
-        <input matInput #objectInput formControlName="object" (ngModelChange)="onObjectSearch($event)">
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Right Ascension (0-24)</mat-label>
-        <input matInput type="number" formControlName="ra" required>
-        @if (taskForm.get('ra')?.errors?.min) {
-          <mat-error>Must be ≥ 0</mat-error>
-        }
-        @if (taskForm.get('ra')?.errors?.max) {
-          <mat-error>Must be ≤ 24</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Declination (-90 to 90)</mat-label>
-        <input matInput type="number" formControlName="decl" required>
-        @if (taskForm.get('decl')?.errors?.min) {
-          <mat-error>Must be ≥ -90</mat-error>
-        }
-        @if (taskForm.get('decl')?.errors?.max) {
-          <mat-error>Must be ≤ 90</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Exposure Time (s)</mat-label>
-        <input matInput type="number" formControlName="exposure">
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Filter</mat-label>
-        <mat-select formControlName="filter">
-          <mat-option [value]="''">— None —</mat-option>
-          @if (scopeFilters.length === 0 && (taskForm.get('scope_id')?.value)) {
-            <mat-option disabled [value]="''">No active filters on this telescope</mat-option>
-          }
-          @for (f of filterSelectOptions(); track f.short_name) {
-            <mat-option [value]="f.short_name">
-              {{ f.short_name }}<span class="filter-opt-full">{{ f.full_name ? ' — ' + f.full_name : '' }}</span>
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Binning (1-4)</mat-label>
-        <mat-select formControlName="binning">
-          <mat-option [value]="1">1x1</mat-option>
-          <mat-option [value]="2">2x2</mat-option>
-          <mat-option [value]="3">3x3</mat-option>
-          <mat-option [value]="4">4x4</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <div class="checkbox-group">
-        <mat-checkbox formControlName="guiding">Enable Guiding</mat-checkbox>
-        <mat-checkbox formControlName="dither">Enable Dithering</mat-checkbox>
-        <mat-checkbox formControlName="calibrate">Enable Calibration</mat-checkbox>
-        <mat-checkbox formControlName="solve">Enable Plate Solving</mat-checkbox>
-      </div>
-
-      <mat-form-field>
-        <mat-label>Minimum Altitude</mat-label>
-        <input matInput type="number" formControlName="min_alt">
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Moon Distance</mat-label>
-        <input matInput type="number" formControlName="moon_distance">
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Skip Before</mat-label>
-        <input matInput [matDatepicker]="pickerBefore" formControlName="skip_before">
-        <mat-datepicker-toggle matSuffix [for]="pickerBefore"></mat-datepicker-toggle>
-        <mat-datepicker #pickerBefore></mat-datepicker>
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Skip After</mat-label>
-        <input matInput [matDatepicker]="pickerAfter" formControlName="skip_after">
-        <mat-datepicker-toggle matSuffix [for]="pickerAfter"></mat-datepicker-toggle>
-        <mat-datepicker #pickerAfter></mat-datepicker>
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Description</mat-label>
-        <textarea matInput formControlName="descr"></textarea>
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Comment</mat-label>
-        <textarea matInput formControlName="comment"></textarea>
-      </mat-form-field>
-
-      @if (mode === 'edit' && originalTask) {
-        <div class="project-membership">
-          <h3 class="subsection-title">Projects</h3>
-          @if (assignedProjectIds.length === 0) {
-            <p class="hint">Not assigned to any project.</p>
-          } @else {
-            <ul class="assigned-projects">
-              @for (pid of assignedProjectIds; track pid) {
-                <li class="assigned-project-row">
-                  <span>{{ projectNameById(pid) }}</span>
-                  <button
-                    mat-icon-button
-                    type="button"
-                    (click)="removeTaskFromProject(pid)"
-                    aria-label="Remove from project"
-                    matTooltip="Remove from project">
-                    <mat-icon>link_off</mat-icon>
-                  </button>
-                </li>
+    <div class="task-form-layout">
+      <!-- Object -->
+      <section class="form-section" aria-labelledby="task-section-object">
+        <h3 class="section-title" id="task-section-object">Object</h3>
+        <div class="section-grid">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Telescope</mat-label>
+            <mat-select formControlName="scope_id" required>
+              @if (telescopes.length === 0) {
+                <mat-option disabled [value]="null">No active telescopes</mat-option>
               }
-            </ul>
-          }
-          <div class="assign-project-row">
-            <mat-form-field class="assign-project-field" subscriptSizing="dynamic">
+              @for (telescope of telescopes; track telescope.scope_id) {
+                <mat-option [value]="telescope.scope_id">
+                  {{ telescope.name }}
+                </mat-option>
+              }
+            </mat-select>
+            @if (taskForm.get('scope_id')?.invalid && taskForm.get('scope_id')?.touched) {
+              <mat-error>Telescope is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Object</mat-label>
+            <input matInput #objectInput formControlName="object" (ngModelChange)="onObjectSearch($event)">
+            @if (taskForm.get('object')?.invalid && taskForm.get('object')?.touched) {
+              <mat-error>Object name is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Right Ascension (0–24)</mat-label>
+            <input matInput type="number" formControlName="ra" required>
+            @if (taskForm.get('ra')?.errors?.min) {
+              <mat-error>Must be ≥ 0</mat-error>
+            }
+            @if (taskForm.get('ra')?.errors?.max) {
+              <mat-error>Must be ≤ 24</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Declination (-90 to 90)</mat-label>
+            <input matInput type="number" formControlName="decl" required>
+            @if (taskForm.get('decl')?.errors?.min) {
+              <mat-error>Must be ≥ -90</mat-error>
+            }
+            @if (taskForm.get('decl')?.errors?.max) {
+              <mat-error>Must be ≤ 90</mat-error>
+            }
+          </mat-form-field>
+
+          @if (mode === 'add') {
+            <mat-form-field
+              class="field-project"
+              subscriptSizing="dynamic"
+              matTooltip="Optional. Active projects for the selected telescope; applied when you create the task.">
               <mat-label>Add to project</mat-label>
               <mat-select [(ngModel)]="assignProjectId" [ngModelOptions]="{standalone: true}">
-                <mat-option [value]="null">— Select project —</mat-option>
+                <mat-option [value]="null">— None —</mat-option>
                 @for (p of assignableProjects; track p.project_id) {
                   <mat-option [value]="p.project_id">{{ projectLabel(p) }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
-            <button mat-stroked-button color="primary" type="button" (click)="assignTaskToProject()">
-              Assign
-            </button>
-          </div>
-          <p class="hint">Only active projects for this task’s telescope are shown.</p>
+          }
+
+          @if (mode === 'edit' && originalTask) {
+            <div class="project-membership">
+              @if (assignedProjectIds.length === 0) {
+                <p class="hint">Not assigned to any project.</p>
+              } @else {
+                <ul class="assigned-projects">
+                  @for (pid of assignedProjectIds; track pid) {
+                    <li class="assigned-project-row">
+                      <span>{{ projectNameById(pid) }}</span>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        (click)="removeTaskFromProject(pid)"
+                        aria-label="Remove from project"
+                        matTooltip="Remove from project">
+                        <mat-icon>link_off</mat-icon>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+              <div class="assign-project-row">
+                <mat-form-field class="assign-project-field" subscriptSizing="dynamic">
+                  <mat-label>Add to project</mat-label>
+                  <mat-select [(ngModel)]="assignProjectId" [ngModelOptions]="{standalone: true}">
+                    <mat-option [value]="null">— Select project —</mat-option>
+                    @for (p of assignableProjects; track p.project_id) {
+                      <mat-option [value]="p.project_id">{{ projectLabel(p) }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <button mat-stroked-button color="primary" type="button" (click)="assignTaskToProject()">
+                  Assign
+                </button>
+              </div>
+              <p class="hint">Only active projects for this task’s telescope are shown.</p>
+            </div>
+          }
         </div>
-      }
+      </section>
+
+      <!-- Parameters -->
+      <section class="form-section" aria-labelledby="task-section-parameters">
+        <h3 class="section-title" id="task-section-parameters">Parameters</h3>
+        <div class="section-grid">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Exposure (s)</mat-label>
+            <input matInput type="number" formControlName="exposure">
+          </mat-form-field>
+
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Filter</mat-label>
+            <mat-select formControlName="filter">
+              <mat-option [value]="''">— None —</mat-option>
+              @if (scopeFilters.length === 0 && (taskForm.get('scope_id')?.value)) {
+                <mat-option disabled [value]="''">No active filters on this telescope</mat-option>
+              }
+              @for (f of filterSelectOptions(); track f.short_name) {
+                <mat-option [value]="f.short_name">
+                  {{ f.short_name }}<span class="filter-opt-full">{{ f.full_name ? ' — ' + f.full_name : '' }}</span>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field class="field-binning" subscriptSizing="dynamic">
+            <mat-label>Binning</mat-label>
+            <mat-select formControlName="binning" panelClass="task-binning-panel">
+              <mat-option [value]="1">1×1</mat-option>
+              <mat-option [value]="2">2×2</mat-option>
+              <mat-option [value]="3">3×3</mat-option>
+              <mat-option [value]="4">4×4</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="checkbox-row" role="group" aria-label="Observation parameters">
+            <mat-checkbox formControlName="dither">Dithering</mat-checkbox>
+            <mat-checkbox formControlName="guiding">Guiding</mat-checkbox>
+            <mat-checkbox formControlName="calibrate">Calibration</mat-checkbox>
+          </div>
+        </div>
+      </section>
+
+      <!-- Limits -->
+      <section class="form-section" aria-labelledby="task-section-limits">
+        <h3 class="section-title" id="task-section-limits">Limits</h3>
+        <div class="section-grid">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Skip before</mat-label>
+            <input matInput [matDatepicker]="pickerBefore" formControlName="skip_before">
+            <mat-datepicker-toggle matSuffix [for]="pickerBefore"></mat-datepicker-toggle>
+            <mat-datepicker #pickerBefore></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Skip after</mat-label>
+            <input matInput [matDatepicker]="pickerAfter" formControlName="skip_after">
+            <mat-datepicker-toggle matSuffix [for]="pickerAfter"></mat-datepicker-toggle>
+            <mat-datepicker #pickerAfter></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Minimum altitude</mat-label>
+            <input matInput type="number" formControlName="min_alt">
+          </mat-form-field>
+
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Moon distance</mat-label>
+            <input matInput type="number" formControlName="moon_distance">
+          </mat-form-field>
+        </div>
+      </section>
+
+      <!-- Others -->
+      <section class="form-section" aria-labelledby="task-section-others">
+        <h3 class="section-title" id="task-section-others">Others</h3>
+        <div class="section-grid">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Description</mat-label>
+            <input matInput formControlName="descr" maxlength="1024">
+          </mat-form-field>
+
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Comment</mat-label>
+            <input matInput formControlName="comment" maxlength="2048">
+          </mat-form-field>
+        </div>
+      </section>
     </div>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close>Cancel</button>
+    <button mat-button mat-dialog-close type="button">Cancel</button>
     <button mat-raised-button color="primary" type="submit">
       {{ mode === 'add' ? 'Add Task' : 'Update Task' }}
     </button>

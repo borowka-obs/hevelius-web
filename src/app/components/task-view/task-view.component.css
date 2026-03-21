@@ -1,14 +1,48 @@
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  padding: 16px;
-}
-
-.checkbox-group {
+.task-form-layout {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
+  padding: 4px 0 8px;
+}
+
+.form-section {
+  padding: 12px 0 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.section-title {
+  margin: 0 0 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  align-items: start;
+}
+
+.checkbox-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 4px 0;
+}
+
+.checkbox-row mat-checkbox {
+  /* Keep checkboxes on one visual row where space allows */
+  flex: 0 0 auto;
 }
 
 mat-form-field {
@@ -16,13 +50,24 @@ mat-form-field {
   position: relative;
 }
 
-textarea {
-  min-height: 100px;
+/* Compact binning control */
+.field-binning {
+  max-width: 9.5rem;
+  width: 100%;
+}
+
+.field-project {
+  grid-column: 1 / -1;
+}
+
+/* Select panel is attached to the overlay; pierce encapsulation. */
+:host ::ng-deep .task-binning-panel.mat-mdc-select-panel {
+  min-width: 7rem !important;
+  max-width: 12rem;
 }
 
 .search-results {
   position: absolute;
-  /*bottom: calc(100% + 5px);  /* Position above the input field with 5px gap */
   left: 0;
   top: 100%;
   right: 0;
@@ -31,7 +76,7 @@ textarea {
   border-radius: 4px;
   max-height: 200px;
   overflow-y: auto;
-  z-index: 1001;  /* Increased z-index to ensure it's above other form elements */
+  z-index: 1001;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
@@ -39,7 +84,7 @@ textarea {
   padding: 8px 16px;
   cursor: pointer;
   border-bottom: 1px solid #eee;
-  background: white;  /* Ensure the background is solid */
+  background: white;
 }
 
 .search-result-item:hover {
@@ -50,16 +95,9 @@ textarea {
   border-bottom: none;
 }
 
-.subsection-title {
-  margin: 0 0 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  grid-column: 1 / -1;
-}
-
 .hint {
-  margin: 0 0 12px;
-  font-size: 0.875rem;
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
   color: rgba(0, 0, 0, 0.6);
   grid-column: 1 / -1;
 }
@@ -71,14 +109,12 @@ textarea {
 
 .project-membership {
   grid-column: 1 / -1;
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
-  padding-top: 16px;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .assigned-projects {
   list-style: none;
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   padding: 0;
 }
 
@@ -87,7 +123,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 4px 0;
+  padding: 2px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
@@ -96,7 +132,7 @@ textarea {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .assign-project-field {
