@@ -1,6 +1,6 @@
 # Hevelius Web Interface Changelog
 
-0.4.0 (unreleased)
+0.4.0 (2026-03-21)
 
 - Upgraded to Angular 19, then 20, then 21
 - Removed old test runner (Karma/Jasmine), migrated to vitest
@@ -13,6 +13,7 @@
 - Filters support added
 - Telescopes list can now be sorted, edited
 - Sensors support added
+- Projects support added
 
 0.3.0 (2025-04-22)
 
