@@ -4,7 +4,7 @@ export class User {
 
 	password: string;
 
-    // MD5 of a password
+    // Backend-managed password hash (not used by frontend auth flow)
     pass_d: string;
     firstname: string;
     lastname: string;

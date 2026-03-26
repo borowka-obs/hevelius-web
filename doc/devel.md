@@ -95,18 +95,13 @@ To run it: `npx knip`
 
 ## API debugging
 
-First, generate the MD5 of a password and then get the JWT token:
+First, submit username/password over HTTPS and then get the JWT token:
 
 ```
-# MD5 of password (macOS uses `md5`, Linux uses `md5sum`)
-# macOS:
-PASS_MD5=$(echo -n "YOUR_PASSWORD" | md5)
-# Linux (GNU):
-# PASS_MD5=$(echo -n "YOUR_PASSWORD" | md5sum | cut -d' ' -f1)
 # Login and extract token (requires jq: brew install jq)
 TOKEN=$(curl -s -X POST http://localhost:5000/api/login \
   -H "Content-Type: application/json" \
-  -d "{\"username\":\"YOUR_USERNAME\",\"password\":\"$PASS_MD5\"}" \
+  -d "{\"username\":\"YOUR_USERNAME\",\"password\":\"YOUR_PASSWORD\"}" \
   | jq -r '.token')
 echo "Token: $TOKEN"
 ```

@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Md5 } from 'ts-md5/dist/md5';
 import { User } from '../models/user';
 import { Hevelius } from 'src/hevelius';
 import { Router } from '@angular/router';
@@ -49,15 +48,13 @@ export class LoginService {
     // This method is called locally when login form is filled in and submit
     // button is pressed.
     login(username: string, password: string): Observable<LoginResponse> {
-        // We need to prepare credentials to be sent. Username is used as is,
-        // but the password needs to be passed through md5.
-        const md5 = new Md5();
         const credentials = {
             username: username,
-            password: md5.appendStr(password).end()
+            password: password
         };
 
-        // This sends a request with specified parameters: username, md5(password)
+        // Send credentials as defined by OpenAPI. Password is sent over HTTPS
+        // and verified server-side against stored Argon2id hashes.
         // This version is for local debugging: return this.http.post<any>('https://localhost/api/login.php', credentials )
         return this.http.post<LoginResponse>(Hevelius.apiUrl + '/login', credentials )
         .pipe(map(data => {

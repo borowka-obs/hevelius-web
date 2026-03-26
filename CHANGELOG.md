@@ -1,5 +1,14 @@
 # Hevelius Web Interface Changelog
 
+0.5.0 (unreleased)
+
+- Login auth contract updated: frontend now sends plaintext password over HTTPS for backend verification
+- Backend password hashing migrated from MD5 to Argon2id
+- Removed `ts-md5` dependency and client-side MD5 hashing code
+- Removed hammerjs dependency
+- Cleaned up API debugging docs to match the new login contract
+- Angular/CDK and other dependencies migrated to 21
+
 0.4.0 (unreleased)
 
 - Upgraded to Angular 19, then 20, then 21
