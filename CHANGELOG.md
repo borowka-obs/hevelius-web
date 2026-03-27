@@ -8,6 +8,8 @@
 - Removed hammerjs dependency
 - Cleaned up API debugging docs to match the new login contract
 - Angular/CDK and other dependencies migrated to 21
+- User profile
+- Gravatar support
 
 0.4.0 (unreleased)
 

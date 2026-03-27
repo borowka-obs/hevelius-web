@@ -1,0 +1,22 @@
+.user-card {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.avatar-large {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+}
+
+.user-details p {
+  margin: 8px 0;
+}

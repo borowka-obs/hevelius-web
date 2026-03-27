@@ -15,6 +15,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AboutDialogComponent } from '../about/about-dialog.component';
+import { GravatarService } from '../../services/gravatar.service';
 
 @Component({
     selector: 'app-layout',
@@ -39,6 +40,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private nightPlanService = inject(NightPlanService);
   private loginService = inject(LoginService);
   private topBarService = inject(TopBarService);
+  private gravatarService = inject(GravatarService);
 
   title = '';
   showFilter = false;
@@ -47,7 +49,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
   showAdd = false;
   onAddClick?: () => void;
   addTooltip = '';
+  avatarUrl = '';
   private subscription: Subscription;
+  private userSubscription: Subscription;
 
   constructor() {
     this.subscription = this.topBarService.state$.subscribe(state => {
@@ -59,6 +63,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.onAddClick = state.onAddClick;
       this.addTooltip = state.addTooltip ?? 'Add';
     });
+    this.userSubscription = this.loginService.currentUser$.subscribe(user => {
+      const fallbackId = user?.user_id?.toString() ?? user?.username ?? user?.firstname ?? 'hevelius-user';
+      this.avatarUrl = this.gravatarService.getAvatarUrl(user?.email, fallbackId, 32);
+    });
   }
 
   ngOnInit() {
@@ -68,6 +76,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    this.userSubscription.unsubscribe();
   }
 
   toggleFilter() {
@@ -101,5 +110,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
   logout() {
     this.loginService.logout();
     this.router.navigate(['/login']);
+  }
+
+  navigateToUser() {
+    this.router.navigate(['/user']);
   }
 }

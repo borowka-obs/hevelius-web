@@ -10,6 +10,7 @@ import { ProjectsListComponent } from './components/projects-list/projects-list.
 import { ProjectDetailComponent } from './components/project-detail/project-detail.component';
 import { FiltersListComponent } from './components/filters-list/filters-list.component';
 import { CatalogsComponent } from './components/catalogs/catalogs.component';
+import { UserComponent } from './components/user/user.component';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -28,6 +29,7 @@ export const routes: Routes = [
       { path: 'projects', component: ProjectsListComponent },
       { path: 'projects/:id', component: ProjectDetailComponent },
       { path: 'catalogs', component: CatalogsComponent },
+      { path: 'user', component: UserComponent },
       { path: '', redirectTo: 'tasks', pathMatch: 'full' }
     ]
   },

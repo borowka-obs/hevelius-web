@@ -26,6 +26,12 @@ interface CurrentUser {
     token?: string;
     user_id?: number;
     username?: string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    permissions?: string;
+    aavso_id?: string;
+    phone?: string;
 }
 
 @Injectable({
@@ -36,10 +42,17 @@ export class LoginService {
     private router = inject(Router);
 
     private currentUser = new BehaviorSubject<CurrentUser | null>(null);
+    currentUser$ = this.currentUser.asObservable();
     private tokenKey = 'jwt_token';
 
     constructor() {
-        const token = localStorage.getItem(this.tokenKey);
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            this.currentUser.next(JSON.parse(storedUser));
+            return;
+        }
+
+        const token = this.getToken();
         if (token) {
             this.currentUser.next({ token });
         }
@@ -73,13 +86,13 @@ export class LoginService {
 
     // This method is called when the response has arrived and indicates the credentials are ok
     // and we have received actual user data (i.e. login was successful)
-    loggedIn(userData) {
+    loggedIn(userData: CurrentUser) {
         // Keep the user's data in the local storage.
         localStorage.setItem('currentUser', JSON.stringify(userData));
         this.currentUser.next(userData);
     }
 
-    public getUser(): User {
+    public getUser(): User | null {
         const x = localStorage.getItem('currentUser');
         if (x) {
             return JSON.parse(x);
