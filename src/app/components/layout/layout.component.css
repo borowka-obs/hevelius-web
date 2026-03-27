@@ -12,3 +12,10 @@ mat-toolbar {
 .content {
   padding: 20px;
 }
+
+.avatar-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: block;
+}

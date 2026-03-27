@@ -1,0 +1,16 @@
+<mat-card class="user-card">
+  <div class="user-header">
+    <img [src]="avatarUrl" alt="User avatar" class="avatar-large">
+    <div>
+      <h2>{{ user?.firstname }} {{ user?.lastname }}</h2>
+      <p>{{ user?.email || 'No e-mail on profile' }}</p>
+    </div>
+  </div>
+
+  <div class="user-details">
+    <p><strong>User ID:</strong> {{ user?.user_id }}</p>
+    <p><strong>AAVSO ID:</strong> {{ user?.aavso_id || '-' }}</p>
+    <p><strong>Phone:</strong> {{ user?.phone || '-' }}</p>
+    <p><strong>Permissions:</strong> {{ user?.permissions || '-' }}</p>
+  </div>
+</mat-card>
