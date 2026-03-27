@@ -11,7 +11,7 @@
 - User profile
 - Gravatar support
 
-0.4.0 (unreleased)
+0.4.0 (2026-03-27)
 
 - Upgraded to Angular 19, then 20, then 21
 - Removed old test runner (Karma/Jasmine), migrated to vitest
