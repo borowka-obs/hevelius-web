@@ -2,7 +2,8 @@
 
 0.5.0 (unreleased)
 
-- Login auth contract updated: frontend now sends plaintext password over HTTPS for backend verification
+- Login auth contract updated: frontend now sends plaintext password over HTTPS
+  for backend verification
 - Backend password hashing migrated from MD5 to Argon2id
 - Removed `ts-md5` dependency and client-side MD5 hashing code
 - Removed hammerjs dependency
@@ -10,6 +11,8 @@
 - Angular/CDK and other dependencies migrated to 21
 - User profile
 - Gravatar support
+- User experience improved when adding new project: the object is looked up in
+  the catalog and RA/DEC coords are set if found
 
 0.4.0 (2026-03-27)
 
@@ -81,4 +84,5 @@
 
 0.0.1 (2019 Feb)
 
-- Initial version with limited capabilities (login, able to list 10 tasks, without any interpretation)
+- Initial version with limited capabilities (login, able to list 10 tasks,
+  without any interpretation)
