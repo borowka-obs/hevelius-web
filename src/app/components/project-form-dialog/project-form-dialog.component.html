@@ -1,7 +1,7 @@
 <h2 mat-dialog-title>New project</h2>
 <mat-dialog-content>
   <form [formGroup]="form">
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Name</mat-label>
       <input
         matInput
@@ -9,13 +9,13 @@
         required
         (keydown.enter)="onNameEnter($event)">
       <mat-hint>
-        Press Enter to fill RA/Dec from the catalog (uses the text above). You can rename the project afterward; coordinates stay as you set them.
+        Press Enter to resolve RA/Dec from the catalog. Renaming the project does not change coordinates.
       </mat-hint>
       @if (catalogLookupPending) {
         <mat-hint align="end">Looking up…</mat-hint>
       }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Telescope</mat-label>
       <mat-select formControlName="scope_id" required>
         @for (s of scopes; track s.scope_id) {
@@ -23,11 +23,11 @@
         }
       </mat-select>
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Description</mat-label>
       <textarea matInput formControlName="description" rows="2"></textarea>
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>RA (hours)</mat-label>
       <input matInput type="number" formControlName="ra" min="0" max="24" step="0.0001">
       <mat-hint>Decimal hours (0–24). Sexagesimal:</mat-hint>
@@ -42,7 +42,7 @@
         <mat-error>RA must be at most 24</mat-error>
       }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Dec (degrees)</mat-label>
       <input matInput type="number" formControlName="decl" min="-90" max="90" step="0.0001">
       <mat-hint>Decimal degrees (−90 to +90). Sexagesimal:</mat-hint>
