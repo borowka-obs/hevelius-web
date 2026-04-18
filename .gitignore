@@ -43,6 +43,9 @@ testem.log
 # OpenAPI spec (synced from backend repo, not committed)
 /api/openapi.yaml
 
+# Local deploy configuration
+.deploy
+
 # System Files
 .DS_Store
 Thumbs.db

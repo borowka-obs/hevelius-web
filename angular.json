@@ -106,6 +106,12 @@
               "src/**/*.html"
             ]
           }
+        },
+        "deploy": {
+          "builder": "hevelius-deploy-builder:deploy",
+          "options": {
+            "script": "scripts/deploy.js"
+          }
         }
       }
     }

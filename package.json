@@ -7,6 +7,7 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
+    "deploy": "ng run hevelius:deploy",
     "sync-openapi": "node scripts/sync-openapi.js"
   },
   "private": true,
@@ -32,6 +33,7 @@
     "@angular/build": "^21.2.4",
     "@angular/cli": "^21.2.4",
     "@angular/compiler-cli": "^21.2.6",
+    "hevelius-deploy-builder": "file:tools/hevelius-deploy-builder",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
