@@ -1,0 +1,9 @@
+{
+  "name": "hevelius-deploy-builder",
+  "version": "0.0.1",
+  "private": true,
+  "builders": "builders.json",
+  "dependencies": {
+    "@angular-devkit/architect": "^0.2102.4"
+  }
+}

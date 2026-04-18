@@ -1,0 +1,9 @@
+# Copy this file to .deploy and adjust values.
+# .deploy is gitignored and should stay local.
+
+hostname=your.server.example
+username=deploy-user
+# Optional, defaults to your SSH client default (usually 22)
+# ssh-port=2222
+path=/var/www/hevelius
+api-url=https://your.server.example:5001/api

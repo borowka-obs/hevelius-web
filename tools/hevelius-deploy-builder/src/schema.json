@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Hevelius Deploy Builder Schema",
+  "type": "object",
+  "properties": {
+    "script": {
+      "type": "string",
+      "description": "Path to deploy script relative to workspace root",
+      "default": "scripts/deploy.js"
+    }
+  },
+  "required": ["script"]
+}
