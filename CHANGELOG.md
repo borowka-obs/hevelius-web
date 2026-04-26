@@ -2,6 +2,7 @@
 
 0.5.0 (unreleased)
 
+- The projects support added
 - Login auth contract updated: frontend now sends plaintext password over HTTPS
   for backend verification
 - Backend password hashing migrated from MD5 to Argon2id

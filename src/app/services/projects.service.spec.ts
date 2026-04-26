@@ -37,15 +37,15 @@ describe('ProjectsService', () => {
     });
   });
 
-  it('should create project', () => {
-    service.createProject({ name: 'M42', scope_id: 3, active: true }).subscribe(result => {
+  it('should create project with regexps', () => {
+    service.createProject({ name: 'M42', scope_id: 3, active: true, regexps: 'M.* NGC.*' }).subscribe(result => {
       expect(result.project_id).toBe(11);
       expect(result.project.name).toBe('M42');
     });
 
     const req = httpMock.expectOne(`${Hevelius.apiUrl}/projects`);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ name: 'M42', scope_id: 3, active: true });
+    expect(req.request.body).toEqual({ name: 'M42', scope_id: 3, active: true, regexps: 'M.* NGC.*' });
     req.flush({
       status: true,
       project_id: 11,
@@ -73,13 +73,13 @@ describe('ProjectsService', () => {
   });
 
   it('should add subframe and map subframe_id', () => {
-    service.addSubframe(11, { filter_id: 2, exposure_time: 120 }).subscribe(result => {
+    service.addSubframe(11, { filter_id: 2, exposure_time: 120, count: 0 }).subscribe(result => {
       expect(result.subframe_id).toBe(44);
     });
 
     const req = httpMock.expectOne(`${Hevelius.apiUrl}/projects/11/subframes`);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ filter_id: 2, exposure_time: 120 });
+    expect(req.request.body).toEqual({ filter_id: 2, exposure_time: 120, count: 0 });
     req.flush({ status: true, subframe_id: 44 });
   });
 });

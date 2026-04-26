@@ -15,6 +15,7 @@ export interface ProjectEditDialogData {
   initialScopeId: number;
   initialRa?: number;
   initialDecl?: number;
+  initialRegexps?: string;
 }
 
 @Component({
@@ -46,6 +47,7 @@ export class ProjectEditDialogComponent {
   constructor() {
     this.form = this.fb.group({
       scope_id: [this.dialogData.initialScopeId, Validators.required],
+      regexps: [this.dialogData.initialRegexps ?? ''],
       ra: [this.dialogData.initialRa ?? null, [Validators.required, Validators.min(0), Validators.max(24)]],
       decl: [this.dialogData.initialDecl ?? null, [Validators.required, Validators.min(-90), Validators.max(90)]]
     });
@@ -71,6 +73,7 @@ export class ProjectEditDialogComponent {
 
     const body: ProjectUpdate = {
       scope_id: Number(v.scope_id),
+      regexps: String(v.regexps ?? '').trim(),
       ra: Number(v.ra),
       decl: Number(v.decl)
     };

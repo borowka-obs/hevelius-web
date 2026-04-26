@@ -10,6 +10,7 @@ export interface ProjectSubframe {
   filter_id: number;
   filter?: Filter;
   exposure_time: number;
+  count?: number;
   goal_count?: number;
   active: boolean;
 }
@@ -18,6 +19,7 @@ export interface Project {
   project_id: number;
   name: string;
   description?: string;
+  regexps?: string;
   scope_id: number;
   ra?: number;
   decl?: number;
@@ -30,6 +32,7 @@ export interface ProjectCreate {
   name: string;
   scope_id: number;
   description?: string;
+  regexps?: string;
   ra?: number;
   decl?: number;
   active?: boolean;
@@ -38,6 +41,7 @@ export interface ProjectCreate {
 export interface ProjectUpdate {
   name?: string;
   description?: string;
+  regexps?: string;
   scope_id?: number;
   ra?: number;
   decl?: number;
@@ -48,6 +52,7 @@ export interface ProjectSubframeCreate {
   filter?: string;
   filter_id?: number;
   exposure_time: number;
+  count?: number;
   goal_count?: number;
   active?: boolean;
 }
@@ -56,6 +61,7 @@ export interface ProjectSubframeUpdate {
   filter?: string;
   filter_id?: number;
   exposure_time?: number;
+  count?: number;
   goal_count?: number;
   active?: boolean;
 }

@@ -48,6 +48,7 @@ export class ProjectFormDialogComponent {
       name: ['', Validators.required],
       scope_id: [null as number | null, Validators.required],
       description: [''],
+      regexps: [''],
       ra: [null as number | null, [Validators.required, Validators.min(0), Validators.max(24)]],
       decl: [null as number | null, [Validators.required, Validators.min(-90), Validators.max(90)]],
       active: [true]
@@ -165,6 +166,7 @@ export class ProjectFormDialogComponent {
       name: value.name,
       scope_id: value.scope_id,
       description: value.description || undefined,
+      regexps: String(value.regexps ?? '').trim(),
       active: value.active,
       ra,
       decl

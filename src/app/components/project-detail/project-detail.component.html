@@ -52,6 +52,10 @@
           <th mat-header-cell *matHeaderCellDef>Exposure (s)</th>
           <td mat-cell *matCellDef="let s">{{ s.exposure_time }}</td>
         </ng-container>
+        <ng-container matColumnDef="count">
+          <th mat-header-cell *matHeaderCellDef>Count</th>
+          <td mat-cell *matCellDef="let s">{{ s.count ?? 0 }}</td>
+        </ng-container>
         <ng-container matColumnDef="goal_count">
           <th mat-header-cell *matHeaderCellDef>Goal count</th>
           <td mat-cell *matCellDef="let s">{{ s.goal_count ?? '–' }}</td>
