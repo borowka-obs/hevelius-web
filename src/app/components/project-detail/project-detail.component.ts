@@ -43,7 +43,7 @@ export class ProjectDetailComponent implements OnInit {
 
   project: Project | null = null;
   telescope: Telescope | null = null;
-  subframesColumns: string[] = ['id', 'filter', 'exposure_time', 'goal_count', 'active', 'actions'];
+  subframesColumns: string[] = ['id', 'filter', 'exposure_time', 'count', 'goal_count', 'active', 'actions'];
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -106,7 +106,8 @@ export class ProjectDetailComponent implements OnInit {
         projectId: this.project.project_id,
         initialScopeId: this.project.scope_id,
         initialRa: this.project.ra,
-        initialDecl: this.project.decl
+        initialDecl: this.project.decl,
+        initialRegexps: this.project.regexps
       }
     });
     ref.afterClosed().subscribe((updated: boolean | undefined) => {
@@ -123,11 +124,12 @@ export class ProjectDetailComponent implements OnInit {
           width: '400px',
           data: { filters, mode: 'add' }
         });
-        dialogRef.afterClosed().subscribe((payload: { filter_id: number; exposure_time: number; goal_count?: number; active: boolean } | undefined) => {
+        dialogRef.afterClosed().subscribe((payload: { filter_id: number; exposure_time: number; count?: number; goal_count?: number; active: boolean } | undefined) => {
           if (payload && this.project) {
             this.projectsService.addSubframe(this.project.project_id, {
               filter_id: payload.filter_id,
               exposure_time: payload.exposure_time,
+              count: payload.count,
               goal_count: payload.goal_count,
               active: payload.active
             }).subscribe({
@@ -152,7 +154,7 @@ export class ProjectDetailComponent implements OnInit {
           width: '400px',
           data: { filters, subframe: sub, mode: 'edit' }
         });
-        dialogRef.afterClosed().subscribe((payload: { filter_id?: number; exposure_time?: number; goal_count?: number; active?: boolean } | undefined) => {
+        dialogRef.afterClosed().subscribe((payload: { filter_id?: number; exposure_time?: number; count?: number; goal_count?: number; active?: boolean } | undefined) => {
           if (payload && this.project) {
             this.projectsService.updateSubframe(this.project.project_id, sub.id, payload).subscribe({
               next: () => {

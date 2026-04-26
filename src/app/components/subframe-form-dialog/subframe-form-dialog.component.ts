@@ -45,6 +45,7 @@ export class SubframeFormDialogComponent {
     this.form = this.fb.group({
       filter_id: [sub?.filter_id ?? null, this.mode === 'add' ? Validators.required : []],
       exposure_time: [sub?.exposure_time ?? 0, [Validators.required, Validators.min(0)]],
+      count: [sub?.count ?? 0, [Validators.min(0)]],
       goal_count: [sub?.goal_count ?? null],
       active: [sub?.active ?? true]
     });
@@ -67,6 +68,7 @@ export class SubframeFormDialogComponent {
       const payload: ProjectSubframeCreate = {
         filter_id: value.filter_id,
         exposure_time: Number(value.exposure_time),
+        count: value.count != null && value.count !== '' ? Number(value.count) : 0,
         goal_count: value.goal_count != null && value.goal_count !== '' ? Number(value.goal_count) : undefined,
         active: value.active
       };
@@ -75,6 +77,7 @@ export class SubframeFormDialogComponent {
       const payload: ProjectSubframeUpdate = {
         filter_id: value.filter_id,
         exposure_time: Number(value.exposure_time),
+        count: value.count != null && value.count !== '' ? Number(value.count) : 0,
         goal_count: value.goal_count != null && value.goal_count !== '' ? Number(value.goal_count) : undefined,
         active: value.active
       };
