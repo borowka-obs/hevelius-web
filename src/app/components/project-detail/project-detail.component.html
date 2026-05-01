@@ -20,12 +20,32 @@
           <a [routerLink]="['/scopes', project.scope_id]">{{ project.scope_id }}</a>)
         </p>
         <p><strong>RA:</strong> {{ formatRA(project.ra) }} <strong>Dec:</strong> {{ formatDec(project.decl) }}</p>
-        <p><strong>Active:</strong> {{ project.active ? 'Yes' : 'No' }}</p>
+        <p class="active-row">
+          <mat-slide-toggle
+            [checked]="project.active"
+            (change)="onProjectActiveChange($event.checked)">
+            Project active
+          </mat-slide-toggle>
+        </p>
+        @if (getSubframes().length) {
+          <p>
+            <strong>Total integration (captured):</strong>
+            {{ formatDurationSeconds(projectCapturedTotalSeconds()) }}
+            <span class="muted">(count × exposure per subframe, summed)</span>
+          </p>
+          <p>
+            <strong>Total integration (goal):</strong>
+            {{ formatDurationSeconds(projectGoalTotalSeconds()) }}
+          </p>
+          @if (projectSummaryLine()) {
+            <p><strong>Plan by filter:</strong> {{ projectSummaryLine() }}</p>
+          }
+        }
 
         <div class="project-actions">
           <button mat-button color="primary" (click)="editProject()" type="button">
             <mat-icon>edit</mat-icon>
-            Edit coordinates / telescope
+            Edit project
           </button>
         </div>
       </mat-card-content>
@@ -59,6 +79,30 @@
         <ng-container matColumnDef="goal_count">
           <th mat-header-cell *matHeaderCellDef>Goal count</th>
           <td mat-cell *matCellDef="let s">{{ s.goal_count ?? '–' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="goal_integration">
+          <th mat-header-cell *matHeaderCellDef>Goal time</th>
+          <td mat-cell *matCellDef="let s">{{ formatDurationSeconds(subGoalSeconds(s)) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="captured_integration">
+          <th mat-header-cell *matHeaderCellDef>Captured</th>
+          <td mat-cell *matCellDef="let s">{{ formatDurationSeconds(subCapturedSeconds(s)) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="progress">
+          <th mat-header-cell *matHeaderCellDef>Progress</th>
+          <td mat-cell *matCellDef="let s">
+            @if (progressPercent(s) != null) {
+              <div class="progress-cell">
+                <mat-progress-bar mode="determinate" [value]="barPercent(s)"></mat-progress-bar>
+                <span class="progress-meta">
+                  {{ progressPercentLabel(s) }}
+                  <span class="muted">({{ s.count ?? 0 }} / {{ s.goal_count }})</span>
+                </span>
+              </div>
+            } @else {
+              —
+            }
+          </td>
         </ng-container>
         <ng-container matColumnDef="active">
           <th mat-header-cell *matHeaderCellDef>Active</th>

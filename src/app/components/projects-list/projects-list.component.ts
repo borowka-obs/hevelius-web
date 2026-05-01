@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
 import { TelescopeService } from '../../services/telescope.service';
@@ -6,6 +7,8 @@ import { Project } from '../../models/project';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +18,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
 import { ProjectFormDialogComponent } from '../project-form-dialog/project-form-dialog.component';
+import {
+  formatIntegrationDuration,
+  projectFilterGoalSummary,
+  projectTotalCapturedSeconds,
+  projectTotalGoalSeconds
+} from '../../utils/project-integration';
 
 @Component({
   selector: 'app-projects-list',
@@ -46,7 +55,9 @@ import { ProjectFormDialogComponent } from '../project-form-dialog/project-form-
     MatButtonModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatIconModule
+    MatIconModule,
+    MatSlideToggleModule,
+    MatTooltipModule
   ]
 })
 export class ProjectsListComponent implements OnInit, OnDestroy {
@@ -56,11 +67,20 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   private topBarService = inject(TopBarService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
 
   dataSource = new MatTableDataSource<Project>();
   allProjects: Project[] = [];
   scopes: { scope_id: number; name: string }[] = [];
-  displayedColumns: string[] = ['project_id', 'name', 'description', 'scope_id', 'active'];
+  displayedColumns: string[] = [
+    'project_id',
+    'name',
+    'description',
+    'scope_id',
+    'summary',
+    'integration',
+    'active'
+  ];
 
   filterForm: FormGroup;
   isFilterVisible = false;
@@ -89,6 +109,9 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
         this.scopes = list.filter(t => t.active).map(t => ({ scope_id: t.scope_id, name: t.name }));
       }
     });
+    this.filterForm.get('activeOnly')?.valueChanges.subscribe(() => {
+      this.applyClientFilterAndSort();
+    });
     this.loadProjects();
   }
 
@@ -115,8 +138,8 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     let list = activeOnly ? this.allProjects.filter(p => p.active) : this.allProjects;
     const { active, direction } = this.sortState;
     list = [...list].sort((a, b) => {
-      let aVal: string | number | boolean = (a as unknown as Record<string, unknown>)[active] as string | number | boolean;
-      let bVal: string | number | boolean = (b as unknown as Record<string, unknown>)[active] as string | number | boolean;
+      let aVal: string | number | boolean = this.sortValueForColumn(a, active);
+      let bVal: string | number | boolean = this.sortValueForColumn(b, active);
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
       if (typeof bVal === 'string') bVal = bVal.toLowerCase();
       if (aVal === bVal) return 0;
@@ -172,5 +195,60 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   getScopeName(scopeId: number): string {
     const s = this.scopes.find(x => x.scope_id === scopeId);
     return s ? s.name : String(scopeId);
+  }
+
+  private sortValueForColumn(p: Project, column: string): string | number | boolean {
+    if (column === 'summary') {
+      return projectFilterGoalSummary(p) || '';
+    }
+    if (column === 'integration') {
+      return projectTotalCapturedSeconds(p);
+    }
+    return (p as unknown as Record<string, unknown>)[column] as string | number | boolean;
+  }
+
+  projectSummary(p: Project): string {
+    const s = projectFilterGoalSummary(p);
+    return s || '—';
+  }
+
+  projectCapturedLabel(p: Project): string {
+    const subs = p.subframes ?? [];
+    if (!subs.length) {
+      return '—';
+    }
+    return formatIntegrationDuration(projectTotalCapturedSeconds(p));
+  }
+
+  projectIntegrationTooltip(p: Project): string {
+    const subs = p.subframes ?? [];
+    if (!subs.length) {
+      return 'Subframes not included in list response — open project for totals';
+    }
+    const goal = formatIntegrationDuration(projectTotalGoalSeconds(p));
+    const cap = formatIntegrationDuration(projectTotalCapturedSeconds(p));
+    return `Captured: ${cap} · Goal total: ${goal}`;
+  }
+
+  toggleProjectActive(p: Project, next: boolean): void {
+    this.projectsService.updateProject(p.project_id, { active: next }).subscribe({
+      next: updated => {
+        const i = this.allProjects.findIndex(x => x.project_id === p.project_id);
+        if (i >= 0) {
+          const prev = this.allProjects[i];
+          this.allProjects[i] = {
+            ...prev,
+            ...updated,
+            subframes: updated.subframes ?? prev.subframes
+          };
+        }
+        this.applyClientFilterAndSort();
+      },
+      error: err => {
+        this.snackBar.open(err?.error?.msg || err?.message || 'Failed to update project', 'Close', {
+          duration: 5000
+        });
+      }
+    });
   }
 }

@@ -37,3 +37,29 @@ table {
 .tasks-heading {
   margin: 0 0 1rem;
 }
+
+.active-row {
+  margin: 0.75rem 0;
+}
+
+.muted {
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 0.85em;
+  margin-left: 0.35rem;
+}
+
+.progress-cell {
+  min-width: 160px;
+  padding: 4px 0;
+}
+
+.progress-cell mat-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.progress-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+}

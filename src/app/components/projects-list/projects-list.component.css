@@ -48,3 +48,10 @@ table {
 tr.clickable {
   cursor: pointer;
 }
+
+.summary-cell {
+  max-width: 280px;
+  white-space: normal;
+  word-break: break-word;
+  font-size: 0.9rem;
+}
