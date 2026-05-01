@@ -34,32 +34,28 @@
     </mat-form-field>
     <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>RA (hours)</mat-label>
-      <input matInput type="number" formControlName="ra" min="0" max="24" step="0.0001">
-      <mat-hint>Decimal hours (0–24). Sexagesimal:</mat-hint>
+      <input matInput formControlName="ra" placeholder="e.g. 0.712 or 00:42:43.2 or 00h42m43s" autocomplete="off">
+      <mat-hint>Decimal hours (0–24) or sexagesimal (H:M:S or Hh Mm Ss)</mat-hint>
       @if (raSexagesimalHint) {
         <mat-hint align="end">{{ raSexagesimalHint }}</mat-hint>
       }
       @if (form.get('ra')?.touched && form.get('ra')?.hasError('required')) {
         <mat-error>RA is required</mat-error>
-      } @else if (form.get('ra')?.touched && form.get('ra')?.hasError('min')) {
-        <mat-error>RA must be at least 0</mat-error>
-      } @else if (form.get('ra')?.touched && form.get('ra')?.hasError('max')) {
-        <mat-error>RA must be at most 24</mat-error>
+      } @else if (form.get('ra')?.touched && form.get('ra')?.hasError('raParse')) {
+        <mat-error>Invalid RA (use decimal hours or H:M:S)</mat-error>
       }
     </mat-form-field>
     <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Dec (degrees)</mat-label>
-      <input matInput type="number" formControlName="decl" min="-90" max="90" step="0.0001">
-      <mat-hint>Decimal degrees (−90 to +90). Sexagesimal:</mat-hint>
+      <input matInput formControlName="decl" placeholder="e.g. 41.27 or +41:16:12" autocomplete="off">
+      <mat-hint>Decimal degrees (−90…90) or sexagesimal (±D:M:S or D°M′S″)</mat-hint>
       @if (decSexagesimalHint) {
         <mat-hint align="end">{{ decSexagesimalHint }}</mat-hint>
       }
       @if (form.get('decl')?.touched && form.get('decl')?.hasError('required')) {
         <mat-error>Dec is required</mat-error>
-      } @else if (form.get('decl')?.touched && form.get('decl')?.hasError('min')) {
-        <mat-error>Dec must be at least −90</mat-error>
-      } @else if (form.get('decl')?.touched && form.get('decl')?.hasError('max')) {
-        <mat-error>Dec must be at most 90</mat-error>
+      } @else if (form.get('decl')?.touched && form.get('decl')?.hasError('decParse')) {
+        <mat-error>Invalid Dec (use decimal degrees or ±D:M:S)</mat-error>
       }
     </mat-form-field>
     <mat-checkbox formControlName="active">Active</mat-checkbox>

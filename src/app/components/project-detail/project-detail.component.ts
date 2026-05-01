@@ -8,6 +8,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -15,6 +17,16 @@ import { SubframeFormDialogComponent } from '../subframe-form-dialog/subframe-fo
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { ProjectEditDialogComponent } from '../project-edit-dialog/project-edit-dialog.component';
 import { TasksComponent } from '../tasks/tasks.component';
+import {
+  formatIntegrationDuration,
+  progressBarPercent,
+  projectFilterGoalSummary,
+  projectTotalCapturedSeconds,
+  projectTotalGoalSeconds,
+  subframeCapturedSeconds,
+  subframeGoalSeconds,
+  subframeProgressPercent
+} from '../../utils/project-integration';
 
 @Component({
   selector: 'app-project-detail',
@@ -28,6 +40,8 @@ import { TasksComponent } from '../tasks/tasks.component';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    MatProgressBarModule,
+    MatSlideToggleModule,
     TasksComponent
   ]
 })
@@ -43,7 +57,18 @@ export class ProjectDetailComponent implements OnInit {
 
   project: Project | null = null;
   telescope: Telescope | null = null;
-  subframesColumns: string[] = ['id', 'filter', 'exposure_time', 'count', 'goal_count', 'active', 'actions'];
+  subframesColumns: string[] = [
+    'id',
+    'filter',
+    'exposure_time',
+    'count',
+    'goal_count',
+    'goal_integration',
+    'captured_integration',
+    'progress',
+    'active',
+    'actions'
+  ];
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -107,7 +132,8 @@ export class ProjectDetailComponent implements OnInit {
         initialScopeId: this.project.scope_id,
         initialRa: this.project.ra,
         initialDecl: this.project.decl,
-        initialRegexps: this.project.regexps
+        initialRegexps: this.project.regexps,
+        initialActive: this.project.active
       }
     });
     ref.afterClosed().subscribe((updated: boolean | undefined) => {
@@ -167,6 +193,66 @@ export class ProjectDetailComponent implements OnInit {
             });
           }
         });
+      }
+    });
+  }
+
+  formatDurationSeconds(sec: number): string {
+    return formatIntegrationDuration(sec);
+  }
+
+  subGoalSeconds(s: ProjectSubframe): number {
+    return subframeGoalSeconds(s);
+  }
+
+  subCapturedSeconds(s: ProjectSubframe): number {
+    return subframeCapturedSeconds(s);
+  }
+
+  progressPercent(s: ProjectSubframe): number | null {
+    return subframeProgressPercent(s);
+  }
+
+  barPercent(s: ProjectSubframe): number {
+    return progressBarPercent(subframeProgressPercent(s));
+  }
+
+  progressPercentLabel(s: ProjectSubframe): string {
+    const pct = subframeProgressPercent(s);
+    if (pct == null) {
+      return '—';
+    }
+    return `${pct.toFixed(1)}%`;
+  }
+
+  projectCapturedTotalSeconds(): number {
+    return this.project ? projectTotalCapturedSeconds(this.project) : 0;
+  }
+
+  projectGoalTotalSeconds(): number {
+    return this.project ? projectTotalGoalSeconds(this.project) : 0;
+  }
+
+  projectSummaryLine(): string {
+    return this.project ? projectFilterGoalSummary(this.project) : '';
+  }
+
+  onProjectActiveChange(active: boolean): void {
+    if (!this.project) {
+      return;
+    }
+    this.projectsService.updateProject(this.project.project_id, { active }).subscribe({
+      next: updated => {
+        const prev = this.project!;
+        this.project = {
+          ...prev,
+          ...updated,
+          subframes: updated.subframes ?? prev.subframes
+        };
+        this.snackBar.open(active ? 'Project enabled' : 'Project disabled', 'Close', { duration: 2500 });
+      },
+      error: err => {
+        this.snackBar.open(err?.error?.msg || 'Failed to update project', 'Close', { duration: 5000 });
       }
     });
   }

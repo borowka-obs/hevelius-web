@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -11,6 +11,23 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { CatalogsService, CatalogObject } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { finalize } from 'rxjs/operators';
+import { parseDecDegrees, parseRAHours } from '../../utils/coord-parse';
+
+function raFieldValidator(c: AbstractControl): ValidationErrors | null {
+  const raw = String(c.value ?? '').trim();
+  if (!raw) {
+    return null;
+  }
+  return parseRAHours(raw) === null ? { raParse: true } : null;
+}
+
+function decFieldValidator(c: AbstractControl): ValidationErrors | null {
+  const raw = String(c.value ?? '').trim();
+  if (!raw) {
+    return null;
+  }
+  return parseDecDegrees(raw) === null ? { decParse: true } : null;
+}
 
 export interface ProjectFormDialogData {
   scopes: { scope_id: number; name: string }[];
@@ -49,8 +66,8 @@ export class ProjectFormDialogComponent {
       scope_id: [null as number | null, Validators.required],
       description: [''],
       regexps: [''],
-      ra: [null as number | null, [Validators.required, Validators.min(0), Validators.max(24)]],
-      decl: [null as number | null, [Validators.required, Validators.min(-90), Validators.max(90)]],
+      ra: ['', [Validators.required, raFieldValidator]],
+      decl: ['', [Validators.required, decFieldValidator]],
       active: [true]
     });
   }
@@ -90,7 +107,7 @@ export class ProjectFormDialogComponent {
         }
         const chosen = this.pickCatalogMatch(name, objects);
         this.form.patchValue(
-          { ra: chosen.ra, decl: chosen.decl },
+          { ra: String(chosen.ra), decl: String(chosen.decl) },
           { emitEvent: false }
         );
         const used =
@@ -108,27 +125,19 @@ export class ProjectFormDialogComponent {
   }
 
   get raSexagesimalHint(): string {
-    const raw = this.form.get('ra')?.value;
-    if (raw === null || raw === undefined || raw === '') {
+    const parsed = parseRAHours(String(this.form.get('ra')?.value ?? '').trim());
+    if (parsed === null) {
       return '';
     }
-    const n = Number(raw);
-    if (Number.isNaN(n)) {
-      return '';
-    }
-    return this.coordsFormatter.formatRA(n);
+    return this.coordsFormatter.formatRA(parsed);
   }
 
   get decSexagesimalHint(): string {
-    const raw = this.form.get('decl')?.value;
-    if (raw === null || raw === undefined || raw === '') {
+    const parsed = parseDecDegrees(String(this.form.get('decl')?.value ?? '').trim());
+    if (parsed === null) {
       return '';
     }
-    const n = Number(raw);
-    if (Number.isNaN(n)) {
-      return '';
-    }
-    return this.coordsFormatter.formatDec(n);
+    return this.coordsFormatter.formatDec(parsed);
   }
 
   private normalizeCatalogLabel(s: string): string {
@@ -160,8 +169,12 @@ export class ProjectFormDialogComponent {
       return;
     }
     const value = this.form.getRawValue();
-    const ra = Number(value.ra);
-    const decl = Number(value.decl);
+    const ra = parseRAHours(String(value.ra).trim());
+    const decl = parseDecDegrees(String(value.decl).trim());
+    if (ra === null || decl === null) {
+      this.snackBar.open('Invalid RA or Dec', 'Close', { duration: 4000 });
+      return;
+    }
     const body = {
       name: value.name,
       scope_id: value.scope_id,

@@ -42,8 +42,8 @@ describe('ProjectFormDialogComponent', () => {
       name: 'M31',
       scope_id: 2,
       description: 'Andromeda',
-      ra: 0.7,
-      decl: 41.2,
+      ra: '0.7',
+      decl: '41.2',
       active: true,
       regexps: null
     });
