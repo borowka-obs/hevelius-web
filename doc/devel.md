@@ -112,3 +112,7 @@ And then use one of the API points, e.g.
 curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:5000/api/sensors?active=false"
 ```
 
+## Syncing the OpenAPI file
+
+Assuming there's a ../hevelius-backend dir (so both hevelius-backend and hevelius-web are siblings),
+you can copy the API definition with `ng run hevelius:sync-openapi`.

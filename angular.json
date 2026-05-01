@@ -112,6 +112,12 @@
           "options": {
             "script": "scripts/deploy.js"
           }
+        },
+        "sync-openapi": {
+          "builder": "hevelius-deploy-builder:deploy",
+          "options": {
+            "script": "scripts/sync-openapi.js"
+          }
         }
       }
     }
