@@ -5,9 +5,10 @@ const path = require('path');
 module.exports = createBuilder((options, context) => {
   return new Promise((resolve) => {
     const scriptPath = path.resolve(context.workspaceRoot, options.script);
-    context.logger.info(`Running deploy script: ${scriptPath}`);
+    const extraArgs = Array.isArray(options.args) ? options.args : [];
+    context.logger.info(`Running script: ${scriptPath}${extraArgs.length ? ` ${extraArgs.join(' ')}` : ''}`);
 
-    const child = spawn(process.execPath, [scriptPath], {
+    const child = spawn(process.execPath, [scriptPath, ...extraArgs], {
       cwd: context.workspaceRoot,
       stdio: 'inherit',
       env: process.env,

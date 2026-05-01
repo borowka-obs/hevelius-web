@@ -5,8 +5,13 @@
   "properties": {
     "script": {
       "type": "string",
-      "description": "Path to deploy script relative to workspace root",
+      "description": "Path to Node script relative to workspace root",
       "default": "scripts/deploy.js"
+    },
+    "args": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Extra arguments passed to the script (e.g. backend branch name for sync-openapi)"
     }
   },
   "required": ["script"]
