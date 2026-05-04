@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
 import { FiltersService } from '../../services/filters.service';
@@ -42,6 +43,7 @@ import {
     MatTooltipModule,
     MatProgressBarModule,
     MatSlideToggleModule,
+    DatePipe,
     TasksComponent
   ]
 })
@@ -57,18 +59,8 @@ export class ProjectDetailComponent implements OnInit {
 
   project: Project | null = null;
   telescope: Telescope | null = null;
-  subframesColumns: string[] = [
-    'id',
-    'filter',
-    'exposure_time',
-    'count',
-    'goal_count',
-    'goal_integration',
-    'captured_integration',
-    'progress',
-    'active',
-    'actions'
-  ];
+  /** Must match every `matColumnDef` in the template — extra or missing keys break the table. */
+  subframesColumns: string[] = ['filter', 'exposure_time', 'goal_count', 'progress', 'active', 'actions'];
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -133,7 +125,9 @@ export class ProjectDetailComponent implements OnInit {
         initialRa: this.project.ra,
         initialDecl: this.project.decl,
         initialRegexps: this.project.regexps,
-        initialActive: this.project.active
+        initialActive: this.project.active,
+        initialStartDate: this.project.start_date ?? null,
+        initialEndDate: this.project.end_date ?? null
       }
     });
     ref.afterClosed().subscribe((updated: boolean | undefined) => {
@@ -227,6 +221,26 @@ export class ProjectDetailComponent implements OnInit {
 
   projectCapturedTotalSeconds(): number {
     return this.project ? projectTotalCapturedSeconds(this.project) : 0;
+  }
+
+  /** Prefer `total_integration_time` from the API (see openapi Project schema). */
+  formatTotalIntegrationFromProject(): string {
+    if (!this.project) {
+      return '—';
+    }
+    const t = this.project.total_integration_time;
+    if (t != null && Number.isFinite(Number(t))) {
+      return formatIntegrationDuration(Number(t));
+    }
+    const fallback = projectTotalCapturedSeconds(this.project);
+    return formatIntegrationDuration(fallback);
+  }
+
+  formatCalendarDate(value: string | null | undefined): string {
+    if (value == null || String(value).trim() === '') {
+      return '—';
+    }
+    return String(value).trim().slice(0, 10);
   }
 
   projectGoalTotalSeconds(): number {

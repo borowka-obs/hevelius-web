@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
 import { TelescopeService } from '../../services/telescope.service';
-import { Project } from '../../models/project';
+import { Project, ProjectsListParams } from '../../models/project';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,12 +19,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
 import { ProjectFormDialogComponent } from '../project-form-dialog/project-form-dialog.component';
-import {
-  formatIntegrationDuration,
-  projectFilterGoalSummary,
-  projectTotalCapturedSeconds,
-  projectTotalGoalSeconds
-} from '../../utils/project-integration';
+import { formatIntegrationDuration, projectFilterGoalSummary } from '../../utils/project-integration';
 
 @Component({
   selector: 'app-projects-list',
@@ -57,7 +53,9 @@ import {
     MatFormFieldModule,
     MatIconModule,
     MatSlideToggleModule,
-    MatTooltipModule
+    MatTooltipModule,
+    RouterModule,
+    DatePipe
   ]
 })
 export class ProjectsListComponent implements OnInit, OnDestroy {
@@ -71,6 +69,9 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
 
   dataSource = new MatTableDataSource<Project>();
   allProjects: Project[] = [];
+  /** All telescopes for resolving scope names and links. */
+  allScopes: { scope_id: number; name: string }[] = [];
+  /** Active telescopes only (filter dropdown). */
   scopes: { scope_id: number; name: string }[] = [];
   displayedColumns: string[] = [
     'project_id',
@@ -79,12 +80,19 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     'scope_id',
     'summary',
     'integration',
+    'start_date',
+    'end_date',
+    'last_updated',
     'active'
   ];
 
   filterForm: FormGroup;
   isFilterVisible = false;
-  sortState: { active: string; direction: 'asc' | 'desc' } = { active: 'project_id', direction: 'asc' };
+  /** Default: most recently updated first (matches GET /api/projects defaults). */
+  sortState: { active: string; direction: 'asc' | 'desc' } = {
+    active: 'last_updated',
+    direction: 'desc'
+  };
 
   constructor() {
     this.filterForm = this.fb.group({
@@ -106,6 +114,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.telescopeService.getTelescopes().subscribe({
       next: list => {
+        this.allScopes = list.map(t => ({ scope_id: t.scope_id, name: t.name }));
         this.scopes = list.filter(t => t.active).map(t => ({ scope_id: t.scope_id, name: t.name }));
       }
     });
@@ -119,33 +128,72 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     this.topBarService.resetState();
   }
 
+  /** Maps mat-sort column id to GET /api/projects `sort_by` when supported; otherwise null (client sort). */
+  private sortColumnMapsToApiField(active: string): ProjectsListParams['sort_by'] | null {
+    switch (active) {
+      case 'project_id':
+        return 'project_id';
+      case 'name':
+        return 'name';
+      case 'last_updated':
+        return 'last_updated';
+      case 'integration':
+        return 'total_integration_time';
+      case 'start_date':
+        return 'start_date';
+      case 'end_date':
+        return 'end_date';
+      default:
+        return null;
+    }
+  }
+
+  private usesClientSortOnly(): boolean {
+    return this.sortColumnMapsToApiField(this.sortState.active) === null;
+  }
+
   private loadProjects(): void {
     const scopeId = this.filterForm?.get('scope_id')?.value ?? null;
-    this.projectsService.getProjects({
-      per_page: 500,
-      ...(scopeId != null && scopeId !== '' ? { scope_id: Number(scopeId) } : {})
-    }).subscribe({
-      next: res => {
-        this.allProjects = res.projects ?? [];
-        this.applyClientFilterAndSort();
-      },
-      error: err => console.error('Error loading projects:', err)
-    });
+    const sortBy = this.sortColumnMapsToApiField(this.sortState.active);
+    const sortParams: Pick<ProjectsListParams, 'sort_by' | 'sort_order'> = sortBy
+      ? { sort_by: sortBy, sort_order: this.sortState.direction }
+      : { sort_by: 'last_updated', sort_order: 'desc' };
+    this.projectsService
+      .getProjects({
+        per_page: 500,
+        ...sortParams,
+        ...(scopeId != null && scopeId !== '' ? { scope_id: Number(scopeId) } : {})
+      })
+      .subscribe({
+        next: res => {
+          this.allProjects = res.projects ?? [];
+          this.applyClientFilterAndSort();
+        },
+        error: err => console.error('Error loading projects:', err)
+      });
   }
 
   private applyClientFilterAndSort(): void {
     const activeOnly = this.filterForm?.get('activeOnly')?.value ?? true;
     let list = activeOnly ? this.allProjects.filter(p => p.active) : this.allProjects;
-    const { active, direction } = this.sortState;
-    list = [...list].sort((a, b) => {
-      let aVal: string | number | boolean = this.sortValueForColumn(a, active);
-      let bVal: string | number | boolean = this.sortValueForColumn(b, active);
-      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-      if (aVal === bVal) return 0;
-      const cmp = aVal < bVal ? -1 : 1;
-      return direction === 'asc' ? cmp : -cmp;
-    });
+    if (this.usesClientSortOnly()) {
+      const { active, direction } = this.sortState;
+      list = [...list].sort((a, b) => {
+        let aVal: string | number | boolean = this.sortValueForColumn(a, active);
+        let bVal: string | number | boolean = this.sortValueForColumn(b, active);
+        if (typeof aVal === 'string') {
+          aVal = aVal.toLowerCase();
+        }
+        if (typeof bVal === 'string') {
+          bVal = bVal.toLowerCase();
+        }
+        if (aVal === bVal) {
+          return 0;
+        }
+        const cmp = aVal < bVal ? -1 : 1;
+        return direction === 'asc' ? cmp : -cmp;
+      });
+    }
     this.dataSource.data = list;
     this.topBarService.updateState({
       title: `Projects: ${list.length} item${list.length !== 1 ? 's' : ''}`
@@ -162,11 +210,15 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   }
 
   onSortChange(sort: Sort): void {
-    this.sortState = {
-      active: sort.active || 'project_id',
-      direction: (sort.direction as 'asc' | 'desc') || 'asc'
-    };
-    this.applyClientFilterAndSort();
+    if (!sort.direction) {
+      this.sortState = { active: 'last_updated', direction: 'desc' };
+    } else {
+      this.sortState = {
+        active: sort.active || 'last_updated',
+        direction: (sort.direction as 'asc' | 'desc') || 'desc'
+      };
+    }
+    this.loadProjects();
   }
 
   toggleFilters(): void {
@@ -193,7 +245,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   }
 
   getScopeName(scopeId: number): string {
-    const s = this.scopes.find(x => x.scope_id === scopeId);
+    const s = this.allScopes.find(x => x.scope_id === scopeId);
     return s ? s.name : String(scopeId);
   }
 
@@ -201,8 +253,18 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     if (column === 'summary') {
       return projectFilterGoalSummary(p) || '';
     }
+    if (column === 'scope_id') {
+      return this.getScopeName(p.scope_id).toLowerCase();
+    }
     if (column === 'integration') {
-      return projectTotalCapturedSeconds(p);
+      const t = p.total_integration_time;
+      return t != null && Number.isFinite(Number(t)) ? Number(t) : -1;
+    }
+    if (column === 'active') {
+      return p.active;
+    }
+    if (column === 'description') {
+      return (p.description ?? '').toLowerCase();
     }
     return (p as unknown as Record<string, unknown>)[column] as string | number | boolean;
   }
@@ -212,22 +274,28 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     return s || '—';
   }
 
-  projectCapturedLabel(p: Project): string {
-    const subs = p.subframes ?? [];
-    if (!subs.length) {
-      return '—';
+  projectTotalIntegrationLabel(p: Project): string {
+    const t = p.total_integration_time;
+    if (t != null && Number.isFinite(Number(t))) {
+      return formatIntegrationDuration(Number(t));
     }
-    return formatIntegrationDuration(projectTotalCapturedSeconds(p));
+    return '—';
   }
 
   projectIntegrationTooltip(p: Project): string {
-    const subs = p.subframes ?? [];
-    if (!subs.length) {
-      return 'Subframes not included in list response — open project for totals';
+    const api = this.projectTotalIntegrationLabel(p);
+    const summary = projectFilterGoalSummary(p);
+    if (summary && summary !== '—') {
+      return `Total integration: ${api}. Plan (goal): ${summary}.`;
     }
-    const goal = formatIntegrationDuration(projectTotalGoalSeconds(p));
-    const cap = formatIntegrationDuration(projectTotalCapturedSeconds(p));
-    return `Captured: ${cap} · Goal total: ${goal}`;
+    return `Total integration: ${api}`;
+  }
+
+  formatCalendarDate(value: string | null | undefined): string {
+    if (value == null || String(value).trim() === '') {
+      return '—';
+    }
+    return String(value).trim().slice(0, 10);
   }
 
   toggleProjectActive(p: Project, next: boolean): void {

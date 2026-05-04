@@ -98,4 +98,18 @@ describe('LoginComponent', () => {
     expect(loginService.getBackendVersion).toHaveBeenCalled();
     expect(component.backendVersion).toBe('Unresponsive');
   });
+
+  it('navigates to projects after successful login', async () => {
+    loginService.login.mockReturnValue(
+      of({ status: true, token: 'test-token', firstname: 'Ada' })
+    );
+
+    fixture.detectChanges();
+    component.loginForm.patchValue({ username: 'user', password: 'secret' });
+    component.onSubmit();
+    await fixture.whenStable();
+
+    expect(loginService.login).toHaveBeenCalledWith('user', 'secret');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/projects');
+  });
 });

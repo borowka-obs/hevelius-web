@@ -58,6 +58,16 @@
         <mat-error>Invalid Dec (use decimal degrees or ±D:M:S)</mat-error>
       }
     </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+      <mat-label>Start date</mat-label>
+      <input matInput type="date" formControlName="start_date">
+      <mat-hint>Optional</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+      <mat-label>End date</mat-label>
+      <input matInput type="date" formControlName="end_date">
+      <mat-hint>Optional</mat-hint>
+    </mat-form-field>
     <mat-checkbox formControlName="active">Active</mat-checkbox>
   </form>
 </mat-dialog-content>

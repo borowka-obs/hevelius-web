@@ -37,6 +37,15 @@ describe('ProjectsService', () => {
     });
   });
 
+  it('should pass sort_by and sort_order when provided', () => {
+    service.getProjects({ sort_by: 'last_updated', sort_order: 'desc', per_page: 100 }).subscribe();
+    const req = httpMock.expectOne(r => r.url.startsWith(`${Hevelius.apiUrl}/projects`));
+    expect(req.request.params.get('sort_by')).toBe('last_updated');
+    expect(req.request.params.get('sort_order')).toBe('desc');
+    expect(req.request.params.get('per_page')).toBe('100');
+    req.flush({ projects: [], total: 0, page: 1, per_page: 100, pages: 0 });
+  });
+
   it('should create project with regexps', () => {
     service.createProject({ name: 'M42', scope_id: 3, active: true, regexps: 'M.* NGC.*' }).subscribe(result => {
       expect(result.project_id).toBe(11);
