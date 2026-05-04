@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ProjectsService } from '../../services/projects.service';
+import { ProjectCreate } from '../../models/project';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CatalogsService, CatalogObject } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
@@ -68,7 +69,9 @@ export class ProjectFormDialogComponent {
       regexps: [''],
       ra: ['', [Validators.required, raFieldValidator]],
       decl: ['', [Validators.required, decFieldValidator]],
-      active: [true]
+      active: [true],
+      start_date: [''],
+      end_date: ['']
     });
   }
 
@@ -175,14 +178,18 @@ export class ProjectFormDialogComponent {
       this.snackBar.open('Invalid RA or Dec', 'Close', { duration: 4000 });
       return;
     }
-    const body = {
+    const sd = String(value.start_date ?? '').trim().slice(0, 10);
+    const ed = String(value.end_date ?? '').trim().slice(0, 10);
+    const body: ProjectCreate = {
       name: value.name,
       scope_id: value.scope_id,
       description: value.description || undefined,
       regexps: String(value.regexps ?? '').trim(),
       active: value.active,
       ra,
-      decl
+      decl,
+      ...(sd ? { start_date: sd } : {}),
+      ...(ed ? { end_date: ed } : {})
     };
     this.projectsService.createProject(body).subscribe({
       next: () => {

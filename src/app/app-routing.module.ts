@@ -30,8 +30,8 @@ export const routes: Routes = [
       { path: 'projects/:id', component: ProjectDetailComponent },
       { path: 'catalogs', component: CatalogsComponent },
       { path: 'user', component: UserComponent },
-      { path: '', redirectTo: 'tasks', pathMatch: 'full' }
+      { path: '', redirectTo: 'projects', pathMatch: 'full' }
     ]
   },
-  { path: '**', redirectTo: '/tasks' }
+  { path: '**', redirectTo: '/projects' }
 ];

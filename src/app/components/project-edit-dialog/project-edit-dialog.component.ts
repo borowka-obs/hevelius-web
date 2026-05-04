@@ -27,6 +27,8 @@ export interface ProjectEditDialogData {
   initialDecl?: number;
   initialRegexps?: string;
   initialActive?: boolean;
+  initialStartDate?: string | null;
+  initialEndDate?: string | null;
 }
 
 function raFieldValidator(c: AbstractControl): ValidationErrors | null {
@@ -82,12 +84,22 @@ export class ProjectEditDialogComponent {
       this.dialogData.initialDecl != null && Number.isFinite(this.dialogData.initialDecl)
         ? String(this.dialogData.initialDecl)
         : '';
+    const startStr =
+      this.dialogData.initialStartDate != null && String(this.dialogData.initialStartDate).trim() !== ''
+        ? String(this.dialogData.initialStartDate).trim().slice(0, 10)
+        : '';
+    const endStr =
+      this.dialogData.initialEndDate != null && String(this.dialogData.initialEndDate).trim() !== ''
+        ? String(this.dialogData.initialEndDate).trim().slice(0, 10)
+        : '';
     this.form = this.fb.group({
       scope_id: [this.dialogData.initialScopeId, Validators.required],
       regexps: [this.dialogData.initialRegexps ?? ''],
       ra: [raStr, [Validators.required, raFieldValidator]],
       decl: [decStr, [Validators.required, decFieldValidator]],
-      active: [this.dialogData.initialActive ?? true]
+      active: [this.dialogData.initialActive ?? true],
+      start_date: [startStr],
+      end_date: [endStr]
     });
 
     this.telescopeService.getTelescopes().subscribe({
@@ -135,12 +147,16 @@ export class ProjectEditDialogComponent {
       return;
     }
 
+    const sd = String(v.start_date ?? '').trim().slice(0, 10);
+    const ed = String(v.end_date ?? '').trim().slice(0, 10);
     const body: ProjectUpdate = {
       scope_id: Number(v.scope_id),
       regexps: String(v.regexps ?? '').trim(),
       ra,
       decl,
-      active: Boolean(v.active)
+      active: Boolean(v.active),
+      start_date: sd === '' ? null : sd,
+      end_date: ed === '' ? null : ed
     };
 
     this.projectsService.updateProject(this.dialogData.projectId, body).subscribe({

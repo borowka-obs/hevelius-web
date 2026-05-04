@@ -45,6 +45,17 @@ table {
   text-decoration: underline;
 }
 
+.scope-link {
+  color: var(--mat-primary-color, #1976d2);
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
+}
+
+.scope-link:hover {
+  text-decoration: none;
+}
+
 tr.clickable {
   cursor: pointer;
 }

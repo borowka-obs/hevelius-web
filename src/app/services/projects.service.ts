@@ -54,6 +54,12 @@ export class ProjectsService {
       if (params.scope_id != null) {
         httpParams = httpParams.set('scope_id', String(params.scope_id));
       }
+      if (params.sort_by != null) {
+        httpParams = httpParams.set('sort_by', params.sort_by);
+      }
+      if (params.sort_order != null) {
+        httpParams = httpParams.set('sort_order', params.sort_order);
+      }
     }
     return this.http.get<ProjectsListResponse>(this.apiUrl, { params: httpParams });
   }

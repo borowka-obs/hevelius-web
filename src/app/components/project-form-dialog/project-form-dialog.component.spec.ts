@@ -60,4 +60,27 @@ describe('ProjectFormDialogComponent', () => {
       decl: 41.2
     });
   });
+
+  it('includes optional start_date and end_date when set', () => {
+    component.form.patchValue({
+      name: 'M42',
+      scope_id: 2,
+      ra: '1',
+      decl: '10',
+      active: true,
+      regexps: '',
+      start_date: '2026-01-10',
+      end_date: '2026-12-31'
+    });
+
+    component.save();
+
+    expect(projectsService.createProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'M42',
+        start_date: '2026-01-10',
+        end_date: '2026-12-31'
+      })
+    );
+  });
 });

@@ -18,6 +18,10 @@
     <mat-icon>menu</mat-icon>
   </button>
   <mat-menu #menu="matMenu">
+    <button mat-menu-item routerLink="/projects">
+      <mat-icon>folder</mat-icon>
+      <span>Projects</span>
+    </button>
     <button mat-menu-item routerLink="/tasks">
       <mat-icon>list</mat-icon>
       <span>Tasks</span>
@@ -37,10 +41,6 @@
     <button mat-menu-item routerLink="/filters">
       <mat-icon>filter_alt</mat-icon>
       <span>Filters</span>
-    </button>
-    <button mat-menu-item routerLink="/projects">
-      <mat-icon>folder</mat-icon>
-      <span>Projects</span>
     </button>
     <button mat-menu-item routerLink="/catalogs">
       <mat-icon>star</mat-icon>
