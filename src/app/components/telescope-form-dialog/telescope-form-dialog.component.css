@@ -16,13 +16,14 @@
   min-width: 0;
 }
 
+/* Scroll only on mat-dialog-content; avoid nested overflow (double scrollbars) */
 mat-dialog-content form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   min-width: min(100%, 480px);
-  max-height: 70vh;
-  overflow-y: auto;
+  /* Room for outline notch / floating label on first field (avoids top clipping) */
+  padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
 
