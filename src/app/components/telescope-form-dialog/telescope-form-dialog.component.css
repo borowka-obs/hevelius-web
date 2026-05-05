@@ -1,5 +1,19 @@
-.full-width {
+.full-width,
+.field-grow {
   width: 100%;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.form-row .field-grow {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 mat-dialog-content form {
