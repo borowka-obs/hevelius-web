@@ -105,6 +105,19 @@ describe('ProjectsListComponent', () => {
     );
   });
 
+  it('embedded mode loads projects for fixed scope_id', async () => {
+    fixture.componentRef.setInput('embedded', true);
+    fixture.componentRef.setInput('scopeId', 1);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(projectsService.getProjects).toHaveBeenCalledWith(
+      expect.objectContaining({
+        per_page: 500,
+        scope_id: 1
+      })
+    );
+  });
+
   it('filters to active projects by default', async () => {
     fixture.detectChanges();
     await fixture.whenStable();

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, input, effect, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
@@ -61,6 +61,11 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
   private router = inject(Router);
 
+  /** When true, skip top bar integration (e.g. embedded on telescope detail). */
+  embedded = input(false);
+  /** When set with embedded, load only this telescope’s projects and hide the scope filter. */
+  scopeId = input<number | undefined>(undefined);
+
   dataSource = new MatTableDataSource<Project>();
   allProjects: Project[] = [];
   /** All telescopes for resolving scope names and links. */
@@ -91,19 +96,34 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
       activeOnly: [true],
       scope_id: [null as number | null]
     });
-    setTimeout(() => {
-      this.topBarService.updateState({
-        showFilter: true,
-        filterVisible: false,
-        onFilterToggle: () => this.toggleFilters(),
-        showAdd: true,
-        addTooltip: 'Add project',
-        onAddClick: () => this.openNewProject()
+    effect(() => {
+      if (!this.embedded()) {
+        return;
+      }
+      const sid = this.scopeId();
+      if (sid == null) {
+        return;
+      }
+      untracked(() => {
+        this.filterForm.patchValue({ scope_id: sid }, { emitEvent: false });
+        this.loadProjects();
       });
     });
   }
 
   ngOnInit(): void {
+    if (!this.embedded()) {
+      setTimeout(() => {
+        this.topBarService.updateState({
+          showFilter: true,
+          filterVisible: false,
+          onFilterToggle: () => this.toggleFilters(),
+          showAdd: true,
+          addTooltip: 'Add project',
+          onAddClick: () => this.openNewProject()
+        });
+      });
+    }
     this.telescopeService.getTelescopes().subscribe({
       next: list => {
         this.allScopes = list.map(t => ({ scope_id: t.scope_id, name: t.name }));
@@ -113,11 +133,15 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     this.filterForm.get('activeOnly')?.valueChanges.subscribe(() => {
       this.applyClientFilterAndSort();
     });
-    this.loadProjects();
+    if (!this.embedded()) {
+      this.loadProjects();
+    }
   }
 
   ngOnDestroy(): void {
-    this.topBarService.resetState();
+    if (!this.embedded()) {
+      this.topBarService.resetState();
+    }
   }
 
   /** Maps mat-sort column id to GET /api/projects `sort_by` when supported; otherwise null (client sort). */
@@ -145,7 +169,9 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   }
 
   private loadProjects(): void {
-    const scopeId = this.filterForm?.get('scope_id')?.value ?? null;
+    const fixedScope =
+      this.embedded() && this.scopeId() != null ? Number(this.scopeId()) : null;
+    const scopeId = fixedScope ?? (this.filterForm?.get('scope_id')?.value ?? null);
     const sortBy = this.sortColumnMapsToApiField(this.sortState.active);
     const sortParams: Pick<ProjectsListParams, 'sort_by' | 'sort_order'> = sortBy
       ? { sort_by: sortBy, sort_order: this.sortState.direction }
@@ -187,9 +213,11 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
       });
     }
     this.dataSource.data = list;
-    this.topBarService.updateState({
-      title: `Projects: ${list.length} item${list.length !== 1 ? 's' : ''}`
-    });
+    if (!this.embedded()) {
+      this.topBarService.updateState({
+        title: `Projects: ${list.length} item${list.length !== 1 ? 's' : ''}`
+      });
+    }
   }
 
   applyFilters(): void {
@@ -197,7 +225,9 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   }
 
   clearFilters(): void {
-    this.filterForm.patchValue({ activeOnly: true, scope_id: null });
+    const keepScope =
+      this.embedded() && this.scopeId() != null ? this.scopeId()! : null;
+    this.filterForm.patchValue({ activeOnly: true, scope_id: keepScope });
     this.loadProjects();
   }
 
@@ -214,6 +244,9 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   }
 
   toggleFilters(): void {
+    if (this.embedded()) {
+      return;
+    }
     this.isFilterVisible = !this.isFilterVisible;
     setTimeout(() => {
       this.topBarService.updateState({ filterVisible: this.isFilterVisible });

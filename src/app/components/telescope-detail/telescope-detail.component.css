@@ -35,8 +35,7 @@
 .filters-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
 .filters-header h2 { margin: 0; }
 .projects-section { margin-top: 2rem; }
-.projects-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.projects-header h2 { margin: 0; }
+.projects-heading { margin: 0 0 1rem; }
 .muted { color: #666; }
 table { width: 100%; }
 
