@@ -255,6 +255,20 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
   }
 
+  copyCoordinates(): void {
+    if (!this.hasMapCoordinates()) {
+      this.snackBar.open('Coordinates unavailable', 'Close', { duration: 2500 });
+      return;
+    }
+    const lat = this.telescope!.lat as number;
+    const lon = this.telescope!.lon as number;
+    const text = `${lat}, ${lon}`;
+    navigator.clipboard.writeText(text).then(
+      () => this.snackBar.open('Coordinates copied', 'Close', { duration: 2500 }),
+      () => this.snackBar.open('Failed to copy coordinates', 'Close', { duration: 3500 })
+    );
+  }
+
   private loadTelescopeNavigation(): void {
     this.telescopeService.getTelescopes({ sort_by: 'scope_id', sort_order: 'asc' }).subscribe({
       next: telescopes => {
