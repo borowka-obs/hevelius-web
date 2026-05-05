@@ -21,20 +21,40 @@
       </button>
     </div>
 
-    <mat-card class="scope-card">
-      <mat-card-header>
-        <mat-card-title>{{ telescope.name }}</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p><strong>Description:</strong> {{ telescope.descr || '—' }}</p>
-        <p><strong>Focal length (mm):</strong> {{ telescope.focal ?? '—' }}</p>
-        <p><strong>Aperture:</strong> {{ formatApertureWithInches(telescope.aperture) }}</p>
-        <p><strong>Min Declination:</strong> {{ telescope.min_dec }}° <strong>Max Declination:</strong> {{ telescope.max_dec }}°</p>
-        <p><strong>Latitude:</strong> {{ formatLatitude(telescope.lat) }} <strong>Longitude:</strong> {{ formatLongitude(telescope.lon) }} <strong>Altitude:</strong> {{ telescope.alt ?? '—' }} m</p>
-        <p><strong>Sensor:</strong> {{ telescope.sensor?.name ?? '—' }}</p>
-        <p><strong>Active:</strong> {{ telescope.active ? 'Yes' : 'No' }}</p>
-      </mat-card-content>
-    </mat-card>
+    <div class="scope-top-grid">
+      <mat-card class="scope-card">
+        <mat-card-header>
+          <mat-card-title>{{ telescope.name }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p><strong>Description:</strong> {{ telescope.descr || '—' }}</p>
+          <p><strong>Focal length (mm):</strong> {{ telescope.focal ?? '—' }}</p>
+          <p><strong>Aperture:</strong> {{ formatApertureWithInches(telescope.aperture) }}</p>
+          <p><strong>Min Declination:</strong> {{ telescope.min_dec }}° <strong>Max Declination:</strong> {{ telescope.max_dec }}°</p>
+          <p><strong>Latitude:</strong> {{ formatLatitude(telescope.lat) }} <strong>Longitude:</strong> {{ formatLongitude(telescope.lon) }} <strong>Altitude:</strong> {{ telescope.alt ?? '—' }} m</p>
+          <p><strong>Sensor:</strong> {{ telescope.sensor?.name ?? '—' }}</p>
+          <p><strong>Active:</strong> {{ telescope.active ? 'Yes' : 'No' }}</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="scope-map-card">
+        <mat-card-header>
+          <mat-card-title>Location map</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (hasMapCoordinates()) {
+            <div #scopeMap class="scope-map"></div>
+            <div class="map-links">
+              <a mat-raised-button color="primary" [href]="getOpenStreetMapUrl()" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+              <a mat-raised-button color="primary" [href]="getAppleMapsUrl()" target="_blank" rel="noopener noreferrer">Apple Maps</a>
+              <a mat-raised-button color="primary" [href]="getGoogleMapsUrl()" target="_blank" rel="noopener noreferrer">Google Maps</a>
+            </div>
+          } @else {
+            <p class="muted">Map unavailable: latitude/longitude is missing.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
 
 
     <div class="projects-section">
