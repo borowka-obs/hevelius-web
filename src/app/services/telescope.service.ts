@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { Hevelius } from 'src/hevelius';
 import { LoginService } from './login.service';
 import { Filter } from '../models/filter';
@@ -66,21 +66,48 @@ export class TelescopeService {
   }
 
   getTelescope(scopeId: number): Observable<Telescope> {
-    return this.http.get<{ status: boolean; scope: Telescope }>(`${this.apiUrl}/${scopeId}`).pipe(
-      map(res => res.scope)
-    );
+    return this.http
+      .get<{ status: boolean; scope: Telescope | null; msg?: string }>(`${this.apiUrl}/${scopeId}`)
+      .pipe(
+        switchMap(res => {
+          if (!res?.status || res.scope == null) {
+            return throwError(() => ({
+              error: { msg: res?.msg ?? `Telescope ${scopeId} not found` }
+            }));
+          }
+          return of(res.scope);
+        })
+      );
   }
 
   createTelescope(body: ScopeCreate): Observable<{ scope_id: number; scope: Telescope }> {
-    return this.http.post<{ status: boolean; scope_id: number; scope: Telescope }>(this.apiUrl, body).pipe(
-      map(res => ({ scope_id: res.scope_id, scope: res.scope }))
-    );
+    return this.http
+      .post<{ status: boolean; scope_id?: number; scope?: Telescope; msg?: string }>(this.apiUrl, body)
+      .pipe(
+        switchMap(res => {
+          if (!res?.status || res.scope == null || res.scope_id == null) {
+            return throwError(() => ({
+              error: { msg: res?.msg ?? 'Failed to create telescope' }
+            }));
+          }
+          return of({ scope_id: res.scope_id, scope: res.scope });
+        })
+      );
   }
 
   updateTelescope(scopeId: number, body: ScopeUpdate): Observable<Telescope> {
-    return this.http.patch<{ status: boolean; scope: Telescope }>(`${this.apiUrl}/${scopeId}`, body).pipe(
-      map(res => res.scope)
-    );
+    return this.http
+      .patch<{ status: boolean; scope: Telescope | null; msg?: string }>(`${this.apiUrl}/${scopeId}`, body)
+      .pipe(
+        switchMap(res => {
+          if (!res?.status || res.scope == null) {
+            return throwError(() => ({
+              error: { msg: res?.msg ?? 'Failed to update telescope' }
+            }));
+          }
+          return of(res.scope);
+        })
+      );
   }
 
   addFilterToScope(scopeId: number, filterId: number): Observable<void> {

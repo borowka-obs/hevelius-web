@@ -114,3 +114,46 @@ export function parseDecDegrees(raw: string): number | null {
   const v = sign * (Math.abs(deg) + m / 60 + sec / 3600);
   return finiteInRange(v, -90, 90);
 }
+
+/**
+ * Parse longitude to decimal degrees (−180…180).
+ * Same input styles as {@link parseDecDegrees} (decimal or sexagesimal).
+ */
+export function parseLongitudeDegrees(raw: string): number | null {
+  let s = raw.trim();
+  if (!s) {
+    return null;
+  }
+
+  let sign = 1;
+  if (s[0] === '+' || s[0] === '-') {
+    sign = s[0] === '-' ? -1 : 1;
+    s = s.slice(1).trim();
+  }
+
+  const strictDec = /^(?:\d+(?:\.\d*)?|\.\d+)$/;
+  if (strictDec.test(s)) {
+    const v = sign * parseFloat(s);
+    return finiteInRange(v, -180, 180);
+  }
+
+  const norm = normalizeDecSeparators(s).replace(/\s+/g, ':');
+  const parts = norm
+    .split(':')
+    .map(p => p.trim())
+    .filter(p => p.length > 0);
+  if (parts.length === 0) {
+    return null;
+  }
+  const deg = parseFloat(parts[0]);
+  const m = parts.length >= 2 ? parseFloat(parts[1]) : 0;
+  const sec = parts.length >= 3 ? parseFloat(parts[2]) : 0;
+  if (!Number.isFinite(deg) || !Number.isFinite(m) || !Number.isFinite(sec)) {
+    return null;
+  }
+  if (m < 0 || m >= 60 || sec < 0 || sec >= 60) {
+    return null;
+  }
+  const v = sign * (Math.abs(deg) + m / 60 + sec / 3600);
+  return finiteInRange(v, -180, 180);
+}

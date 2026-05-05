@@ -104,6 +104,18 @@ describe('TelescopeService', () => {
     });
   });
 
+  it('should error when update response has status false', () => {
+    service.updateTelescope(7, { name: 'x' }).subscribe({
+      next: () => expect.fail('expected error'),
+      error: err => {
+        expect(err.error.msg).toBe('not found');
+      }
+    });
+
+    const req = httpMock.expectOne(`${Hevelius.apiUrl}/scopes/7`);
+    req.flush({ status: false, scope: null, msg: 'not found' });
+  });
+
   it('should add filter to scope', () => {
     service.addFilterToScope(3, 11).subscribe(res => {
       expect(res).toBeUndefined();

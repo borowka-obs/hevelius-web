@@ -1,43 +1,87 @@
 <h2 mat-dialog-title>{{ title }}</h2>
 <mat-dialog-content>
   <form [formGroup]="form">
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Name</mat-label>
       <input matInput formControlName="name" required>
+      @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
+        <mat-error>Name is required</mat-error>
+      }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Description</mat-label>
       <textarea matInput formControlName="descr" rows="2"></textarea>
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Focal length (mm)</mat-label>
-      <input matInput type="number" formControlName="focal" min="0" step="0.1">
+      <input matInput formControlName="focal" placeholder="e.g. 1200" autocomplete="off">
+      <mat-hint>Optional, number ≥ 0</mat-hint>
+      @if (form.get('focal')?.touched && form.get('focal')?.hasError('nonNegative')) {
+        <mat-error>Enter a valid non-negative number</mat-error>
+      }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Aperture (mm)</mat-label>
-      <input matInput type="number" formControlName="aperture" min="0" step="0.1">
+      <input matInput formControlName="aperture" placeholder="e.g. 200" autocomplete="off">
+      <mat-hint>Optional, number ≥ 0</mat-hint>
+      @if (form.get('aperture')?.touched && form.get('aperture')?.hasError('nonNegative')) {
+        <mat-error>Enter a valid non-negative number</mat-error>
+      }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Min Dec</mat-label>
-      <input matInput type="number" formControlName="min_dec" step="0.1">
+      <input matInput formControlName="min_dec" placeholder="e.g. -30 or +41:16:12" autocomplete="off">
+      <mat-hint>Optional; degrees -90 to 90</mat-hint>
+      @if (form.get('min_dec')?.touched && form.get('min_dec')?.hasError('decLimit')) {
+        <mat-error>Must be between -90 and 90</mat-error>
+      }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Max Dec</mat-label>
-      <input matInput type="number" formControlName="max_dec" step="0.1">
+      <input matInput formControlName="max_dec" placeholder="e.g. 90" autocomplete="off">
+      <mat-hint>Optional, −90°–90°; ≥ Min Dec if both set</mat-hint>
+      @if (form.get('max_dec')?.touched && form.get('max_dec')?.hasError('decLimit')) {
+        <mat-error>Must be between -90 and 90</mat-error>
+      }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    @if (form.hasError('minMaxDec') && (form.get('min_dec')?.touched || form.get('max_dec')?.touched)) {
+      <div class="form-level-error">Min Dec must be less than or equal to Max Dec</div>
+    }
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Longitude</mat-label>
-      <input matInput type="number" formControlName="lon" step="0.0001">
+      <input matInput formControlName="lon" placeholder="e.g. 18.517 or +18:31:01.2" autocomplete="off">
+      <mat-hint class="coord-hint">
+        <span class="coord-hint-main">Decimal or D:M:S, −180° to 180°</span>
+        @if (lonSexagesimalHint) {
+          <span class="coord-hint-preview">{{ lonSexagesimalHint }}</span>
+        }
+      </mat-hint>
+      @if (form.get('lon')?.touched && form.get('lon')?.hasError('lonParse')) {
+        <mat-error>Invalid longitude (use decimal degrees or D:M:S)</mat-error>
+      }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Latitude</mat-label>
-      <input matInput type="number" formControlName="lat" step="0.0001">
+      <input matInput formControlName="lat" placeholder="e.g. 49.2 or +49:12:00" autocomplete="off">
+      <mat-hint class="coord-hint">
+        <span class="coord-hint-main">Decimal or D:M:S, −90° to 90°</span>
+        @if (latSexagesimalHint) {
+          <span class="coord-hint-preview">{{ latSexagesimalHint }}</span>
+        }
+      </mat-hint>
+      @if (form.get('lat')?.touched && form.get('lat')?.hasError('latParse')) {
+        <mat-error>Invalid latitude (use decimal degrees or D:M:S)</mat-error>
+      }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Altitude</mat-label>
-      <input matInput type="number" formControlName="alt" min="0" step="0.1">
+      <input matInput formControlName="alt" placeholder="e.g. 320" autocomplete="off">
+      <mat-hint>Optional, meters ≥ 0</mat-hint>
+      @if (form.get('alt')?.touched && form.get('alt')?.hasError('nonNegative')) {
+        <mat-error>Enter a valid non-negative number</mat-error>
+      }
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Sensor</mat-label>
       <mat-select formControlName="sensor_id">
         <mat-option [value]="null">None</mat-option>
@@ -50,6 +94,8 @@
   </form>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="save()">{{ mode === 'add' ? 'Create' : 'Save' }}</button>
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" type="button" [disabled]="form.invalid" (click)="save()">
+    {{ mode === 'add' ? 'Create' : 'Save' }}
+  </button>
 </mat-dialog-actions>

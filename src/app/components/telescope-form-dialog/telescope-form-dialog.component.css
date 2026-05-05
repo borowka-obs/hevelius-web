@@ -1,2 +1,52 @@
-.full-width { width: 100%; }
-mat-dialog-content form { display: flex; flex-direction: column; min-width: 360px; max-height: 70vh; overflow-y: auto; }
+.full-width {
+  width: 100%;
+}
+
+mat-dialog-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: min(100%, 480px);
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-bottom: 0.5rem;
+}
+
+/* Extra air after multi-line fields so hints/subscripts clear the next outline */
+mat-dialog-content form mat-form-field:has(textarea) {
+  margin-bottom: 0.35rem;
+}
+
+mat-dialog-content form mat-checkbox {
+  margin-top: 0.25rem;
+}
+
+/* Hint row: short wrapping text + single-line DMS preview */
+mat-hint.coord-hint {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+mat-hint.coord-hint .coord-hint-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+mat-hint.coord-hint .coord-hint-preview {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.form-level-error {
+  color: var(--mat-form-field-error-text-color, #f44336);
+  font-size: 12px;
+  margin: -0.25rem 0 0 0;
+  padding-left: 16px;
+}
