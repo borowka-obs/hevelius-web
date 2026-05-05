@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TelescopeService } from '../../services/telescope.service';
 import { Telescope } from '../../services/telescope.service';
@@ -17,6 +17,7 @@ import { AddFilterToScopeDialogComponent } from '../add-filter-to-scope-dialog/a
 import { Filter } from '../../models/filter';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope-form-dialog.component';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-telescope-detail',
@@ -35,7 +36,7 @@ import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope
     MatTooltipModule
   ]
 })
-export class TelescopeDetailComponent implements OnInit {
+export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private telescopeService = inject(TelescopeService);
@@ -43,6 +44,7 @@ export class TelescopeDetailComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private fb = inject(FormBuilder);
+  @ViewChild('scopeMap', { static: false }) scopeMapElement?: ElementRef<HTMLDivElement>;
 
   telescope: Telescope | null = null;
   telescopesNavigation: Telescope[] = [];
@@ -64,6 +66,9 @@ export class TelescopeDetailComponent implements OnInit {
     { value: 'inactive', label: 'Inactive only' },
     { value: 'all', label: 'All' }
   ] as const;
+  private map?: L.Map;
+  private mapLayer?: L.TileLayer;
+  private mapMarker?: L.CircleMarker;
 
   ngOnInit(): void {
     this.loadTelescopeNavigation();
@@ -71,6 +76,14 @@ export class TelescopeDetailComponent implements OnInit {
     if (id) {
       this.loadTelescope(Number(id));
     }
+  }
+
+  ngAfterViewInit(): void {
+    this.refreshMap();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyMap();
   }
 
   constructor() {
@@ -85,6 +98,7 @@ export class TelescopeDetailComponent implements OnInit {
         this.telescope = t;
         this.currentScopeIndex = this.telescopesNavigation.findIndex(scope => scope.scope_id === t.scope_id);
         this.loadProjects(scopeId);
+        setTimeout(() => this.refreshMap());
       },
       error: () => {
         this.snackBar.open('Telescope not found', 'Close', { duration: 3000 });
@@ -216,6 +230,31 @@ export class TelescopeDetailComponent implements OnInit {
     return `${aperture}mm (${inchText}")`;
   }
 
+  hasMapCoordinates(): boolean {
+    return this.telescope?.lat != null && this.telescope?.lon != null;
+  }
+
+  getOpenStreetMapUrl(): string | null {
+    if (!this.hasMapCoordinates()) return null;
+    const lat = this.telescope!.lat;
+    const lon = this.telescope!.lon;
+    return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=13/${lat}/${lon}`;
+  }
+
+  getAppleMapsUrl(): string | null {
+    if (!this.hasMapCoordinates()) return null;
+    const lat = this.telescope!.lat;
+    const lon = this.telescope!.lon;
+    return `https://maps.apple.com/?ll=${lat},${lon}&q=${encodeURIComponent(this.telescope?.name ?? 'Telescope')}`;
+  }
+
+  getGoogleMapsUrl(): string | null {
+    if (!this.hasMapCoordinates()) return null;
+    const lat = this.telescope!.lat;
+    const lon = this.telescope!.lon;
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+  }
+
   private loadTelescopeNavigation(): void {
     this.telescopeService.getTelescopes({ sort_by: 'scope_id', sort_order: 'asc' }).subscribe({
       next: telescopes => {
@@ -251,6 +290,52 @@ export class TelescopeDetailComponent implements OnInit {
     const minutes = Math.floor(minutesFloat);
     const seconds = (minutesFloat - minutes) * 60;
     return `${degrees.toString().padStart(2, '0')}° ${minutes.toString().padStart(2, '0')}' ${seconds.toFixed(1).padStart(4, '0')}"`;
+  }
+
+  private refreshMap(): void {
+    if (!this.scopeMapElement) {
+      return;
+    }
+    if (!this.hasMapCoordinates()) {
+      this.destroyMap();
+      return;
+    }
+
+    const lat = this.telescope!.lat as number;
+    const lon = this.telescope!.lon as number;
+
+    if (!this.map) {
+      this.map = L.map(this.scopeMapElement.nativeElement, {
+        center: [lat, lon],
+        zoom: 13,
+        zoomControl: true
+      });
+      this.mapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      });
+      this.mapLayer.addTo(this.map);
+      this.mapMarker = L.circleMarker([lat, lon], {
+        radius: 8,
+        color: '#1976d2',
+        fillColor: '#1976d2',
+        fillOpacity: 0.5,
+        weight: 2
+      }).addTo(this.map);
+    } else {
+      this.map.setView([lat, lon], this.map.getZoom());
+      this.mapMarker?.setLatLng([lat, lon]);
+      this.map.invalidateSize();
+    }
+  }
+
+  private destroyMap(): void {
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+      this.mapLayer = undefined;
+      this.mapMarker = undefined;
+    }
   }
 
   getFilters(): Filter[] {
