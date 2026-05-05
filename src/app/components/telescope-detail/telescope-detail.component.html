@@ -2,10 +2,24 @@
   <p>Loading…</p>
 } @else {
   <div class="container">
-    <button mat-button (click)="backToList()">
-      <mat-icon>arrow_back</mat-icon>
-      Back to telescopes
-    </button>
+    <div class="scope-actions">
+      <button mat-raised-button color="primary" (click)="backToList()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to telescopes
+      </button>
+      <button mat-raised-button color="primary" (click)="openEditTelescope()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-raised-button color="primary" (click)="goToPreviousScope()" [disabled]="!canGoToPreviousScope()">
+        <mat-icon>chevron_left</mat-icon>
+        Prev @if (getPreviousScopeName(); as prevName) { ({{ prevName }}) }
+      </button>
+      <button mat-raised-button color="primary" (click)="goToNextScope()" [disabled]="!canGoToNextScope()">
+        Next @if (getNextScopeName(); as nextName) { ({{ nextName }}) }
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
 
     <mat-card class="scope-card">
       <mat-card-header>
@@ -14,9 +28,9 @@
       <mat-card-content>
         <p><strong>Description:</strong> {{ telescope.descr || '—' }}</p>
         <p><strong>Focal length (mm):</strong> {{ telescope.focal ?? '—' }}</p>
-        <p><strong>Aperture (mm):</strong> {{ telescope.aperture ?? '—' }}</p>
+        <p><strong>Aperture:</strong> {{ formatApertureWithInches(telescope.aperture) }}</p>
         <p><strong>Min Dec:</strong> {{ telescope.min_dec }} <strong>Max Dec:</strong> {{ telescope.max_dec }}</p>
-        <p><strong>Lon:</strong> {{ telescope.lon ?? '—' }} <strong>Lat:</strong> {{ telescope.lat ?? '—' }} <strong>Alt:</strong> {{ telescope.alt ?? '—' }}</p>
+        <p><strong>Lon:</strong> {{ formatLongitude(telescope.lon) }} <strong>Lat:</strong> {{ formatLatitude(telescope.lat) }} <strong>Alt:</strong> {{ telescope.alt ?? '—' }}</p>
         <p><strong>Sensor:</strong> {{ telescope.sensor?.name ?? '—' }}</p>
         <p><strong>Active:</strong> {{ telescope.active ? 'Yes' : 'No' }}</p>
       </mat-card-content>

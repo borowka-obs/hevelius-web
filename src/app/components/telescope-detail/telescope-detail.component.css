@@ -1,4 +1,10 @@
 .container { padding: 20px; }
+.scope-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
 .scope-card { margin: 1rem 0; max-width: 640px; }
 .filters-section { margin-top: 2rem; }
 .filters-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
