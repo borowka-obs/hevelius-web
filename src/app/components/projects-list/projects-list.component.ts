@@ -1,14 +1,11 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
 import { TelescopeService } from '../../services/telescope.service';
 import { Project, ProjectsListParams } from '../../models/project';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -51,8 +48,6 @@ import { formatIntegrationDuration, projectFilterGoalSummary } from '../../utils
     MatButtonModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatIconModule,
-    MatSlideToggleModule,
     MatTooltipModule,
     RouterModule,
     DatePipe
@@ -65,7 +60,6 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   private topBarService = inject(TopBarService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
 
   dataSource = new MatTableDataSource<Project>();
   allProjects: Project[] = [];
@@ -74,7 +68,6 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   /** Active telescopes only (filter dropdown). */
   scopes: { scope_id: number; name: string }[] = [];
   displayedColumns: string[] = [
-    'project_id',
     'name',
     'description',
     'scope_id',
@@ -82,8 +75,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     'integration',
     'start_date',
     'end_date',
-    'last_updated',
-    'active'
+    'last_updated'
   ];
 
   filterForm: FormGroup;
@@ -260,9 +252,6 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
       const t = p.total_integration_time;
       return t != null && Number.isFinite(Number(t)) ? Number(t) : -1;
     }
-    if (column === 'active') {
-      return p.active;
-    }
     if (column === 'description') {
       return (p.description ?? '').toLowerCase();
     }
@@ -298,25 +287,10 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     return String(value).trim().slice(0, 10);
   }
 
-  toggleProjectActive(p: Project, next: boolean): void {
-    this.projectsService.updateProject(p.project_id, { active: next }).subscribe({
-      next: updated => {
-        const i = this.allProjects.findIndex(x => x.project_id === p.project_id);
-        if (i >= 0) {
-          const prev = this.allProjects[i];
-          this.allProjects[i] = {
-            ...prev,
-            ...updated,
-            subframes: updated.subframes ?? prev.subframes
-          };
-        }
-        this.applyClientFilterAndSort();
-      },
-      error: err => {
-        this.snackBar.open(err?.error?.msg || err?.message || 'Failed to update project', 'Close', {
-          duration: 5000
-        });
-      }
-    });
+  formatDescription(value: string | null | undefined): string {
+    if (value == null || String(value).trim() === '') {
+      return '—';
+    }
+    return String(value).trim();
   }
 }
