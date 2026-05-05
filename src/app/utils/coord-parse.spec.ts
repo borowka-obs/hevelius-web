@@ -1,4 +1,4 @@
-import { parseDecDegrees, parseRAHours } from './coord-parse';
+import { parseDecDegrees, parseLongitudeDegrees, parseRAHours } from './coord-parse';
 
 describe('coord-parse', () => {
   describe('parseRAHours', () => {
@@ -35,6 +35,22 @@ describe('coord-parse', () => {
     it('rejects out-of-range Dec', () => {
       expect(parseDecDegrees('91')).toBeNull();
       expect(parseDecDegrees('')).toBeNull();
+    });
+  });
+
+  describe('parseLongitudeDegrees', () => {
+    it('parses decimal degrees', () => {
+      expect(parseLongitudeDegrees('18.517')).toBeCloseTo(18.517, 4);
+      expect(parseLongitudeDegrees('-122.4')).toBeCloseTo(-122.4, 4);
+    });
+
+    it('parses sexagesimal', () => {
+      expect(parseLongitudeDegrees('18°31\'01.2"')).toBeCloseTo(18.517, 3);
+    });
+
+    it('rejects out-of-range longitude', () => {
+      expect(parseLongitudeDegrees('181')).toBeNull();
+      expect(parseLongitudeDegrees('')).toBeNull();
     });
   });
 });
