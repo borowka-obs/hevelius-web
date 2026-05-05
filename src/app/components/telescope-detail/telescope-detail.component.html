@@ -48,6 +48,9 @@
               <a mat-raised-button color="primary" [href]="getOpenStreetMapUrl()" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
               <a mat-raised-button color="primary" [href]="getAppleMapsUrl()" target="_blank" rel="noopener noreferrer">Apple Maps</a>
               <a mat-raised-button color="primary" [href]="getGoogleMapsUrl()" target="_blank" rel="noopener noreferrer">Google Maps</a>
+              <button mat-raised-button color="primary" type="button" (click)="copyCoordinates()">
+                Copy coordinates
+              </button>
             </div>
           } @else {
             <p class="muted">Map unavailable: latitude/longitude is missing.</p>
