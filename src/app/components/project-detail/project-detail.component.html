@@ -2,10 +2,24 @@
   <p>Loading…</p>
 } @else {
   <div class="container">
-    <button mat-button (click)="backToList()">
-      <mat-icon>arrow_back</mat-icon>
-      Back to projects
-    </button>
+    <div class="project-actions-top">
+      <button mat-raised-button color="primary" (click)="backToList()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to projects
+      </button>
+      <button mat-raised-button color="primary" (click)="editProject()" type="button">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-raised-button color="primary" (click)="goToPreviousProject()" [disabled]="!canGoToPreviousProject()">
+        <mat-icon>chevron_left</mat-icon>
+        Prev @if (getPreviousProjectName(); as prevName) { ({{ prevName }}) }
+      </button>
+      <button mat-raised-button color="primary" (click)="goToNextProject()" [disabled]="!canGoToNextProject()">
+        Next @if (getNextProjectName(); as nextName) { ({{ nextName }}) }
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
 
     <mat-card class="project-card">
       <mat-card-header>
@@ -30,13 +44,6 @@
             —
           }
         </p>
-        <p class="active-row">
-          <mat-slide-toggle
-            [checked]="project.active"
-            (change)="onProjectActiveChange($event.checked)">
-            Project active
-          </mat-slide-toggle>
-        </p>
         @if (getSubframes().length) {
           <p>
             <strong>Total integration (captured):</strong>
@@ -53,13 +60,6 @@
             <p><strong>Plan by filter:</strong> {{ projectSummaryLine() }}</p>
           }
         }
-
-        <div class="project-actions">
-          <button mat-button color="primary" (click)="editProject()" type="button">
-            <mat-icon>edit</mat-icon>
-            Edit project
-          </button>
-        </div>
       </mat-card-content>
     </mat-card>
 

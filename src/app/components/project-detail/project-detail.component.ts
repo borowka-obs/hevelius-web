@@ -10,7 +10,6 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -42,7 +41,6 @@ import {
     MatIconModule,
     MatTooltipModule,
     MatProgressBarModule,
-    MatSlideToggleModule,
     DatePipe,
     TasksComponent
   ]
@@ -58,11 +56,14 @@ export class ProjectDetailComponent implements OnInit {
   private telescopeService = inject(TelescopeService);
 
   project: Project | null = null;
+  projectNavigation: Project[] = [];
+  currentProjectIndex = -1;
   telescope: Telescope | null = null;
   /** Must match every `matColumnDef` in the template — extra or missing keys break the table. */
   subframesColumns: string[] = ['filter', 'exposure_time', 'goal_count', 'progress', 'active', 'actions'];
 
   ngOnInit(): void {
+    this.loadProjectNavigation();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadProject(Number(id));
@@ -73,6 +74,7 @@ export class ProjectDetailComponent implements OnInit {
     this.projectsService.getProject(projectId).subscribe({
       next: p => {
         this.project = p;
+        this.currentProjectIndex = this.projectNavigation.findIndex(project => project.project_id === p.project_id);
         this.loadScope(p.scope_id);
       },
       error: () => {
@@ -95,6 +97,42 @@ export class ProjectDetailComponent implements OnInit {
 
   backToList(): void {
     this.router.navigate(['/projects']);
+  }
+
+  canGoToPreviousProject(): boolean {
+    return this.currentProjectIndex > 0;
+  }
+
+  canGoToNextProject(): boolean {
+    return this.currentProjectIndex >= 0 && this.currentProjectIndex < this.projectNavigation.length - 1;
+  }
+
+  getPreviousProjectName(): string | null {
+    if (!this.canGoToPreviousProject()) {
+      return null;
+    }
+    return this.projectNavigation[this.currentProjectIndex - 1]?.name ?? null;
+  }
+
+  getNextProjectName(): string | null {
+    if (!this.canGoToNextProject()) {
+      return null;
+    }
+    return this.projectNavigation[this.currentProjectIndex + 1]?.name ?? null;
+  }
+
+  goToPreviousProject(): void {
+    if (!this.canGoToPreviousProject()) return;
+    const prev = this.projectNavigation[this.currentProjectIndex - 1];
+    this.router.navigate(['/projects', prev.project_id]);
+    this.loadProject(prev.project_id);
+  }
+
+  goToNextProject(): void {
+    if (!this.canGoToNextProject()) return;
+    const next = this.projectNavigation[this.currentProjectIndex + 1];
+    this.router.navigate(['/projects', next.project_id]);
+    this.loadProject(next.project_id);
   }
 
   getSubframes(): ProjectSubframe[] {
@@ -251,26 +289,6 @@ export class ProjectDetailComponent implements OnInit {
     return this.project ? projectFilterGoalSummary(this.project) : '';
   }
 
-  onProjectActiveChange(active: boolean): void {
-    if (!this.project) {
-      return;
-    }
-    this.projectsService.updateProject(this.project.project_id, { active }).subscribe({
-      next: updated => {
-        const prev = this.project!;
-        this.project = {
-          ...prev,
-          ...updated,
-          subframes: updated.subframes ?? prev.subframes
-        };
-        this.snackBar.open(active ? 'Project enabled' : 'Project disabled', 'Close', { duration: 2500 });
-      },
-      error: err => {
-        this.snackBar.open(err?.error?.msg || 'Failed to update project', 'Close', { duration: 5000 });
-      }
-    });
-  }
-
   deleteSubframe(sub: ProjectSubframe): void {
     if (!confirm(`Delete subframe "${sub.filter?.short_name ?? sub.filter_id}"?`)) {
       return;
@@ -283,6 +301,21 @@ export class ProjectDetailComponent implements OnInit {
       },
       error: err => {
         this.snackBar.open(err?.error?.msg || 'Failed to delete subframe', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  private loadProjectNavigation(): void {
+    this.projectsService.getProjects({ per_page: 500, sort_by: 'project_id', sort_order: 'asc' }).subscribe({
+      next: res => {
+        this.projectNavigation = res.projects ?? [];
+        if (this.project) {
+          this.currentProjectIndex = this.projectNavigation.findIndex(project => project.project_id === this.project!.project_id);
+        }
+      },
+      error: () => {
+        this.projectNavigation = [];
+        this.currentProjectIndex = -1;
       }
     });
   }
