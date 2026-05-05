@@ -22,6 +22,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterModule } from '@angular/router';
 
 import { LongPressDirective } from '../../directives/long-press.directive';
 import { MatSelectModule } from '@angular/material/select';
@@ -62,6 +63,7 @@ import { TaskParams } from '../../models/task-response';
     MatSnackBarModule,
     MatSelectModule,
     MatTooltipModule,
+    RouterModule,
     LongPressDirective
 ]
 })
@@ -90,7 +92,7 @@ export class TasksComponent implements OnInit, OnDestroy {
   };
 
   dataSource = inject(TasksService);
-  displayedColumns: string[] = ['task_id', 'user_id', 'state', 'object', 'ra', 'decl', 'exposure', 'actions'];
+  displayedColumns: string[] = ['task_id', 'user_id', 'scope_id', 'state', 'object', 'ra', 'decl', 'exposure', 'actions'];
   totalTasks = 0;
   currentPage = 1;
   pageSize = 50;
@@ -122,6 +124,14 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   getStateLabel(state: number): string {
     return this.dataSource.states.getState(state);
+  }
+
+  getTaskOwnerLabel(task: Task): string {
+    return task.user_login && task.user_login.trim() !== '' ? task.user_login : String(task.user_id);
+  }
+
+  getTaskScopeLabel(task: Task): string {
+    return task.scope_name && task.scope_name.trim() !== '' ? task.scope_name : String(task.scope_id ?? '-');
   }
 
   onFilterFieldEnter(event: Event): void {

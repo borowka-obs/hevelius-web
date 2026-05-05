@@ -60,7 +60,18 @@
 
       <ng-container matColumnDef="user_id">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Owner</th>
-        <td mat-cell *matCellDef="let task">{{task.user_id}}</td>
+        <td mat-cell *matCellDef="let task">{{ getTaskOwnerLabel(task) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="scope_id">
+        <th mat-header-cell *matHeaderCellDef>Telescope</th>
+        <td mat-cell *matCellDef="let task">
+          @if (task.scope_id != null) {
+            <a [routerLink]="['/scopes', task.scope_id]">{{ getTaskScopeLabel(task) }}</a>
+          } @else {
+            -
+          }
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="state">

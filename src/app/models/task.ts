@@ -14,6 +14,7 @@ export interface Date {
 export interface Task {
     task_id: number;
     user_id: number;
+    user_login?: string | null;
     aavso_id: string;
     object: string;
     ra: number;
@@ -22,6 +23,8 @@ export interface Task {
     state: number;
     /** Telescope ID (see OpenAPI Task schema). */
     scope_id?: number;
+    /** Telescope name from /api/tasks join. */
+    scope_name?: string | null;
     /** Projects this task belongs to (when returned by API). */
     project_ids?: number[];
     activated?: string;
