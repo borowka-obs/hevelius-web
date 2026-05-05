@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
 import { ProjectsListComponent } from './projects-list.component';
 import { ProjectsService } from '../../services/projects.service';
@@ -28,7 +27,7 @@ function minimalTelescope(partial: Partial<Telescope> & Pick<Telescope, 'scope_i
 describe('ProjectsListComponent', () => {
   let fixture: ComponentFixture<ProjectsListComponent>;
   let component: ProjectsListComponent;
-  let projectsService: { getProjects: ReturnType<typeof vi.fn>; updateProject: ReturnType<typeof vi.fn> };
+  let projectsService: { getProjects: ReturnType<typeof vi.fn> };
   let telescopeService: { getTelescopes: ReturnType<typeof vi.fn> };
 
   const mockProjects: Project[] = [
@@ -63,7 +62,6 @@ describe('ProjectsListComponent', () => {
           pages: 1
         })
       ),
-      updateProject: vi.fn().mockReturnValue(of({ ...mockProjects[0], active: false }))
     };
     telescopeService = {
       getTelescopes: vi.fn().mockReturnValue(
@@ -82,7 +80,6 @@ describe('ProjectsListComponent', () => {
         { provide: ProjectsService, useValue: projectsService },
         { provide: TelescopeService, useValue: telescopeService },
         { provide: MatDialog, useValue: { open: vi.fn().mockReturnValue({ afterClosed: () => of(false) }) } },
-        { provide: MatSnackBar, useValue: { open: vi.fn() } }
       ]
     }).compileComponents();
   });
@@ -153,6 +150,13 @@ describe('ProjectsListComponent', () => {
     expect(component.formatCalendarDate(null)).toBe('—');
     expect(component.formatCalendarDate('')).toBe('—');
     expect(component.formatCalendarDate('2026-03-20')).toBe('2026-03-20');
+  });
+
+  it('formatDescription returns dash for empty and trims text', () => {
+    expect(component.formatDescription(null)).toBe('—');
+    expect(component.formatDescription('')).toBe('—');
+    expect(component.formatDescription('   ')).toBe('—');
+    expect(component.formatDescription('  Notes  ')).toBe('Notes');
   });
 
   it('projectTotalIntegrationLabel uses API field', () => {
