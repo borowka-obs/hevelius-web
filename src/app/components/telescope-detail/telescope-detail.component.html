@@ -29,46 +29,13 @@
         <p><strong>Description:</strong> {{ telescope.descr || '—' }}</p>
         <p><strong>Focal length (mm):</strong> {{ telescope.focal ?? '—' }}</p>
         <p><strong>Aperture:</strong> {{ formatApertureWithInches(telescope.aperture) }}</p>
-        <p><strong>Min Dec:</strong> {{ telescope.min_dec }} <strong>Max Dec:</strong> {{ telescope.max_dec }}</p>
-        <p><strong>Lon:</strong> {{ formatLongitude(telescope.lon) }} <strong>Lat:</strong> {{ formatLatitude(telescope.lat) }} <strong>Alt:</strong> {{ telescope.alt ?? '—' }}</p>
+        <p><strong>Min Declination:</strong> {{ telescope.min_dec }}° <strong>Max Declination:</strong> {{ telescope.max_dec }}°</p>
+        <p><strong>Latitude:</strong> {{ formatLatitude(telescope.lat) }} <strong>Longitude:</strong> {{ formatLongitude(telescope.lon) }} <strong>Altitude:</strong> {{ telescope.alt ?? '—' }} m</p>
         <p><strong>Sensor:</strong> {{ telescope.sensor?.name ?? '—' }}</p>
         <p><strong>Active:</strong> {{ telescope.active ? 'Yes' : 'No' }}</p>
       </mat-card-content>
     </mat-card>
 
-    <div class="filters-section">
-      <div class="filters-header">
-        <h2>Filters</h2>
-        <button mat-raised-button color="primary" (click)="openAddFilter()">
-          <mat-icon>add</mat-icon>
-          Add filter
-        </button>
-      </div>
-      @if (getFilters().length === 0) {
-        <p class="muted">No filters assigned. Click "Add filter" to assign one.</p>
-      } @else {
-        <table mat-table [dataSource]="getFilters()" class="mat-elevation-z8">
-          <ng-container matColumnDef="short_name">
-            <th mat-header-cell *matHeaderCellDef>Short name</th>
-            <td mat-cell *matCellDef="let f">{{ f.short_name }}</td>
-          </ng-container>
-          <ng-container matColumnDef="full_name">
-            <th mat-header-cell *matHeaderCellDef>Full name</th>
-            <td mat-cell *matCellDef="let f">{{ f.full_name ?? '—' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let f">
-              <button mat-icon-button (click)="removeFilter(f)" matTooltip="Remove from telescope">
-                <mat-icon>remove_circle_outline</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="filterColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: filterColumns;"></tr>
-        </table>
-      }
-    </div>
 
     <div class="projects-section">
       <div class="projects-header">
@@ -130,5 +97,40 @@
         </table>
       }
     </div>
+
+    <div class="filters-section">
+      <div class="filters-header">
+        <h2>Filters</h2>
+        <button mat-raised-button color="primary" (click)="openAddFilter()">
+          <mat-icon>add</mat-icon>
+          Add filter
+        </button>
+      </div>
+      @if (getFilters().length === 0) {
+        <p class="muted">No filters assigned. Click "Add filter" to assign one.</p>
+      } @else {
+        <table mat-table [dataSource]="getFilters()" class="mat-elevation-z8">
+          <ng-container matColumnDef="short_name">
+            <th mat-header-cell *matHeaderCellDef>Short name</th>
+            <td mat-cell *matCellDef="let f">{{ f.short_name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="full_name">
+            <th mat-header-cell *matHeaderCellDef>Full name</th>
+            <td mat-cell *matCellDef="let f">{{ f.full_name ?? '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let f">
+              <button mat-icon-button (click)="removeFilter(f)" matTooltip="Remove from telescope">
+                <mat-icon>remove_circle_outline</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="filterColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: filterColumns;"></tr>
+        </table>
+      }
+    </div>
+
   </div>
 }
