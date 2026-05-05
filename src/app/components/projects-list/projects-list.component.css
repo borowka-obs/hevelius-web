@@ -2,6 +2,14 @@
   padding: 20px;
 }
 
+.projects-embedded-container {
+  padding: 0;
+}
+
+.filters-embedded {
+  margin-bottom: 1rem;
+}
+
 .filters {
   overflow: hidden;
   margin-bottom: 1rem;
