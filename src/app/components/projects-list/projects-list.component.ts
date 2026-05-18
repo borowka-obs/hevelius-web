@@ -19,6 +19,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { TopBarService } from '../../services/top-bar.service';
 import { ProjectFormDialogComponent } from '../project-form-dialog/project-form-dialog.component';
 import { formatIntegrationDuration, projectFilterGoalSummary } from '../../utils/project-integration';
+import { ProjectPublicationsComponent } from '../project-publications/project-publications.component';
 
 @Component({
   selector: 'app-projects-list',
@@ -53,7 +54,8 @@ import { formatIntegrationDuration, projectFilterGoalSummary } from '../../utils
     MatInputModule,
     MatTooltipModule,
     RouterModule,
-    DatePipe
+    DatePipe,
+    ProjectPublicationsComponent
   ]
 })
 export class ProjectsListComponent implements OnInit, OnDestroy {
@@ -83,7 +85,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     if (this.isMobile) {
       return ['name', 'scope_id', 'integration'];
     }
-    return ['name', 'description', 'scope_id', 'summary', 'integration', 'start_date', 'end_date', 'last_updated'];
+    return ['name', 'description', 'scope_id', 'summary', 'integration', 'publications', 'last_updated'];
   }
 
   @HostListener('window:resize')
@@ -168,10 +170,6 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
         return 'last_updated';
       case 'integration':
         return 'total_integration_time';
-      case 'start_date':
-        return 'start_date';
-      case 'end_date':
-        return 'end_date';
       default:
         return null;
     }

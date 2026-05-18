@@ -37,8 +37,7 @@ describe('ProjectsListComponent', () => {
       scope_id: 1,
       active: true,
       total_integration_time: 3600,
-      start_date: '2026-01-15',
-      end_date: '2026-06-01',
+      publications: 'https://www.astrobin.com/x/1 https://facebook.com/p/1',
       last_updated: '2026-05-01T12:00:00.000Z'
     },
     {
@@ -157,6 +156,24 @@ describe('ProjectsListComponent', () => {
         sort_order: 'asc'
       })
     );
+  });
+
+  it('does not show start or end date columns', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const headers = fixture.nativeElement.textContent as string;
+    expect(headers).not.toMatch(/\bStart\b/);
+    expect(headers).not.toMatch(/\bEnd\b/);
+    expect(headers).toContain('Publications');
+  });
+
+  it('shows publication icons in publications column', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const icons = fixture.nativeElement.querySelectorAll('a.publication-icon-link');
+    expect(icons.length).toBeGreaterThanOrEqual(2);
   });
 
   it('formatCalendarDate returns dash for empty', () => {

@@ -71,7 +71,8 @@ export class ProjectFormDialogComponent {
       decl: ['', [Validators.required, decFieldValidator]],
       active: [true],
       start_date: [''],
-      end_date: ['']
+      end_date: [''],
+      publications: ['']
     });
   }
 
@@ -180,6 +181,7 @@ export class ProjectFormDialogComponent {
     }
     const sd = String(value.start_date ?? '').trim().slice(0, 10);
     const ed = String(value.end_date ?? '').trim().slice(0, 10);
+    const pubs = String(value.publications ?? '').trim();
     const body: ProjectCreate = {
       name: value.name,
       scope_id: value.scope_id,
@@ -189,7 +191,8 @@ export class ProjectFormDialogComponent {
       ra,
       decl,
       ...(sd ? { start_date: sd } : {}),
-      ...(ed ? { end_date: ed } : {})
+      ...(ed ? { end_date: ed } : {}),
+      ...(pubs ? { publications: pubs } : {})
     };
     this.projectsService.createProject(body).subscribe({
       next: () => {

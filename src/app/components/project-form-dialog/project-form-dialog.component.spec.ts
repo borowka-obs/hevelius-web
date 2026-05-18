@@ -61,6 +61,24 @@ describe('ProjectFormDialogComponent', () => {
     });
   });
 
+  it('includes publications when set', () => {
+    component.form.patchValue({
+      name: 'M31',
+      scope_id: 2,
+      ra: '0.7',
+      decl: '41.2',
+      active: true,
+      regexps: '',
+      publications: 'https://www.astrobin.com/x/1 https://facebook.com/p/1'
+    });
+    component.save();
+    expect(projectsService.createProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        publications: 'https://www.astrobin.com/x/1 https://facebook.com/p/1'
+      })
+    );
+  });
+
   it('includes optional start_date and end_date when set', () => {
     component.form.patchValue({
       name: 'M42',

@@ -31,6 +31,8 @@ export interface Project {
   /** Optional calendar dates (YYYY-MM-DD). */
   start_date?: string | null;
   end_date?: string | null;
+  /** Space-separated publication URLs (social posts, galleries). */
+  publications?: string | null;
   subframes?: ProjectSubframe[];
   user_ids?: number[];
 }
@@ -45,6 +47,7 @@ export interface ProjectCreate {
   active?: boolean;
   start_date?: string | null;
   end_date?: string | null;
+  publications?: string | null;
 }
 
 export interface ProjectUpdate {
@@ -57,6 +60,7 @@ export interface ProjectUpdate {
   active?: boolean;
   start_date?: string | null;
   end_date?: string | null;
+  publications?: string | null;
 }
 
 export interface ProjectSubframeCreate {
