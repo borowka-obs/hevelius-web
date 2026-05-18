@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { User } from '../models/user';
 import { Hevelius } from 'src/hevelius';
 import { Router } from '@angular/router';
@@ -44,6 +44,10 @@ export class LoginService {
     private currentUser = new BehaviorSubject<CurrentUser | null>(null);
     currentUser$ = this.currentUser.asObservable();
     private tokenKey = 'jwt_token';
+    /** Minimum interval between silent token refresh calls (ms). */
+    private readonly refreshMinIntervalMs = 5 * 60 * 1000;
+    private lastTokenRefreshAt = 0;
+    private refreshInFlight = false;
 
     constructor() {
         const storedUser = localStorage.getItem('currentUser');
@@ -77,6 +81,7 @@ export class LoginService {
                     // Login success
                     this.loggedIn(data);
                     localStorage.setItem(this.tokenKey, data.token);
+                    this.lastTokenRefreshAt = Date.now();
                     // Store user data
                     localStorage.setItem('currentUser', JSON.stringify(data));
                 }
@@ -135,5 +140,42 @@ export class LoginService {
     getAuthHeaders(): { [header: string]: string } {
         const token = localStorage.getItem(this.tokenKey);
         return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+
+    /** Extend session when the user is active (debounced). */
+    maybeRefreshToken(): void {
+        if (!this.isLoggedIn() || this.refreshInFlight) {
+            return;
+        }
+        const now = Date.now();
+        if (now - this.lastTokenRefreshAt < this.refreshMinIntervalMs) {
+            return;
+        }
+        this.refreshInFlight = true;
+        this.http.post<LoginResponse>(Hevelius.apiUrl + '/login/refresh', {})
+            .pipe(
+                tap(data => {
+                    if (data.status && data.token) {
+                        localStorage.setItem(this.tokenKey, data.token);
+                        const stored = localStorage.getItem('currentUser');
+                        if (stored) {
+                            try {
+                                const user = JSON.parse(stored) as CurrentUser;
+                                user.token = data.token;
+                                localStorage.setItem('currentUser', JSON.stringify(user));
+                                this.currentUser.next(user);
+                            } catch {
+                                /* ignore malformed stored user */
+                            }
+                        }
+                        this.lastTokenRefreshAt = Date.now();
+                    }
+                }),
+                catchError(() => of(null)),
+                tap(() => {
+                    this.refreshInFlight = false;
+                })
+            )
+            .subscribe();
     }
 }
