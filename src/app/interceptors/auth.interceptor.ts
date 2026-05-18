@@ -7,7 +7,8 @@ import {
     HttpErrorResponse
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
+import { HttpResponse } from '@angular/common/http';
 import { LoginService } from '../services/login.service';
 import { Router } from '@angular/router';
 
@@ -29,6 +30,17 @@ export class AuthInterceptor implements HttpInterceptor {
         }
 
         return next.handle(request).pipe(
+            tap(event => {
+                if (
+                    event instanceof HttpResponse &&
+                    token &&
+                    event.status >= 200 &&
+                    event.status < 300 &&
+                    !request.url.includes('/login')
+                ) {
+                    this.loginService.maybeRefreshToken();
+                }
+            }),
             catchError((error: HttpErrorResponse) => {
                 if (error.status === 401) {
                     // Token expired or invalid
