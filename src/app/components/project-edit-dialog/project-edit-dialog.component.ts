@@ -29,6 +29,7 @@ export interface ProjectEditDialogData {
   initialActive?: boolean;
   initialStartDate?: string | null;
   initialEndDate?: string | null;
+  initialPublications?: string | null;
 }
 
 function raFieldValidator(c: AbstractControl): ValidationErrors | null {
@@ -99,7 +100,8 @@ export class ProjectEditDialogComponent {
       decl: [decStr, [Validators.required, decFieldValidator]],
       active: [this.dialogData.initialActive ?? true],
       start_date: [startStr],
-      end_date: [endStr]
+      end_date: [endStr],
+      publications: [this.dialogData.initialPublications ?? '']
     });
 
     this.telescopeService.getTelescopes().subscribe({
@@ -149,6 +151,7 @@ export class ProjectEditDialogComponent {
 
     const sd = String(v.start_date ?? '').trim().slice(0, 10);
     const ed = String(v.end_date ?? '').trim().slice(0, 10);
+    const pubs = String(v.publications ?? '').trim();
     const body: ProjectUpdate = {
       scope_id: Number(v.scope_id),
       regexps: String(v.regexps ?? '').trim(),
@@ -156,7 +159,8 @@ export class ProjectEditDialogComponent {
       decl,
       active: Boolean(v.active),
       start_date: sd === '' ? null : sd,
-      end_date: ed === '' ? null : ed
+      end_date: ed === '' ? null : ed,
+      publications: pubs === '' ? null : pubs
     };
 
     this.projectsService.updateProject(this.dialogData.projectId, body).subscribe({

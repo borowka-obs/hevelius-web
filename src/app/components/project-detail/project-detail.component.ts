@@ -17,6 +17,7 @@ import { SubframeFormDialogComponent } from '../subframe-form-dialog/subframe-fo
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { ProjectEditDialogComponent } from '../project-edit-dialog/project-edit-dialog.component';
 import { TasksComponent } from '../tasks/tasks.component';
+import { ProjectPublicationsComponent } from '../project-publications/project-publications.component';
 import {
   formatIntegrationDuration,
   progressBarPercent,
@@ -42,7 +43,8 @@ import {
     MatTooltipModule,
     MatProgressBarModule,
     DatePipe,
-    TasksComponent
+    TasksComponent,
+    ProjectPublicationsComponent
   ]
 })
 export class ProjectDetailComponent implements OnInit {
@@ -165,7 +167,8 @@ export class ProjectDetailComponent implements OnInit {
         initialRegexps: this.project.regexps,
         initialActive: this.project.active,
         initialStartDate: this.project.start_date ?? null,
-        initialEndDate: this.project.end_date ?? null
+        initialEndDate: this.project.end_date ?? null,
+        initialPublications: this.project.publications ?? null
       }
     });
     ref.afterClosed().subscribe((updated: boolean | undefined) => {

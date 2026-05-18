@@ -36,6 +36,10 @@
         <p><strong>RA:</strong> {{ formatRA(project.ra) }} <strong>Dec:</strong> {{ formatDec(project.decl) }}</p>
         <p><strong>Start date:</strong> {{ formatCalendarDate(project.start_date) }}</p>
         <p><strong>End date:</strong> {{ formatCalendarDate(project.end_date) }}</p>
+        <p class="publications-row">
+          <strong>Publications:</strong>
+          <app-project-publications [publications]="project.publications" />
+        </p>
         <p>
           <strong>Last updated:</strong>
           @if (project.last_updated) {
