@@ -7,11 +7,13 @@ import { Project, ProjectsListParams } from '../../models/project';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
@@ -48,6 +50,7 @@ import { formatIntegrationDuration, projectFilterGoalSummary } from '../../utils
     MatButtonModule,
     MatSelectModule,
     MatFormFieldModule,
+    MatInputModule,
     MatTooltipModule,
     RouterModule,
     DatePipe
@@ -88,6 +91,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
   }
 
+  searchControl = new FormControl('');
   filterForm: FormGroup;
   isFilterVisible = false;
   /** Default: most recently updated first (matches GET /api/projects defaults). */
@@ -138,6 +142,10 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     this.filterForm.get('activeOnly')?.valueChanges.subscribe(() => {
       this.applyClientFilterAndSort();
     });
+    this.searchControl.valueChanges.pipe(
+      debounceTime(200),
+      distinctUntilChanged()
+    ).subscribe(() => this.applyClientFilterAndSort());
     if (!this.embedded()) {
       this.loadProjects();
     }
@@ -198,7 +206,11 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
 
   private applyClientFilterAndSort(): void {
     const activeOnly = this.filterForm?.get('activeOnly')?.value ?? true;
+    const nameFilter = (this.searchControl.value ?? '').trim().toLowerCase();
     let list = activeOnly ? this.allProjects.filter(p => p.active) : this.allProjects;
+    if (nameFilter) {
+      list = list.filter(p => p.name.toLowerCase().includes(nameFilter));
+    }
     if (this.usesClientSortOnly()) {
       const { active, direction } = this.sortState;
       list = [...list].sort((a, b) => {
@@ -233,6 +245,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     const keepScope =
       this.embedded() && this.scopeId() != null ? this.scopeId()! : null;
     this.filterForm.patchValue({ activeOnly: true, scope_id: keepScope });
+    this.searchControl.setValue('', { emitEvent: false });
     this.loadProjects();
   }
 
