@@ -41,10 +41,12 @@
     <div class="mobile-cards">
       @for (p of dataSource.data; track p.project_id) {
         <div class="project-card" (click)="openProject(p)">
-          <div class="card-name">{{ p.name }}</div>
-          <div class="card-meta">
-            <a [routerLink]="['/scopes', p.scope_id]" (click)="$event.stopPropagation()" class="scope-link">{{ getScopeName(p.scope_id) }}</a>
-            <span class="card-integration">{{ projectTotalIntegrationLabel(p) }}</span>
+          <div class="card-line1">
+            <span class="card-name">{{ p.name }}</span>
+            <a [routerLink]="['/scopes', p.scope_id]" (click)="$event.stopPropagation()" class="scope-link card-scope">{{ getScopeName(p.scope_id) }}</a>
+          </div>
+          <div class="card-line2">
+            {{ projectTotalIntegrationLabel(p) }}@if (projectSummary(p) !== '—') { ({{ projectSummary(p) }})}
           </div>
           @if (p.description) {
             <div class="card-description">{{ p.description }}</div>
