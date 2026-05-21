@@ -74,3 +74,32 @@ tr.clickable {
   word-break: break-word;
   font-size: 0.9rem;
 }
+
+@media (max-width: 640px) {
+  .container {
+    padding: 6px 4px;
+  }
+
+  .filters {
+    margin-bottom: 0.5rem;
+  }
+
+  .table-container {
+    margin-top: 0.5rem;
+    overflow-x: hidden;
+  }
+
+  table {
+    font-size: 0.8rem;
+  }
+
+  /* Tighten cell padding on mobile */
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding: 4px 6px !important;
+  }
+
+  .project-link-button {
+    font-size: 0.8rem;
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, input, effect, untracked } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, input, effect, untracked, HostListener } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
@@ -72,16 +72,21 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   allScopes: { scope_id: number; name: string }[] = [];
   /** Active telescopes only (filter dropdown). */
   scopes: { scope_id: number; name: string }[] = [];
-  displayedColumns: string[] = [
-    'name',
-    'description',
-    'scope_id',
-    'summary',
-    'integration',
-    'start_date',
-    'end_date',
-    'last_updated'
-  ];
+
+  private readonly MOBILE_BREAKPOINT = 640;
+  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+
+  get displayedColumns(): string[] {
+    if (this.isMobile) {
+      return ['name', 'scope_id', 'integration'];
+    }
+    return ['name', 'description', 'scope_id', 'summary', 'integration', 'start_date', 'end_date', 'last_updated'];
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+  }
 
   filterForm: FormGroup;
   isFilterVisible = false;
