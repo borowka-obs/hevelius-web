@@ -1,5 +1,5 @@
 .container {
-  padding: 20px;
+  padding: 8px;
 }
 
 .search-bar {
@@ -146,7 +146,7 @@ tr.clickable {
 
 @media (max-width: 640px) {
   .container {
-    padding: 6px 4px;
+    padding: 4px;
   }
 
   .filters {
