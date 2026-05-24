@@ -43,7 +43,7 @@
         <div class="project-card" (click)="openProject(p)" (keyup.enter)="openProject(p)" tabindex="0" role="button">
           <div class="card-line1">
             <span class="card-name">{{ p.name }}</span>
-            <a [routerLink]="['/scopes', p.scope_id]" (click)="$event.stopPropagation()" class="scope-link card-scope">{{ getScopeName(p.scope_id) }}</a>
+            <app-project-publications class="card-publications" [publications]="p.publications" />
           </div>
           <div class="card-line2">
             {{ projectTotalIntegrationLabel(p) }}@if (projectSummary(p) !== '—') { ({{ projectSummary(p) }})}

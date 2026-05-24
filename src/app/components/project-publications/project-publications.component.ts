@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, HostListener, computed, input } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   PublicationLink,
@@ -57,6 +57,11 @@ export class ProjectPublicationsComponent {
   publications = input<string | null | undefined>(null);
 
   links = computed(() => sortedPublicationLinks(this.publications()));
+
+  @HostListener('click', ['$event'])
+  stopClickPropagation(event: Event): void {
+    event.stopPropagation();
+  }
 
   logoPath(link: PublicationLink): string {
     return publicationLogoPath(link.platformId);
