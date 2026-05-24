@@ -18,7 +18,7 @@ describe('project-publications', () => {
     expect(detectPublicationPlatform('https://www.astrobin.com/full/1/')).toBe('astrobin');
     expect(detectPublicationPlatform('https://facebook.com/groups/x')).toBe('facebook');
     expect(detectPublicationPlatform('https://www.flickr.com/photos/x')).toBe('flickr');
-    expect(detectPublicationPlatform('https://astropolis.ru/viewtopic.php?t=1')).toBe('astropolis');
+    expect(detectPublicationPlatform('https://astropolis.pl/viewtopic.php?t=1')).toBe('astropolis');
     expect(detectPublicationPlatform('https://example.org/p')).toBe('generic');
   });
 

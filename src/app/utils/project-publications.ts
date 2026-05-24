@@ -1,7 +1,7 @@
 /** Known publication hosts; add entries here and matching `{id}-logo.png` under assets/publications/. */
 export const PUBLICATION_PLATFORMS = [
   { id: 'astrobin', label: 'AstroBin', hostPatterns: ['astrobin.com'] },
-  { id: 'astropolis', label: 'Astropolis', hostPatterns: ['astropolis.ru', 'astropolis.org'] },
+  { id: 'astropolis', label: 'Astropolis', hostPatterns: ['astropolis.pl', 'astropolis.org'] },
   { id: 'facebook', label: 'Facebook', hostPatterns: ['facebook.com', 'fb.com', 'fb.me'] },
   { id: 'flickr', label: 'Flickr', hostPatterns: ['flickr.com'] }
 ] as const;
