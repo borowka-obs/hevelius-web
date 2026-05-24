@@ -15,7 +15,7 @@
 - User experience improved when adding new project: the object is looked up in
   the catalog and RA/DEC coords are set if found
 - Massive projects enhancements: subframes presentation improved, added many new
-  fields, sorting, better editing etc.
+  fields, sorting, better editing, deleting projects etc.
 
 0.4.0 (2026-03-27)
 

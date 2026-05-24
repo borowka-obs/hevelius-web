@@ -7,7 +7,7 @@ import {
   ValidationErrors,
   Validators
 } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -20,9 +20,27 @@ import { ProjectUpdate } from '../../models/project';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { parseDecDegrees, parseRAHours } from '../../utils/coord-parse';
 
+@Component({
+  selector: 'app-delete-project-confirm-dialog',
+  template: `
+    <h2 mat-dialog-title>Delete project?</h2>
+    <mat-dialog-content>
+      <p>This will permanently delete the project and all its data (subframes, task links). This action cannot be undone.</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Cancel</button>
+      <button mat-raised-button color="warn" [mat-dialog-close]="true">Delete</button>
+    </mat-dialog-actions>
+  `,
+  standalone: true,
+  imports: [MatDialogModule, MatButtonModule]
+})
+export class DeleteProjectConfirmDialogComponent {}
+
 export interface ProjectEditDialogData {
   projectId: number;
   initialScopeId: number;
+  initialDescription?: string | null;
   initialRa?: number;
   initialDecl?: number;
   initialRegexps?: string;
@@ -71,6 +89,7 @@ export class ProjectEditDialogComponent {
   private projectsService = inject(ProjectsService);
   private snackBar = inject(MatSnackBar);
   private coordsFormatter = inject(CoordsFormatterService);
+  private dialog = inject(MatDialog);
 
   form: FormGroup;
   activeTelescopes: Telescope[] = [];
@@ -95,6 +114,7 @@ export class ProjectEditDialogComponent {
         : '';
     this.form = this.fb.group({
       scope_id: [this.dialogData.initialScopeId, Validators.required],
+      description: [this.dialogData.initialDescription ?? ''],
       regexps: [this.dialogData.initialRegexps ?? ''],
       ra: [raStr, [Validators.required, raFieldValidator]],
       decl: [decStr, [Validators.required, decFieldValidator]],
@@ -134,6 +154,22 @@ export class ProjectEditDialogComponent {
     this.dialogRef.close(false);
   }
 
+  deleteProject(): void {
+    const ref = this.dialog.open(DeleteProjectConfirmDialogComponent, { width: '400px' });
+    ref.afterClosed().subscribe((confirmed: boolean | undefined) => {
+      if (!confirmed) return;
+      this.projectsService.deleteProject(this.dialogData.projectId).subscribe({
+        next: () => {
+          this.snackBar.open('Project deleted', 'Close', { duration: 3000 });
+          this.dialogRef.close('deleted');
+        },
+        error: err => {
+          this.snackBar.open(err?.error?.msg || err?.message || 'Failed to delete project', 'Close', { duration: 5000 });
+        }
+      });
+    });
+  }
+
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -154,6 +190,7 @@ export class ProjectEditDialogComponent {
     const pubs = String(v.publications ?? '').trim();
     const body: ProjectUpdate = {
       scope_id: Number(v.scope_id),
+      description: String(v.description ?? '').trim(),
       regexps: String(v.regexps ?? '').trim(),
       ra,
       decl,

@@ -105,6 +105,12 @@ export class ProjectsService {
     return this.http.post<{ status: boolean; msg?: string }>(`${this.apiUrl}/${projectId}/tasks/${taskId}`, {});
   }
 
+  deleteProject(projectId: number): Observable<void> {
+    return this.http.delete<{ status: boolean; msg?: string }>(`${this.apiUrl}/${projectId}`).pipe(
+      map(() => undefined)
+    );
+  }
+
   /** DELETE /api/projects/{project_id}/tasks/{task_id} */
   removeTaskFromProject(projectId: number, taskId: number): Observable<{ status: boolean; msg?: string }> {
     return this.http.delete<{ status: boolean; msg?: string }>(`${this.apiUrl}/${projectId}/tasks/${taskId}`);
