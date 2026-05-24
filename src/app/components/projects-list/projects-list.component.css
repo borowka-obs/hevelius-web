@@ -44,9 +44,7 @@
   font-size: 1rem;
 }
 
-.card-scope {
-  font-size: 0.8rem;
-  white-space: nowrap;
+.card-publications {
   flex-shrink: 0;
 }
 
