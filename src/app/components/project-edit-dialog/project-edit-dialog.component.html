@@ -11,6 +11,13 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="2"></textarea>
+    </mat-form-field>
+
+    <div class="field-gap"></div>
+
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Regexps</mat-label>
       <input matInput formControlName="regexps">
       <mat-hint>This is a space separated list of regular expressions. Optional</mat-hint>
@@ -66,7 +73,9 @@
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
+<mat-dialog-actions>
+  <button mat-raised-button color="warn" (click)="deleteProject()" type="button" class="delete-btn">Delete project</button>
+  <span class="actions-spacer"></span>
   <button mat-button (click)="cancel()" type="button">Cancel</button>
   <button mat-raised-button color="primary" (click)="save()" type="button" [disabled]="saving">
     {{ saving ? 'Saving…' : 'Save' }}

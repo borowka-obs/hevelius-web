@@ -81,6 +81,15 @@ describe('ProjectsService', () => {
     req.flush({ status: true });
   });
 
+  it('should delete a project', () => {
+    let completed = false;
+    service.deleteProject(7).subscribe(() => { completed = true; });
+    const req = httpMock.expectOne(`${Hevelius.apiUrl}/projects/7`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ status: true, msg: 'Project 7 deleted' });
+    expect(completed).toBe(true);
+  });
+
   it('should add subframe and map subframe_id', () => {
     service.addSubframe(11, { filter_id: 2, exposure_time: 120, count: 0 }).subscribe(result => {
       expect(result.subframe_id).toBe(44);

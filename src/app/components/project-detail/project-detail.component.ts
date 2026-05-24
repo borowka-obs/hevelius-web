@@ -162,6 +162,7 @@ export class ProjectDetailComponent implements OnInit {
       data: {
         projectId: this.project.project_id,
         initialScopeId: this.project.scope_id,
+        initialDescription: this.project.description ?? null,
         initialRa: this.project.ra,
         initialDecl: this.project.decl,
         initialRegexps: this.project.regexps,
@@ -171,8 +172,10 @@ export class ProjectDetailComponent implements OnInit {
         initialPublications: this.project.publications ?? null
       }
     });
-    ref.afterClosed().subscribe((updated: boolean | undefined) => {
-      if (updated) {
+    ref.afterClosed().subscribe((result: boolean | 'deleted' | undefined) => {
+      if (result === 'deleted') {
+        this.router.navigate(['/projects']);
+      } else if (result) {
         this.loadProject(this.project!.project_id);
       }
     });
