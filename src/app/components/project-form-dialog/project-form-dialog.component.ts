@@ -11,8 +11,40 @@ import { ProjectCreate } from '../../models/project';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CatalogsService, CatalogObject } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { finalize } from 'rxjs/operators';
 import { parseDecDegrees, parseRAHours } from '../../utils/coord-parse';
+
+/** Longest-common-subsequence ratio, matching Python difflib.SequenceMatcher.ratio() semantics. */
+export function sequenceRatio(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  if (!m && !n) return 1;
+  if (!m || !n) return 0;
+  const dp: number[] = new Array(n + 1).fill(0);
+  let lcs = 0;
+  for (let i = 1; i <= m; i++) {
+    let prev = 0;
+    for (let j = 1; j <= n; j++) {
+      const temp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? prev + 1 : Math.max(dp[j], dp[j - 1]);
+      prev = temp;
+    }
+    lcs = dp[n];
+  }
+  return (2 * lcs) / (m + n);
+}
+
+export interface SimilarProject { project_id: number; name: string; }
+
+export function findSimilarProjects(name: string, existing: SimilarProject[]): SimilarProject[] {
+  const q = name.trim().toLowerCase();
+  if (!q) return [];
+  return existing.filter(p => {
+    const e = p.name.trim().toLowerCase();
+    if (q.includes(e) || e.includes(q)) return true;
+    return sequenceRatio(q, e) >= 0.6;
+  });
+}
 
 function raFieldValidator(c: AbstractControl): ValidationErrors | null {
   const raw = String(c.value ?? '').trim();
@@ -32,6 +64,7 @@ function decFieldValidator(c: AbstractControl): ValidationErrors | null {
 
 export interface ProjectFormDialogData {
   scopes: { scope_id: number; name: string }[];
+  existingProjects?: SimilarProject[];
 }
 
 @Component({
@@ -60,6 +93,7 @@ export class ProjectFormDialogComponent {
 
   form: FormGroup;
   catalogLookupPending = false;
+  similarProjects: SimilarProject[] = [];
 
   constructor() {
     this.form = this.fb.group({
@@ -73,6 +107,16 @@ export class ProjectFormDialogComponent {
       start_date: [''],
       end_date: [''],
       publications: ['']
+    });
+
+    this.form.get('name')!.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(name => {
+      this.similarProjects = findSimilarProjects(
+        String(name ?? ''),
+        this.data?.existingProjects ?? []
+      );
     });
   }
 
