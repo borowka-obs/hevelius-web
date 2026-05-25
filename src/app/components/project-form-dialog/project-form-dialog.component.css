@@ -8,3 +8,17 @@ mat-dialog-content form {
   gap: 0.5rem;
   min-width: 320px;
 }
+
+.similar-warning {
+  font-size: 12px;
+  color: #92400e;
+  background: #fef3c7;
+  border-left: 3px solid #d97706;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin-top: -4px;
+}
+
+.similar-warning-icon {
+  margin-right: 4px;
+}

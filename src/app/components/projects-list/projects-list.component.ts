@@ -272,7 +272,10 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   openNewProject(): void {
     const dialogRef = this.dialog.open(ProjectFormDialogComponent, {
       width: '480px',
-      data: { scopes: this.scopes }
+      data: {
+        scopes: this.scopes,
+        existingProjects: this.allProjects.map(p => ({ project_id: p.project_id, name: p.name }))
+      }
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
