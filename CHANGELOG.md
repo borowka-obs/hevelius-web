@@ -17,6 +17,7 @@
 - Massive projects enhancements: subframes presentation improved, added many new
   fields, sorting, better editing, deleting projects, checking for similar existing
   projects when adding a new one etc.
+- The session timeout is extended if there's any activity.
 
 0.4.0 (2026-03-27)
 
