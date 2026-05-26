@@ -7,10 +7,10 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { NightPlanService } from '../../services/night-plan.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { BehaviorSubject } from 'rxjs';
+import { LoginService } from '../../services/login.service';
+import { of } from 'rxjs';
 
 describe('LayoutComponent', () => {
   let component: LayoutComponent;
@@ -21,13 +21,7 @@ describe('LayoutComponent', () => {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   let router: Router;
   /* eslint-enable @typescript-eslint/no-unused-vars */
-  let nightPlanService: { getTaskCount: ReturnType<typeof vi.fn> };
-
   beforeEach(async () => {
-    nightPlanService = {
-      getTaskCount: vi.fn().mockReturnValue(new BehaviorSubject(0)),
-    };
-
     await TestBed.configureTestingModule({
       imports: [
         RouterTestingModule,
@@ -39,7 +33,10 @@ describe('LayoutComponent', () => {
         LayoutComponent
       ],
       providers: [
-        { provide: NightPlanService, useValue: nightPlanService },
+        {
+          provide: LoginService,
+          useValue: { currentUser$: of(null), logout: vi.fn() }
+        },
         provideHttpClient(),
         provideHttpClientTesting()
       ]

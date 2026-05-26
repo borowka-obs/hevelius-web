@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskViewComponent } from '../task-view/task-view.component';
 import { Router, RouterModule } from '@angular/router';
-import { NightPlanService } from '../../services/night-plan.service';
 import { LoginService } from '../../services/login.service';
 import { Subscription } from 'rxjs';
 import { TopBarService } from '../../services/top-bar.service';
@@ -37,7 +36,6 @@ import { GravatarService } from '../../services/gravatar.service';
 export class LayoutComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
   private router = inject(Router);
-  private nightPlanService = inject(NightPlanService);
   private loginService = inject(LoginService);
   private topBarService = inject(TopBarService);
   private gravatarService = inject(GravatarService);
