@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { CatalogsService, CatalogObject } from './catalogs.service';
+import { CatalogsService, CatalogObject, InstalledCatalog } from './catalogs.service';
 import { LoginService } from './login.service';
 import { Hevelius } from 'src/hevelius';
 
@@ -96,6 +96,33 @@ describe('CatalogsService', () => {
     });
   });
 
+  describe('listInstalledCatalogs', () => {
+    it('should return installed catalogs with object counts', () => {
+      const mockCatalogs: InstalledCatalog[] = [
+        { name: 'New General Catalogue', shortname: 'NGC', object_count: 7840 },
+        { name: 'Index Catalogue', shortname: 'IC', object_count: 5386 }
+      ];
+
+      service.listInstalledCatalogs('entries').subscribe(catalogs => {
+        expect(catalogs).toEqual(mockCatalogs);
+        expect(catalogs.length).toBe(2);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/catalogs?sort=entries`);
+      expect(req.request.method).toBe('GET');
+      req.flush({ catalogs: mockCatalogs });
+    });
+
+    it('should request name sort when specified', () => {
+      service.listInstalledCatalogs('name').subscribe(catalogs => {
+        expect(catalogs).toEqual([]);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/catalogs?sort=name`);
+      req.flush({ catalogs: [] });
+    });
+  });
+
   describe('listObjects', () => {
     it('should return paginated catalog objects', () => {
       const mockResponse = {
@@ -132,6 +159,34 @@ describe('CatalogsService', () => {
 
       const req = httpMock.expectOne(`${Hevelius.apiUrl}/catalogs/list?page=1&per_page=10`);
       expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should pass coordinate proximity filters', () => {
+      const mockResponse = {
+        objects: [] as CatalogObject[],
+        total: 0,
+        page: 1,
+        per_page: 100,
+        pages: 0
+      };
+
+      service.listObjects({
+        ra: 12.5,
+        decl: 45,
+        proximity: 2,
+        catalog: 'NGC'
+      }).subscribe(response => {
+        expect(response.total).toBe(0);
+      });
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${Hevelius.apiUrl}/catalogs/list`
+      );
+      expect(req.request.params.get('ra')).toBe('12.5');
+      expect(req.request.params.get('decl')).toBe('45');
+      expect(req.request.params.get('proximity')).toBe('2');
+      expect(req.request.params.get('catalog')).toBe('NGC');
       req.flush(mockResponse);
     });
 

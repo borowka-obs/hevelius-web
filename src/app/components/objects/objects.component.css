@@ -1,0 +1,173 @@
+.container {
+  padding: 20px;
+}
+
+.filters {
+  margin-bottom: 20px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.filter-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px;
+  align-items: flex-start;
+}
+
+.filter-field {
+  flex: 1 1 180px;
+  min-width: 140px;
+}
+
+.filter-field-narrow {
+  flex: 1 1 100px;
+  min-width: 90px;
+}
+
+.coord-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+.coord-label {
+  flex: 0 0 100%;
+  font-size: 0.85rem;
+  color: #616161;
+  margin: 0;
+}
+
+.filter-error {
+  flex: 1 1 100%;
+  margin: 0;
+  color: #c62828;
+  font-size: 0.875rem;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: auto;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+}
+
+.paginator {
+  margin-top: 8px;
+}
+
+.mat-column-name {
+  min-width: 150px;
+}
+
+.mat-column-catalog {
+  min-width: 100px;
+}
+
+.mat-column-ra,
+.mat-column-decl {
+  min-width: 120px;
+}
+
+.mat-column-type,
+.mat-column-const {
+  min-width: 100px;
+}
+
+.mat-column-magn {
+  min-width: 80px;
+}
+
+.mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.object-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+
+.card-line1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.card-name {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.card-catalog {
+  font-size: 0.85rem;
+  color: #616161;
+  flex-shrink: 0;
+}
+
+.card-line2,
+.card-line3 {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.no-results {
+  padding: 24px;
+  text-align: center;
+  color: #757575;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 8px 4px;
+  }
+
+  .filters {
+    margin-bottom: 12px;
+  }
+
+  .filter-form {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .filter-field,
+  .filter-field-narrow {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .filter-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: stretch;
+  }
+
+  .filter-actions button {
+    flex: 1;
+  }
+
+  .table-container {
+    overflow-x: hidden;
+  }
+}
