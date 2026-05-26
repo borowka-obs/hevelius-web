@@ -1,0 +1,131 @@
+<div class="container">
+  <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+    <form [formGroup]="filterForm" class="filter-form" (ngSubmit)="onFilterSubmit($event)">
+      <mat-form-field class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" type="text" placeholder="Name or alternate name">
+      </mat-form-field>
+
+      <mat-form-field class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Catalog</mat-label>
+        <mat-select formControlName="catalog">
+          <mat-option [value]="null">All catalogs</mat-option>
+          @for (c of installedCatalogs; track c.shortname) {
+            <mat-option [value]="c.shortname">{{ c.shortname }} — {{ c.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Constellation</mat-label>
+        <input matInput formControlName="constellation" type="text"
+               placeholder="e.g. Cyg"
+               [matAutocomplete]="constAuto">
+        <mat-autocomplete #constAuto="matAutocomplete">
+          @for (abbr of filteredConstellations$ | async; track abbr) {
+            <mat-option [value]="abbr">{{ abbr }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <div class="coord-filters">
+        <span class="coord-label">Near coordinates</span>
+        <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
+          <mat-label>RA (h)</mat-label>
+          <input matInput formControlName="ra" type="number" step="any" min="0" max="24">
+        </mat-form-field>
+        <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
+          <mat-label>Dec (°)</mat-label>
+          <input matInput formControlName="decl" type="number" step="any" min="-90" max="90">
+        </mat-form-field>
+        <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
+          <mat-label>Radius (°)</mat-label>
+          <input matInput formControlName="proximity" type="number" step="any" min="0">
+        </mat-form-field>
+      </div>
+
+      @if (filterError) {
+        <p class="filter-error" role="alert">{{ filterError }}</p>
+      }
+
+      <div class="filter-actions">
+        <button type="button" mat-button (click)="clearFilters()">Clear</button>
+        <button type="submit" mat-raised-button color="primary">Apply</button>
+      </div>
+    </form>
+  </div>
+
+  @if (isMobile) {
+    <div class="mobile-cards">
+      @for (object of objects; track object.object_id) {
+        <div class="object-card">
+          <div class="card-line1">
+            <span class="card-name">{{ object.name }}</span>
+            <span class="card-catalog">{{ object.catalog }}</span>
+          </div>
+          <div class="card-line2">
+            {{ formatRA(object.ra) }} · {{ formatDec(object.decl) }}
+          </div>
+          <div class="card-line3">
+            @if (object.type) { {{ object.type }} · }
+            {{ object.const }}
+            @if (object.magn !== null && object.magn !== undefined) { · mag {{ object.magn }} }
+          </div>
+        </div>
+      } @empty {
+        <div class="no-results">No objects match the current filters.</div>
+      }
+    </div>
+  } @else {
+    <div class="table-container">
+      <table mat-table [dataSource]="objects" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z8">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+          <td mat-cell *matCellDef="let object">{{ object.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="catalog">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Catalog</th>
+          <td mat-cell *matCellDef="let object">{{ object.catalog }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="ra">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>RA</th>
+          <td mat-cell *matCellDef="let object">{{ formatRA(object.ra) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="decl">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Dec</th>
+          <td mat-cell *matCellDef="let object">{{ formatDec(object.decl) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+          <td mat-cell *matCellDef="let object">{{ object.type }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="const">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Constellation</th>
+          <td mat-cell *matCellDef="let object">{{ object.const }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="magn">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Magnitude</th>
+          <td mat-cell *matCellDef="let object">{{ object.magn }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  }
+
+  <mat-paginator
+    class="paginator"
+    [length]="totalObjects"
+    [pageIndex]="currentPage - 1"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[50, 100, 200, 500]"
+    (page)="onPageChange($event)">
+  </mat-paginator>
+</div>

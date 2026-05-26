@@ -23,12 +23,36 @@ export interface CatalogObject {
   catalog: string;
 }
 
+/** Installed catalog with object count (GET /api/catalogs). */
+export interface InstalledCatalog {
+  name: string;
+  shortname: string;
+  object_count: number;
+}
+
 interface CatalogListResponse {
   objects: CatalogObject[];
   total: number;
   page: number;
   per_page: number;
   pages: number;
+}
+
+interface CatalogsInstalledListResponse {
+  catalogs: InstalledCatalog[];
+}
+
+export interface ListObjectsParams {
+  page?: number;
+  per_page?: number;
+  sort_by?: string;
+  sort_order?: string;
+  catalog?: string;
+  name?: string;
+  constellation?: string;
+  ra?: number;
+  decl?: number;
+  proximity?: number;
 }
 
 @Injectable({
@@ -57,16 +81,21 @@ export class CatalogsService {
     );
   }
 
-  /** GET /catalogs/list. Backend should accept optional query params: catalog, name, constellation (IAU 3-letter, e.g. Cyg, Sgr). */
-  listObjects(params: {
-    page?: number;
-    per_page?: number;
-    sort_by?: string;
-    sort_order?: string;
-    catalog?: string;
-    name?: string;
-    constellation?: string;
-  } = {}): Observable<CatalogListResponse> {
+  /** GET /api/catalogs — installed catalogs with object counts. */
+  listInstalledCatalogs(sort: 'entries' | 'name' = 'entries'): Observable<InstalledCatalog[]> {
+    return this.http.get<CatalogsInstalledListResponse>(
+      this.baseUrl,
+      {
+        params: { sort },
+        headers: this.loginService.getAuthHeaders()
+      }
+    ).pipe(
+      map(response => response.catalogs ?? [])
+    );
+  }
+
+  /** GET /catalogs/list — paginated objects with sorting and filtering. */
+  listObjects(params: ListObjectsParams = {}): Observable<CatalogListResponse> {
     return this.http.get<CatalogListResponse>(
       `${this.baseUrl}/list`,
       {
