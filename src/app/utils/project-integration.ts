@@ -37,7 +37,7 @@ export function formatIntegrationDuration(totalSeconds: number): string {
     parts.push(`${h}h`);
   }
   if (m > 0) {
-    parts.push(`${m}min`);
+    parts.push(`${m}m`);
   }
   if (s > 0 && h === 0 && m === 0) {
     parts.push(`${s}s`);
@@ -45,13 +45,13 @@ export function formatIntegrationDuration(totalSeconds: number): string {
     parts.push(`${s}s`);
   }
   if (!parts.length) {
-    return '0min';
+    return '0m';
   }
   return parts.join('');
 }
 
 /**
- * Brief per-filter goal summary, e.g. "Ha 8h40min, OIII 2h15min".
+ * Brief per-filter captured summary, e.g. "Ha 3h20m, OIII 1h5m".
  */
 export function projectFilterGoalSummary(project: Project): string {
   const subs = project.subframes ?? [];
@@ -61,7 +61,7 @@ export function projectFilterGoalSummary(project: Project): string {
   const byFilter = new Map<string, number>();
   for (const s of subs) {
     const name = (s.filter?.short_name ?? `id${s.filter_id}`).trim() || '?';
-    byFilter.set(name, (byFilter.get(name) ?? 0) + subframeGoalSeconds(s));
+    byFilter.set(name, (byFilter.get(name) ?? 0) + subframeCapturedSeconds(s));
   }
   const chunks: string[] = [];
   for (const [name, sec] of byFilter) {

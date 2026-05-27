@@ -1,6 +1,7 @@
 import { Project, ProjectSubframe } from '../models/project';
 import {
   formatIntegrationDuration,
+  projectFilterGoalSummary,
   projectTotalCapturedSeconds,
   subframeCapturedSeconds,
   subframeProgressPercent
@@ -52,7 +53,40 @@ describe('project-integration', () => {
 
   it('formatIntegrationDuration formats seconds', () => {
     expect(formatIntegrationDuration(3600)).toContain('1h');
-    expect(formatIntegrationDuration(2700)).toContain('45min');
+    expect(formatIntegrationDuration(2700)).toContain('45m');
+  });
+
+  it('projectFilterGoalSummary shows captured/goal per filter', () => {
+    const project: Project = {
+      project_id: 1,
+      name: 'P',
+      scope_id: 1,
+      active: true,
+      subframes: [
+        {
+          id: 1,
+          project_id: 1,
+          filter_id: 1,
+          filter: { filter_id: 1, short_name: 'Ha' } as any,
+          exposure_time: 3600,
+          count: 3,
+          goal_count: 8,
+          active: true
+        },
+        {
+          id: 2,
+          project_id: 1,
+          filter_id: 2,
+          filter: { filter_id: 2, short_name: 'OIII' } as any,
+          exposure_time: 3600,
+          count: 1,
+          goal_count: 4,
+          active: true
+        }
+      ]
+    };
+    const result = projectFilterGoalSummary(project);
+    expect(result).toBe('Ha 3h, OIII 1h');
   });
 
   it('subframeProgressPercent uses count and goal_count', () => {
