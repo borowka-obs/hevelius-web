@@ -327,7 +327,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     const api = this.projectTotalIntegrationLabel(p);
     const summary = projectFilterGoalSummary(p);
     if (summary && summary !== '—') {
-      return `Total integration: ${api}. Plan (goal): ${summary}.`;
+      return `Total integration: ${api}. Plan by filter (captured/goal): ${summary}.`;
     }
     return `Total integration: ${api}`;
   }
