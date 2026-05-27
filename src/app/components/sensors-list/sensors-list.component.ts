@@ -65,7 +65,7 @@ export class SensorsListComponent implements OnInit, OnDestroy {
     if (this.isMobile) {
       return ['name', 'vendor', 'resolution', 'active', 'actions'];
     }
-    return ['name', 'vendor', 'resx', 'resy', 'pixel_x', 'pixel_y', 'width', 'height', 'bits', 'active', 'actions'];
+    return ['name', 'vendor', 'resolution', 'pixel_size', 'sensor_size', 'bits', 'active', 'actions'];
   }
 
   @HostListener('window:resize')

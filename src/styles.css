@@ -24,4 +24,11 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   .mat-mdc-paginator-range-label {
     font-size: 0.8rem;
   }
+
+  /* Larger touch targets for icon buttons (44px matches iOS/Material guidelines) */
+  .mat-mdc-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+    padding: 10px !important;
+  }
 }
