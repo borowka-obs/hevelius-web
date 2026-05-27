@@ -19,6 +19,8 @@ describe('project-publications', () => {
     expect(detectPublicationPlatform('https://facebook.com/groups/x')).toBe('facebook');
     expect(detectPublicationPlatform('https://www.flickr.com/photos/x')).toBe('flickr');
     expect(detectPublicationPlatform('https://astropolis.pl/viewtopic.php?t=1')).toBe('astropolis');
+    expect(detectPublicationPlatform('https://x.com/user/status/1')).toBe('x');
+    expect(detectPublicationPlatform('https://twitter.com/user/status/1')).toBe('x');
     expect(detectPublicationPlatform('https://example.org/p')).toBe('generic');
   });
 
