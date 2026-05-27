@@ -91,19 +91,17 @@ describe('TelescopeListComponent', () => {
     expect(tableRows.length).toBe(1);
 
     const firstRowCells = tableRows[0].querySelectorAll('td.mat-mdc-cell');
-    expect(firstRowCells[0].textContent.trim()).toBe('1');
-    expect(firstRowCells[2].textContent.trim()).toBe('Test Description 1');
-    expect(firstRowCells[7].textContent.trim()).toBe('Test Sensor 1');
-    expect(firstRowCells[8].querySelector('mat-icon').textContent.trim()).toBe('check_circle');
+    expect(firstRowCells[0].textContent.trim()).toBe('Test Telescope 1');
+    expect(firstRowCells[1].textContent.trim()).toBe('Test Description 1');
+    expect(firstRowCells[5].textContent.trim()).toBe('Test Sensor 1');
+    expect(firstRowCells[6].querySelector('mat-icon').textContent.trim()).toBe('check_circle');
   });
 
   it('should have correct column definitions', () => {
     expect(component.displayedColumns).toEqual([
-      'scope_id',
       'name',
       'descr',
-      'focal',
-      'aperture',
+      'optics',
       'min_dec',
       'max_dec',
       'sensor',
