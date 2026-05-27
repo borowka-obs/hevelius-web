@@ -42,7 +42,7 @@
       <ng-container matColumnDef="sensor_size">
         <th mat-header-cell *matHeaderCellDef>Size (mm)</th>
         <td mat-cell *matCellDef="let s">
-          @if (s.width != null && s.height != null) {
+          @if (s.width !== null && s.height !== null) {
             {{ s.width }}×{{ s.height }}
           } @else {
             -
