@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FiltersService } from '../../services/filters.service';
 import { TelescopeService } from '../../services/telescope.service';
@@ -57,10 +57,23 @@ export class FiltersListComponent implements OnInit, OnDestroy {
   dataSource = new MatTableDataSource<Filter>();
   allFilters: Filter[] = [];
   telescopes: Telescope[] = [];
-  displayedColumns: string[] = ['filter_id', 'short_name', 'full_name', 'url', 'active', 'used_by', 'actions'];
+  private readonly MOBILE_BREAKPOINT = 640;
+  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+
+  get displayedColumns(): string[] {
+    if (this.isMobile) {
+      return ['short_name', 'full_name', 'active', 'used_by', 'actions'];
+    }
+    return ['short_name', 'full_name', 'url', 'active', 'used_by', 'actions'];
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+  }
 
   currentSort: { sort_by: FiltersListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
-    sort_by: 'filter_id',
+    sort_by: 'short_name',
     sort_order: 'asc'
   };
   filterForm: FormGroup;
@@ -142,7 +155,7 @@ export class FiltersListComponent implements OnInit, OnDestroy {
   onSortChange(sort: Sort): void {
     const allowed: Array<FiltersListParams['sort_by']> = ['filter_id', 'short_name', 'full_name', 'active'];
     this.currentSort = {
-      sort_by: allowed.includes(sort.active as FiltersListParams['sort_by']) ? sort.active as FiltersListParams['sort_by'] : 'filter_id',
+      sort_by: allowed.includes(sort.active as FiltersListParams['sort_by']) ? sort.active as FiltersListParams['sort_by'] : 'short_name',
       sort_order: (sort.direction as 'asc' | 'desc') || 'asc'
     };
     this.loadFilters();

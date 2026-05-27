@@ -55,11 +55,9 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
   dataSource = new MatTableDataSource<Telescope>();
   allTelescopes: Telescope[] = [];
   displayedColumns: string[] = [
-    'scope_id',
     'name',
     'descr',
-    'focal',
-    'aperture',
+    'optics',
     'min_dec',
     'max_dec',
     'sensor',
@@ -145,10 +143,21 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
     this.applyClientFilter();
   }
 
+  getOpticsLabel(t: Telescope): string {
+    const f = t.focal;
+    const a = t.aperture;
+    if (f != null && a != null && a !== 0) {
+      return `${f}mm@F/${(f / a).toFixed(1)}`;
+    }
+    if (f != null) { return `${f}mm`; }
+    if (a != null) { return `${a}mm`; }
+    return '-';
+  }
+
   onSortChange(sort: Sort): void {
-    const sortBy = (sort.active === 'scope_id' || sort.active === 'name' || sort.active === 'focal' || sort.active === 'active')
+    const sortBy = (sort.active === 'name' || sort.active === 'focal' || sort.active === 'active')
       ? sort.active as TelescopesListParams['sort_by']
-      : 'scope_id';
+      : 'name';
     this.currentSort = {
       sort_by: sortBy,
       sort_order: (sort.direction as 'asc' | 'desc') || 'asc'

@@ -3,7 +3,7 @@
 .filter-form { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .filter-field { margin: 0.5rem 0; }
 .filter-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.5rem; }
-.table-container { margin-top: 1rem; }
+.table-container { margin-top: 1rem; overflow-x: auto; }
 table { width: 100%; }
 .muted { color: #666; }
 .more-link { padding: 0 4px; min-width: auto; vertical-align: baseline; }
@@ -32,4 +32,28 @@ button.scope-link-button.mat-mdc-button {
 
 button.scope-link-button.mat-mdc-button:hover {
   background-color: rgba(25, 118, 210, 0.22);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 8px;
+  }
+
+  .table-container {
+    margin-top: 0.5rem;
+  }
+
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding: 4px 6px !important;
+  }
+
+  table {
+    font-size: 0.82rem;
+  }
+
+  button.scope-link-button.mat-mdc-button {
+    padding: 2px 6px;
+    font-size: 0.8rem;
+  }
 }
