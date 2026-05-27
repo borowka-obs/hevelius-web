@@ -1,10 +1,15 @@
 # Hevelius Web Interface Changelog
 
-0.5.0 (unreleased)
+0.5.0 (2026-05-27)
 
-- Renamed **Catalogs** page to **Objects** (`/objects`); menu label and top bar updated (star icon unchanged).
-- Added **Catalogs** page (`/catalogs`) listing installed catalogs with object counts; sort by count or name; tap/click opens Objects filtered by that catalog.
-- Objects filtering: catalog picker from installed catalogs, name/altname search, constellation autocomplete, and coordinate proximity (RA, decl, radius in degrees).
+- Tweaked the interface to be more phone friendly
+- Project publications added (custom icons for AstroBin, astropolis.pl, Facebook, X, Flickr and more)
+- Renamed **Catalogs** page to **Objects** (`/objects`); menu label and top bar updated.
+- Added **Catalogs** page (`/catalogs`) listing installed catalogs with object counts;
+  sort by count or name; tap/click opens Objects filtered by that catalog.
+- Proximity search in Objects implemented (you can specify RA,dec and radius)
+- Objects filtering: catalog picker from installed catalogs, name/altname search,
+  constellation autocomplete, and coordinate proximity (RA, decl, radius in degrees).
 - Objects and Catalogs layouts adapt to narrow screens (card list on phones, table on wider viewports).
 - The projects support added
 - Login auth contract updated: frontend now sends plaintext password over HTTPS
