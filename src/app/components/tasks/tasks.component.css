@@ -2,6 +2,14 @@ table {
   width: 100%;
 }
 
+.table-container {
+  overflow-x: auto;
+}
+
+.container {
+  padding: 16px;
+}
+
 .spacer {
   flex: 1 1 auto;
 }
@@ -97,4 +105,19 @@ mat-paginator {
 
 .container.tasks-embedded .table-container {
   margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 8px;
+  }
+
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding: 4px 6px !important;
+  }
+
+  table {
+    font-size: 0.82rem;
+  }
 }

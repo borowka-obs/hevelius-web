@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SensorsService } from '../../services/sensors.service';
 import { Sensor, SensorsListParams } from '../../models/sensor';
@@ -58,20 +58,20 @@ export class SensorsListComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
 
   dataSource = new MatTableDataSource<Sensor>();
-  displayedColumns: string[] = [
-    'sensor_id',
-    'name',
-    'vendor',
-    'resx',
-    'resy',
-    'pixel_x',
-    'pixel_y',
-    'width',
-    'height',
-    'bits',
-    'active',
-    'actions'
-  ];
+  private readonly MOBILE_BREAKPOINT = 640;
+  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+
+  get displayedColumns(): string[] {
+    if (this.isMobile) {
+      return ['name', 'vendor', 'resolution', 'active', 'actions'];
+    }
+    return ['name', 'vendor', 'resx', 'resy', 'pixel_x', 'pixel_y', 'width', 'height', 'bits', 'active', 'actions'];
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+  }
 
   currentSort: { sort_by: SensorsListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
     sort_by: 'sensor_id',

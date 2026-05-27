@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, inject, input } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, HostListener, inject, input } from '@angular/core';
 import { LoginService } from '../../services/login.service';
 import { TasksService } from '../../services/tasks.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
@@ -92,7 +92,21 @@ export class TasksComponent implements OnInit, OnDestroy {
   };
 
   dataSource = inject(TasksService);
-  displayedColumns: string[] = ['task_id', 'user_id', 'scope_id', 'state', 'object', 'ra', 'decl', 'exposure', 'actions'];
+  private readonly MOBILE_BREAKPOINT = 640;
+  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+
+  get displayedColumns(): string[] {
+    if (this.isMobile) {
+      return ['scope_id', 'state', 'object', 'actions'];
+    }
+    return ['user_id', 'scope_id', 'state', 'object', 'ra', 'decl', 'exposure', 'actions'];
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+  }
+
   totalTasks = 0;
   currentPage = 1;
   pageSize = 50;

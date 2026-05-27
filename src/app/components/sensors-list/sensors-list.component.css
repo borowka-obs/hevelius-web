@@ -29,8 +29,28 @@
 
 .table-container {
   margin-top: 1rem;
+  overflow-x: auto;
 }
 
 table {
   width: 100%;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 8px;
+  }
+
+  .table-container {
+    margin-top: 0.5rem;
+  }
+
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding: 4px 6px !important;
+  }
+
+  table {
+    font-size: 0.82rem;
+  }
 }

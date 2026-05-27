@@ -6,3 +6,22 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Mobile: compact table cell padding and readable font size */
+@media (max-width: 640px) {
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Prevent long words from blowing out table layout */
+  .mat-mdc-cell {
+    word-break: break-word;
+  }
+
+  /* Make paginator more compact */
+  .mat-mdc-paginator-range-label {
+    font-size: 0.8rem;
+  }
+}
