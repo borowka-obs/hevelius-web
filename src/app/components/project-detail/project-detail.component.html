@@ -67,6 +67,24 @@
       </mat-card-content>
     </mat-card>
 
+    @if (hasFov) {
+      <mat-card class="sky-view-card">
+        <mat-card-header>
+          <mat-card-title>Sky View</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <app-sky-view
+            [ra]="project.ra!"
+            [dec]="project.decl!"
+            [fovWidthDeg]="fovWidthDeg"
+            [fovHeightDeg]="fovHeightDeg"
+            [rotation]="project.rotation ?? 0"
+            [fovMultiplier]="4"
+          />
+        </mat-card-content>
+      </mat-card>
+    }
+
     <div class="subframes-section">
       <div class="subframes-header">
         <h2>Subframes</h2>

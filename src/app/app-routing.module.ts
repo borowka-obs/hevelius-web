@@ -12,6 +12,7 @@ import { FiltersListComponent } from './components/filters-list/filters-list.com
 import { ObjectsComponent } from './components/objects/objects.component';
 import { CatalogsListComponent } from './components/catalogs-list/catalogs-list.component';
 import { UserComponent } from './components/user/user.component';
+import { SkyMapComponent } from './components/sky-map/sky-map.component';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -32,6 +33,7 @@ export const routes: Routes = [
       { path: 'objects', component: ObjectsComponent },
       { path: 'catalogs', component: CatalogsListComponent },
       { path: 'user', component: UserComponent },
+      { path: 'sky-map', component: SkyMapComponent },
       { path: '', redirectTo: 'projects', pathMatch: 'full' }
     ]
   },

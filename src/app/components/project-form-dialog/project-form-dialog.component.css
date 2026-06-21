@@ -22,3 +22,39 @@ mat-dialog-content form {
 .similar-warning-icon {
   margin-right: 4px;
 }
+
+.fov-section {
+  border-top: 1px solid rgba(0,0,0,0.12);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.fov-section-title {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fov-chip {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fov-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.fov-hint {
+  font-size: 11px;
+  color: rgba(0,0,0,0.54);
+  margin-top: 4px;
+}
