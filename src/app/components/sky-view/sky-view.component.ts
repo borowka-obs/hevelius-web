@@ -6,7 +6,8 @@ import {
   AfterViewInit,
   ElementRef,
   ViewChild,
-  NgZone
+  NgZone,
+  inject
 } from '@angular/core';
 
 /** FOV rectangle corners in WCS space for an Aladin polygon overlay. */
@@ -58,8 +59,7 @@ export class SkyViewComponent implements AfterViewInit, OnChanges, OnDestroy {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private aladin: any = null;
   private ready = false;
-
-  constructor(private zone: NgZone) {}
+  private zone = inject(NgZone);
 
   ngAfterViewInit(): void {
     this.zone.runOutsideAngular(() => {
