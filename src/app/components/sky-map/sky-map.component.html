@@ -5,31 +5,38 @@
     </mat-card-header>
 
     <mat-card-content>
-      <div *ngIf="loading" class="center-spinner">
-        <mat-spinner diameter="48"></mat-spinner>
-      </div>
-
-      <div *ngIf="errorMsg" class="error-msg">{{ errorMsg }}</div>
-
-      <div *ngIf="!loading && !errorMsg">
-        <!-- Scope filter chips -->
-        <div class="scope-chips" *ngIf="scopeIds.length > 1">
-          <mat-chip-set>
-            <mat-chip
-              *ngFor="let id of scopeIds"
-              [style.--chip-color]="scopeColor(id)"
-              [class.chip-hidden]="!isScopeVisible(id)"
-              (click)="toggleScope(id)"
-              [highlighted]="isScopeVisible(id)">
-              <mat-icon matChipAvatar [style.color]="scopeColor(id)">lens</mat-icon>
-              Scope {{ id }}
-            </mat-chip>
-          </mat-chip-set>
+      @if (loading) {
+        <div class="center-spinner">
+          <mat-spinner diameter="48"></mat-spinner>
         </div>
+      }
+
+      @if (errorMsg) {
+        <div class="error-msg">{{ errorMsg }}</div>
+      }
+
+      @if (!loading && !errorMsg) {
+        <!-- Scope filter chips -->
+        @if (scopeIds.length > 1) {
+          <div class="scope-chips">
+            <mat-chip-set>
+              @for (id of scopeIds; track id) {
+                <mat-chip
+                  [style.--chip-color]="scopeColor(id)"
+                  [class.chip-hidden]="!isScopeVisible(id)"
+                  (click)="toggleScope(id)"
+                  [highlighted]="isScopeVisible(id)">
+                  <mat-icon matChipAvatar [style.color]="scopeColor(id)">lens</mat-icon>
+                  Scope {{ id }}
+                </mat-chip>
+              }
+            </mat-chip-set>
+          </div>
+        }
 
         <!-- Aladin host -->
         <div #host class="aladin-host"></div>
-      </div>
+      }
     </mat-card-content>
   </mat-card>
 </div>
