@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { CatalogsService } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { ProjectsService } from '../../services/projects.service';
+import { TelescopeService } from '../../services/telescope.service';
 import { ProjectFormDialogComponent, findSimilarProjects, sequenceRatio } from './project-form-dialog.component';
 
 describe('sequenceRatio', () => {
@@ -75,6 +76,7 @@ describe('ProjectFormDialogComponent', () => {
       providers: [
         { provide: ProjectsService, useValue: projectsService },
         { provide: CatalogsService, useValue: { searchObjects: vi.fn().mockReturnValue(of([])) } },
+        { provide: TelescopeService, useValue: { getTelescope: vi.fn().mockReturnValue(of({ focal: null, sensor: null })) } },
         CoordsFormatterService,
         { provide: MatDialogRef, useValue: { close: vi.fn() } },
         { provide: MatSnackBar, useValue: { open: vi.fn() } },
@@ -116,7 +118,12 @@ describe('ProjectFormDialogComponent', () => {
       regexps: '',
       active: true,
       ra: 0.7,
-      decl: 41.2
+      decl: 41.2,
+      focal: null,
+      resx: null,
+      resy: null,
+      pixel_x: null,
+      pixel_y: null
     });
   });
 
@@ -192,5 +199,40 @@ describe('ProjectFormDialogComponent', () => {
     expect(component.similarProjects.length).toBeGreaterThan(0);
     component.save();
     expect(projectsService.createProject).toHaveBeenCalled();
+  });
+
+  it('fovChip returns null when optical params are missing', () => {
+    expect(component.fovChip).toBeNull();
+  });
+
+  it('fovChip returns formatted FOV string when all optical params are set', () => {
+    component.form.patchValue({ focal: 2541, resx: 3326, resy: 2504, pixel_x: 5.4, pixel_y: 5.4 });
+    expect(component.fovChip).toMatch(/^\d+\.\d+° × \d+\.\d+°$/);
+  });
+
+  it('includes explicit optical params in the save payload', () => {
+    component.form.patchValue({
+      name: 'M31',
+      scope_id: 2,
+      ra: '0.7',
+      decl: '41.2',
+      active: true,
+      regexps: '',
+      focal: 2541,
+      resx: 3326,
+      resy: 2504,
+      pixel_x: 5.4,
+      pixel_y: 5.4
+    });
+    component.save();
+    expect(projectsService.createProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        focal: 2541,
+        resx: 3326,
+        resy: 2504,
+        pixel_x: 5.4,
+        pixel_y: 5.4
+      })
+    );
   });
 });
