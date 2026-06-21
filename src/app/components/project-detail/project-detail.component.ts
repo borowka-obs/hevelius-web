@@ -28,6 +28,7 @@ import {
   subframeGoalSeconds,
   subframeProgressPercent
 } from '../../utils/project-integration';
+import { SkyViewComponent, computeFovDeg } from '../sky-view/sky-view.component';
 
 @Component({
   selector: 'app-project-detail',
@@ -44,7 +45,8 @@ import {
     MatProgressBarModule,
     DatePipe,
     TasksComponent,
-    ProjectPublicationsComponent
+    ProjectPublicationsComponent,
+    SkyViewComponent
   ]
 })
 export class ProjectDetailComponent implements OnInit {
@@ -293,6 +295,21 @@ export class ProjectDetailComponent implements OnInit {
 
   projectSummaryLine(): string {
     return this.project ? projectFilterGoalSummary(this.project) : '';
+  }
+
+  get hasFov(): boolean {
+    const p = this.project;
+    return !!(p?.focal && p?.resx && p?.resy && p?.pixel_x && p?.pixel_y && p?.ra != null && p?.decl != null);
+  }
+
+  get fovWidthDeg(): number {
+    const p = this.project!;
+    return computeFovDeg(p.resx!, p.pixel_x!, p.focal!);
+  }
+
+  get fovHeightDeg(): number {
+    const p = this.project!;
+    return computeFovDeg(p.resy!, p.pixel_y!, p.focal!);
   }
 
   deleteSubframe(sub: ProjectSubframe): void {

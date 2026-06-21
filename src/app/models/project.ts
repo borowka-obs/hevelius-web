@@ -33,6 +33,18 @@ export interface Project {
   end_date?: string | null;
   /** Space-separated publication URLs (social posts, galleries). */
   publications?: string | null;
+  /** Camera position angle, degrees East of North. null = not set. */
+  rotation?: number | null;
+  /** Focal length (mm) stored at project creation; copied from telescope. */
+  focal?: number | null;
+  /** Sensor width (pixels) stored at project creation; copied from sensor. */
+  resx?: number | null;
+  /** Sensor height (pixels) stored at project creation; copied from sensor. */
+  resy?: number | null;
+  /** Pixel pitch X (µm) stored at project creation; copied from sensor. */
+  pixel_x?: number | null;
+  /** Pixel pitch Y (µm) stored at project creation; copied from sensor. */
+  pixel_y?: number | null;
   subframes?: ProjectSubframe[];
   user_ids?: number[];
 }
@@ -48,6 +60,12 @@ export interface ProjectCreate {
   start_date?: string | null;
   end_date?: string | null;
   publications?: string | null;
+  rotation?: number | null;
+  focal?: number | null;
+  resx?: number | null;
+  resy?: number | null;
+  pixel_x?: number | null;
+  pixel_y?: number | null;
 }
 
 export interface ProjectUpdate {
@@ -61,6 +79,12 @@ export interface ProjectUpdate {
   start_date?: string | null;
   end_date?: string | null;
   publications?: string | null;
+  rotation?: number | null;
+  focal?: number | null;
+  resx?: number | null;
+  resy?: number | null;
+  pixel_x?: number | null;
+  pixel_y?: number | null;
 }
 
 export interface ProjectSubframeCreate {

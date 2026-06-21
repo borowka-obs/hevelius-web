@@ -11,9 +11,12 @@ import { ProjectCreate } from '../../models/project';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CatalogsService, CatalogObject } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
+import { TelescopeService } from '../../services/telescope.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { finalize } from 'rxjs/operators';
 import { parseDecDegrees, parseRAHours } from '../../utils/coord-parse';
+import { computeFovDeg } from '../sky-view/sky-view.component';
+import { CommonModule } from '@angular/common';
 
 /** Longest-common-subsequence ratio, matching Python difflib.SequenceMatcher.ratio() semantics. */
 export function sequenceRatio(a: string, b: string): number {
@@ -73,6 +76,7 @@ export interface ProjectFormDialogData {
   styleUrls: ['./project-form-dialog.component.css'],
   standalone: true,
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -87,6 +91,7 @@ export class ProjectFormDialogComponent {
   private projectsService = inject(ProjectsService);
   private catalogsService = inject(CatalogsService);
   private coordsFormatter = inject(CoordsFormatterService);
+  private telescopeService = inject(TelescopeService);
   private dialogRef = inject(MatDialogRef<ProjectFormDialogComponent>);
   private snackBar = inject(MatSnackBar);
   data = inject<ProjectFormDialogData>(MAT_DIALOG_DATA);
@@ -94,6 +99,7 @@ export class ProjectFormDialogComponent {
   form: FormGroup;
   catalogLookupPending = false;
   similarProjects: SimilarProject[] = [];
+  fovLoadPending = false;
 
   constructor() {
     this.form = this.fb.group({
@@ -106,7 +112,12 @@ export class ProjectFormDialogComponent {
       active: [true],
       start_date: [''],
       end_date: [''],
-      publications: ['']
+      publications: [''],
+      focal: [null as number | null],
+      resx: [null as number | null],
+      resy: [null as number | null],
+      pixel_x: [null as number | null],
+      pixel_y: [null as number | null]
     });
 
     this.form.get('name')!.valueChanges.pipe(
@@ -118,6 +129,34 @@ export class ProjectFormDialogComponent {
         this.data?.existingProjects ?? []
       );
     });
+
+    this.form.get('scope_id')!.valueChanges.subscribe((scopeId: number | null) => {
+      if (!scopeId) return;
+      this.fovLoadPending = true;
+      this.telescopeService.getTelescope(scopeId).pipe(
+        finalize(() => { this.fovLoadPending = false; })
+      ).subscribe({
+        next: t => {
+          this.form.patchValue({
+            focal: t.focal ?? null,
+            resx: t.sensor?.resx ?? null,
+            resy: t.sensor?.resy ?? null,
+            pixel_x: t.sensor?.pixel_x ?? null,
+            pixel_y: t.sensor?.pixel_y ?? null
+          }, { emitEvent: false });
+        },
+        error: () => { /* leave fields as-is */ }
+      });
+    });
+  }
+
+  get fovChip(): string | null {
+    const v = this.form.getRawValue();
+    const { focal, resx, resy, pixel_x, pixel_y } = v;
+    if (!focal || !resx || !resy || !pixel_x || !pixel_y) return null;
+    const w = computeFovDeg(resx, pixel_x, focal);
+    const h = computeFovDeg(resy, pixel_y, focal);
+    return `${w.toFixed(2)}° × ${h.toFixed(2)}°`;
   }
 
   get scopes(): { scope_id: number; name: string }[] {
@@ -236,7 +275,12 @@ export class ProjectFormDialogComponent {
       decl,
       ...(sd ? { start_date: sd } : {}),
       ...(ed ? { end_date: ed } : {}),
-      ...(pubs ? { publications: pubs } : {})
+      ...(pubs ? { publications: pubs } : {}),
+      focal: value.focal != null ? Number(value.focal) : null,
+      resx: value.resx != null ? Number(value.resx) : null,
+      resy: value.resy != null ? Number(value.resy) : null,
+      pixel_x: value.pixel_x != null ? Number(value.pixel_x) : null,
+      pixel_y: value.pixel_y != null ? Number(value.pixel_y) : null
     };
     this.projectsService.createProject(body).subscribe({
       next: () => {
