@@ -2,6 +2,10 @@
 
 0.6.0 (unreleased)
 
+- Added **Asteroids** page (`/asteroids`) listing minor planets from the MPC
+  catalogue, with paging, sorting, and filtering (designation, number,
+  numbered/provisional, absolute magnitude range); click a row to view an
+  asteroid's full orbital element details (`/asteroids/:id`).
 - Detailed telescope view extended: many new parameters shown (F number,
   default rotation, camera details, FOV etc).
 - Default camera rotation for a telescope is now supported.

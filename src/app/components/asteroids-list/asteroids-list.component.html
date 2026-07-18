@@ -1,0 +1,110 @@
+<div class="container">
+  <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+    <form [formGroup]="filterForm" class="filter-form" (ngSubmit)="onFilterSubmit($event)">
+      <mat-form-field class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Designation</mat-label>
+        <input matInput formControlName="designation" type="text" placeholder="e.g. 00001">
+      </mat-form-field>
+
+      <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
+        <mat-label>Number</mat-label>
+        <input matInput formControlName="number" type="number" step="1" min="1">
+      </mat-form-field>
+
+      <mat-form-field class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Numbering</mat-label>
+        <mat-select formControlName="numbered">
+          <mat-option [value]="null">All asteroids</mat-option>
+          <mat-option [value]="true">Numbered only</mat-option>
+          <mat-option [value]="false">Unnumbered / provisional only</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="mag-filters">
+        <span class="mag-label">Absolute magnitude (H)</span>
+        <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
+          <mat-label>Min</mat-label>
+          <input matInput formControlName="mag_min" type="number" step="any">
+        </mat-form-field>
+        <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
+          <mat-label>Max</mat-label>
+          <input matInput formControlName="mag_max" type="number" step="any">
+        </mat-form-field>
+      </div>
+
+      @if (filterError) {
+        <p class="filter-error" role="alert">{{ filterError }}</p>
+      }
+
+      <div class="filter-actions">
+        <button type="button" mat-button (click)="clearFilters()">Clear</button>
+        <button type="submit" mat-raised-button color="primary">Apply</button>
+      </div>
+    </form>
+  </div>
+
+  @if (isMobile) {
+    <div class="mobile-cards">
+      @for (asteroid of asteroids; track asteroid.asteroid_id) {
+        <div class="asteroid-card" (click)="openAsteroid(asteroid)" (keyup.enter)="openAsteroid(asteroid)" tabindex="0" role="button">
+          <div class="card-line1">
+            <span class="card-designation">{{ asteroid.designation }}</span>
+            @if (asteroid.number !== null) { <span class="card-number">#{{ asteroid.number }}</span> }
+          </div>
+          <div class="card-line2">
+            @if (asteroid.absolute_magnitude !== null) { H = {{ asteroid.absolute_magnitude }} }
+          </div>
+        </div>
+      } @empty {
+        <div class="no-results">No asteroids match the current filters.</div>
+      }
+    </div>
+  } @else {
+    <div class="table-container">
+      <table mat-table [dataSource]="asteroids" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z8">
+        <ng-container matColumnDef="number">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Number</th>
+          <td mat-cell *matCellDef="let asteroid">{{ asteroid.number ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="designation">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Designation</th>
+          <td mat-cell *matCellDef="let asteroid">{{ asteroid.designation }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="absolute_magnitude">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Magnitude (H)</th>
+          <td mat-cell *matCellDef="let asteroid">{{ asteroid.absolute_magnitude ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="semimajor_axis">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Semi-major axis (AU)</th>
+          <td mat-cell *matCellDef="let asteroid">{{ asteroid.semimajor_axis }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="eccentricity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Eccentricity</th>
+          <td mat-cell *matCellDef="let asteroid">{{ asteroid.eccentricity }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="inclination">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Inclination (°)</th>
+          <td mat-cell *matCellDef="let asteroid">{{ asteroid.inclination }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="asteroid-row" (click)="openAsteroid(row)"></tr>
+      </table>
+    </div>
+  }
+
+  <mat-paginator
+    class="paginator"
+    [length]="totalAsteroids"
+    [pageIndex]="currentPage - 1"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[50, 100, 200, 500]"
+    (page)="onPageChange($event)">
+  </mat-paginator>
+</div>
