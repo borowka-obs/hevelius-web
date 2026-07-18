@@ -1,0 +1,46 @@
+@if (notFound) {
+  <div class="container">
+    <p>Asteroid not found.</p>
+    <button mat-raised-button color="primary" (click)="backToList()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to asteroids
+    </button>
+  </div>
+} @else if (!asteroid) {
+  <p>Loading…</p>
+} @else {
+  <div class="container">
+    <div class="asteroid-actions">
+      <button mat-raised-button color="primary" (click)="backToList()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to asteroids
+      </button>
+    </div>
+
+    <mat-card class="asteroid-card">
+      <mat-card-header>
+        <mat-card-title>
+          {{ asteroid.designation }}
+          @if (asteroid.number !== null) { <span class="number-badge">#{{ asteroid.number }}</span> }
+        </mat-card-title>
+        @if (isProvisional()) {
+          <mat-card-subtitle>Unnumbered / provisional designation</mat-card-subtitle>
+        }
+      </mat-card-header>
+      <mat-card-content>
+        <div class="fields-grid">
+          <p><strong>Epoch:</strong> {{ asteroid.epoch }}</p>
+          <p><strong>Absolute magnitude (H):</strong> {{ asteroid.absolute_magnitude ?? '—' }}</p>
+          <p><strong>Slope parameter (G):</strong> {{ asteroid.slope_parameter ?? '—' }}</p>
+          <p><strong>Semi-major axis (a):</strong> {{ asteroid.semimajor_axis }} AU</p>
+          <p><strong>Eccentricity (e):</strong> {{ asteroid.eccentricity }}</p>
+          <p><strong>Inclination (i):</strong> {{ asteroid.inclination }}°</p>
+          <p><strong>Longitude of ascending node (Ω):</strong> {{ asteroid.ascending_node }}°</p>
+          <p><strong>Argument of perihelion (ω):</strong> {{ asteroid.perihelion_arg }}°</p>
+          <p><strong>Mean anomaly (M):</strong> {{ asteroid.mean_anomaly }}°</p>
+          <p><strong>Mean daily motion (n):</strong> {{ asteroid.mean_motion }}°/day</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+}

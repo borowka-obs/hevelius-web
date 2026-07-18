@@ -11,6 +11,8 @@ import { ProjectDetailComponent } from './components/project-detail/project-deta
 import { FiltersListComponent } from './components/filters-list/filters-list.component';
 import { ObjectsComponent } from './components/objects/objects.component';
 import { CatalogsListComponent } from './components/catalogs-list/catalogs-list.component';
+import { AsteroidsListComponent } from './components/asteroids-list/asteroids-list.component';
+import { AsteroidDetailComponent } from './components/asteroid-detail/asteroid-detail.component';
 import { UserComponent } from './components/user/user.component';
 import { SkyMapComponent } from './components/sky-map/sky-map.component';
 import { AuthGuard } from './guards/auth.guard';
@@ -32,6 +34,8 @@ export const routes: Routes = [
       { path: 'projects/:id', component: ProjectDetailComponent },
       { path: 'objects', component: ObjectsComponent },
       { path: 'catalogs', component: CatalogsListComponent },
+      { path: 'asteroids', component: AsteroidsListComponent },
+      { path: 'asteroids/:id', component: AsteroidDetailComponent },
       { path: 'user', component: UserComponent },
       { path: 'sky-map', component: SkyMapComponent },
       { path: '', redirectTo: 'projects', pathMatch: 'full' }

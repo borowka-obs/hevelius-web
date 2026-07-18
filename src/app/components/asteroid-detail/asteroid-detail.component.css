@@ -1,0 +1,32 @@
+.container {
+  padding: 20px;
+}
+
+.asteroid-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.asteroid-card {
+  margin: 1rem 0;
+  max-width: 640px;
+}
+
+.number-badge {
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  color: #616161;
+  font-weight: 400;
+}
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.25rem 1.5rem;
+}
+
+.fields-grid p {
+  margin: 0.4rem 0;
+}

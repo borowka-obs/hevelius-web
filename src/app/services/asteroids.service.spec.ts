@@ -1,0 +1,127 @@
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { AsteroidsService, Asteroid } from './asteroids.service';
+import { LoginService } from './login.service';
+import { Hevelius } from 'src/hevelius';
+
+describe('AsteroidsService', () => {
+  let service: AsteroidsService;
+  let httpMock: HttpTestingController;
+
+  const mockAsteroid: Asteroid = {
+    asteroid_id: 1,
+    number: 1,
+    designation: '00001',
+    epoch: 'K25A2',
+    mean_anomaly: 10.5,
+    perihelion_arg: 73.6,
+    ascending_node: 80.3,
+    inclination: 10.6,
+    eccentricity: 0.078,
+    mean_motion: 0.214,
+    semimajor_axis: 2.77,
+    absolute_magnitude: 3.34,
+    slope_parameter: 0.12
+  };
+
+  beforeEach(() => {
+    const loginServiceSpy = {
+      getAuthHeaders: vi.fn().mockReturnValue({ 'Authorization': 'Bearer test-token' }),
+    };
+
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [
+        AsteroidsService,
+        { provide: LoginService, useValue: loginServiceSpy }
+      ]
+    });
+
+    service = TestBed.inject(AsteroidsService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+
+  describe('listAsteroids', () => {
+    it('should return paginated asteroids', () => {
+      const mockResponse = {
+        asteroids: [mockAsteroid],
+        total: 1,
+        page: 1,
+        per_page: 100,
+        pages: 1
+      };
+
+      service.listAsteroids({ page: 1, per_page: 100 }).subscribe(response => {
+        expect(response).toEqual(mockResponse);
+        expect(response.asteroids.length).toBe(1);
+        expect(response.total).toBe(1);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroids?page=1&per_page=100`);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
+      req.flush(mockResponse);
+    });
+
+    it('should pass filter, sort, and paging params', () => {
+      const mockResponse = { asteroids: [], total: 0, page: 1, per_page: 100, pages: 0 };
+
+      service.listAsteroids({
+        designation: '00001',
+        number: 1,
+        numbered: true,
+        mag_min: 4,
+        mag_max: 10,
+        sort_by: 'absolute_magnitude',
+        sort_order: 'desc'
+      }).subscribe(response => {
+        expect(response.total).toBe(0);
+      });
+
+      const req = httpMock.expectOne((r) => r.url === `${Hevelius.apiUrl}/asteroids`);
+      expect(req.request.params.get('designation')).toBe('00001');
+      expect(req.request.params.get('number')).toBe('1');
+      expect(req.request.params.get('numbered')).toBe('true');
+      expect(req.request.params.get('mag_min')).toBe('4');
+      expect(req.request.params.get('mag_max')).toBe('10');
+      expect(req.request.params.get('sort_by')).toBe('absolute_magnitude');
+      expect(req.request.params.get('sort_order')).toBe('desc');
+      req.flush(mockResponse);
+    });
+
+    it('should handle empty parameters', () => {
+      const mockResponse = { asteroids: [], total: 0, page: 1, per_page: 100, pages: 0 };
+
+      service.listAsteroids().subscribe(response => {
+        expect(response).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroids`);
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('getAsteroid', () => {
+    it('should return a single asteroid', () => {
+      const mockResponse = { status: true, asteroid: mockAsteroid, msg: 'OK' };
+
+      service.getAsteroid(1).subscribe(response => {
+        expect(response).toEqual(mockResponse);
+        expect(response.asteroid.designation).toBe('00001');
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroids/1`);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
+      req.flush(mockResponse);
+    });
+  });
+});
