@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AsteroidsService, Asteroid } from '../../services/asteroids.service';
+import { AsteroidsService, Asteroid, AsteroidTag } from '../../services/asteroids.service';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatChipsModule } from '@angular/material/chips';
 import { Subscription } from 'rxjs';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -21,6 +22,8 @@ interface LoadAsteroidsParams {
   numbered?: boolean;
   mag_min?: number;
   mag_max?: number;
+  tags?: string;
+  tags_mode?: 'any' | 'all';
 }
 
 @Component({
@@ -48,6 +51,7 @@ interface LoadAsteroidsParams {
     MatTableModule,
     MatSortModule,
     MatPaginatorModule,
+    MatChipsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -73,7 +77,7 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
     if (this.isMobile) {
       return ['number', 'designation', 'absolute_magnitude'];
     }
-    return ['number', 'designation', 'absolute_magnitude', 'semimajor_axis', 'eccentricity', 'inclination'];
+    return ['number', 'designation', 'absolute_magnitude', 'semimajor_axis', 'eccentricity', 'inclination', 'tags'];
   }
 
   currentSort: {
@@ -85,6 +89,7 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   };
 
   asteroids: Asteroid[] = [];
+  availableTags: AsteroidTag[] = [];
   totalAsteroids = 0;
   currentPage = 1;
   pageSize = 100;
@@ -111,7 +116,9 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
       number: [null as number | null],
       numbered: [null as boolean | null],
       mag_min: [null as number | null],
-      mag_max: [null as number | null]
+      mag_max: [null as number | null],
+      tags: [[] as string[]],
+      tags_mode: ['any' as 'any' | 'all']
     });
   }
 
@@ -121,6 +128,13 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.subscriptions.push(
+      this.asteroidsService.listTags().subscribe({
+        next: tags => { this.availableTags = tags; },
+        error: () => { this.availableTags = []; }
+      })
+    );
+
     this.loadAsteroids({
       ...this.getFilterParams(),
       sort_by: this.currentSort.sort_by,
@@ -145,6 +159,11 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
     const magMax = v.mag_max != null && v.mag_max !== '' ? Number(v.mag_max) : null;
     if (magMin != null && !Number.isNaN(magMin)) out.mag_min = magMin;
     if (magMax != null && !Number.isNaN(magMax)) out.mag_max = magMax;
+    const tags: string[] = v.tags ?? [];
+    if (tags.length > 0) {
+      out.tags = tags.join(',');
+      out.tags_mode = v.tags_mode === 'all' ? 'all' : 'any';
+    }
     return out;
   }
 
@@ -178,7 +197,9 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
       number: null,
       numbered: null,
       mag_min: null,
-      mag_max: null
+      mag_max: null,
+      tags: [],
+      tags_mode: 'any'
     });
     this.currentPage = 1;
     this.loadAsteroids({

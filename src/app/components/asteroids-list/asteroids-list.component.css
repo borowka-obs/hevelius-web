@@ -43,6 +43,15 @@
   margin: 0;
 }
 
+.tag-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  flex: 1 1 100%;
+  width: 100%;
+}
+
 .filter-error {
   flex: 1 1 100%;
   margin: 0;
@@ -100,6 +109,19 @@ table {
   min-width: 110px;
 }
 
+.mat-column-tags {
+  min-width: 160px;
+}
+
+.mat-column-tags mat-chip-set,
+.card-tags {
+  --mdc-chip-container-height: 22px;
+}
+
+mat-chip {
+  font-size: 0.75rem;
+}
+
 .mobile-cards {
   display: flex;
   flex-direction: column;
@@ -136,6 +158,10 @@ table {
   margin-top: 4px;
   font-size: 0.85rem;
   color: #555;
+}
+
+.card-tags {
+  margin-top: 6px;
 }
 
 .no-results {
