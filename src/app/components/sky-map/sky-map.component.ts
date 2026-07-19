@@ -144,31 +144,33 @@ export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private redrawAll(): void {
     if (!this.aladin || !this.A) return;
-    try {
-      this.aladin.removeLayers();
-    } catch { /* ignore */ }
+    // v3 has removeOverlays() for graphic overlays and no single "remove all" for catalogs;
+    // re-create the aladin view is the safest reset — falling back to individual removes.
+    try { this.aladin.removeOverlays(); } catch { /* ignore */ }
+    try { this.aladin.removeCatalogs(); } catch { /* ignore */ }
 
     for (const p of this.projects) {
       if (this.hiddenScopes.has(p.scope_id)) continue;
       if (p.ra == null || p.decl == null) continue;
       const color = scopeColor(p.scope_id);
+      // API stores RA in hours; Aladin Lite expects degrees
+      const raDeg = p.ra * 15;
       const hasFov = p.focal && p.resx && p.resy && p.pixel_x && p.pixel_y;
 
       if (hasFov) {
         const wDeg = computeFovDeg(p.resx!, p.pixel_x!, p.focal!);
         const hDeg = computeFovDeg(p.resy!, p.pixel_y!, p.focal!);
-        const corners = fovCorners(p.ra, p.decl, wDeg, hDeg, p.rotation ?? 0);
+        const corners = fovCorners(raDeg, p.decl, wDeg, hDeg, p.rotation ?? 0);
         try {
           const overlay = this.A.graphicOverlay({ color, lineWidth: 1.5 });
-          this.aladin.addLayer(overlay);
+          this.aladin.addOverlay(overlay);
           overlay.add(this.A.polygon(corners));
-        } catch { /* overlay API may vary */ }
+        } catch { /* ignore */ }
       } else {
-        // No optical params — show a marker only
         try {
           const cat = this.A.catalog({ name: p.name, sourceSize: 12, color });
-          this.aladin.addLayer(cat);
-          cat.addSources([this.A.source(p.ra, p.decl, { name: p.name })]);
+          this.aladin.addCatalog(cat);
+          cat.addSources([this.A.source(raDeg, p.decl, { name: p.name })]);
         } catch { /* ignore */ }
       }
     }
