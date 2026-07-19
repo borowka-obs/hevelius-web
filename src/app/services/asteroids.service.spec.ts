@@ -216,4 +216,52 @@ describe('AsteroidsService', () => {
       req.flush({ status: true, msg: 'Tag removed' });
     });
   });
+
+  describe('getVisibility', () => {
+    it('should GET the visibility curve with scope_id and defaults', () => {
+      const mockResponse = {
+        status: true,
+        scope_id: 1,
+        scope_name: 'Warsaw scope',
+        night_start: '2026-07-19 20:00:00.000',
+        night_end: '2026-07-20 04:00:00.000',
+        samples: [{ time: '2026-07-19 20:00:00.000', altitude_deg: 12.3, azimuth_deg: 45.6, apparent_magnitude: 8.8 }],
+        max_altitude_deg: 40.1,
+        max_altitude_time: '2026-07-20 00:00:00.000',
+        apparent_magnitude_at_max: 8.5,
+        visible: true,
+        has_magnitude_estimate: true,
+        msg: 'OK'
+      };
+
+      service.getVisibility(1, { scopeId: 1 }).subscribe(response => {
+        expect(response).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroids/1/visibility?scope_id=1`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should pass an explicit date and step_minutes', () => {
+      const mockResponse = {
+        status: true, scope_id: 2, scope_name: 'Scope 2',
+        night_start: '2026-01-15 18:00:00.000', night_end: '2026-01-16 06:00:00.000',
+        samples: [], max_altitude_deg: -5, max_altitude_time: '2026-01-15 22:00:00.000',
+        apparent_magnitude_at_max: null, visible: false, has_magnitude_estimate: false
+      };
+
+      service.getVisibility(1, { scopeId: 2, date: '2026-01-15', stepMinutes: 30 }).subscribe(response => {
+        expect(response.visible).toBe(false);
+      });
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${Hevelius.apiUrl}/asteroids/1/visibility`
+      );
+      expect(req.request.params.get('scope_id')).toBe('2');
+      expect(req.request.params.get('date')).toBe('2026-01-15');
+      expect(req.request.params.get('step_minutes')).toBe('30');
+      req.flush(mockResponse);
+    });
+  });
 });

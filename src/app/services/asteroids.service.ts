@@ -91,6 +91,35 @@ export interface StatusMsgResponse {
   msg?: string;
 }
 
+export interface AsteroidVisibilitySample {
+  time: string;
+  altitude_deg: number;
+  azimuth_deg: number;
+  apparent_magnitude: number | null;
+}
+
+export interface AsteroidVisibilityResponse {
+  status: boolean;
+  scope_id: number;
+  scope_name: string;
+  night_start: string;
+  night_end: string;
+  samples: AsteroidVisibilitySample[];
+  max_altitude_deg: number;
+  max_altitude_time: string;
+  apparent_magnitude_at_max: number | null;
+  visible: boolean;
+  has_magnitude_estimate: boolean;
+  msg?: string;
+}
+
+export interface AsteroidVisibilityParams {
+  scopeId: number;
+  /** Evening date (YYYY-MM-DD) whose night to compute; defaults to tonight. */
+  date?: string;
+  stepMinutes?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -170,6 +199,24 @@ export class AsteroidsService {
     return this.http.delete<StatusMsgResponse>(
       `${this.baseUrl}/${asteroidId}/tags/${tagId}`,
       { headers: this.loginService.getAuthHeaders() }
+    );
+  }
+
+  /**
+   * GET /api/asteroids/{id}/visibility — altitude/azimuth/magnitude curve for
+   * one night from a telescope's location. Defaults to tonight.
+   */
+  getVisibility(asteroidId: number, params: AsteroidVisibilityParams): Observable<AsteroidVisibilityResponse> {
+    return this.http.get<AsteroidVisibilityResponse>(
+      `${this.baseUrl}/${asteroidId}/visibility`,
+      {
+        params: this.sanitizeParams({
+          scope_id: params.scopeId,
+          date: params.date,
+          step_minutes: params.stepMinutes
+        }),
+        headers: this.loginService.getAuthHeaders()
+      }
     );
   }
 

@@ -28,17 +28,34 @@
         }
       </mat-card-header>
       <mat-card-content>
-        <div class="fields-grid">
-          <p><strong>Epoch:</strong> {{ asteroid.epoch }}</p>
-          <p><strong>Absolute magnitude (H):</strong> {{ asteroid.absolute_magnitude ?? '—' }}</p>
-          <p><strong>Slope parameter (G):</strong> {{ asteroid.slope_parameter ?? '—' }}</p>
-          <p><strong>Semi-major axis (a):</strong> {{ asteroid.semimajor_axis }} AU</p>
-          <p><strong>Eccentricity (e):</strong> {{ asteroid.eccentricity }}</p>
-          <p><strong>Inclination (i):</strong> {{ asteroid.inclination }}°</p>
-          <p><strong>Longitude of ascending node (Ω):</strong> {{ asteroid.ascending_node }}°</p>
-          <p><strong>Argument of perihelion (ω):</strong> {{ asteroid.perihelion_arg }}°</p>
-          <p><strong>Mean anomaly (M):</strong> {{ asteroid.mean_anomaly }}°</p>
-          <p><strong>Mean daily motion (n):</strong> {{ asteroid.mean_motion }}°/day</p>
+        <div class="element-group">
+          <h3 class="group-heading">Identification</h3>
+          <div class="fields-grid">
+            <p><strong>Designation:</strong> {{ asteroid.designation }}</p>
+            <p><strong>Number:</strong> {{ asteroid.number ?? '— (provisional)' }}</p>
+            <p><strong>Epoch:</strong> {{ asteroid.epoch }}</p>
+          </div>
+        </div>
+
+        <div class="element-group">
+          <h3 class="group-heading">Orbital elements</h3>
+          <div class="fields-grid">
+            <p><strong>Semi-major axis (a):</strong> {{ asteroid.semimajor_axis }} AU</p>
+            <p><strong>Eccentricity (e):</strong> {{ asteroid.eccentricity }}</p>
+            <p><strong>Inclination (i):</strong> {{ asteroid.inclination }}°</p>
+            <p><strong>Longitude of ascending node (Ω):</strong> {{ asteroid.ascending_node }}°</p>
+            <p><strong>Argument of perihelion (ω):</strong> {{ asteroid.perihelion_arg }}°</p>
+            <p><strong>Mean anomaly (M):</strong> {{ asteroid.mean_anomaly }}°</p>
+            <p><strong>Mean daily motion (n):</strong> {{ asteroid.mean_motion }}°/day</p>
+          </div>
+        </div>
+
+        <div class="element-group">
+          <h3 class="group-heading">Photometric</h3>
+          <div class="fields-grid">
+            <p><strong>Absolute magnitude (H):</strong> {{ asteroid.absolute_magnitude ?? '—' }}</p>
+            <p><strong>Slope parameter (G):</strong> {{ asteroid.slope_parameter ?? '—' }}</p>
+          </div>
         </div>
       </mat-card-content>
     </mat-card>
@@ -79,6 +96,75 @@
             Add
           </button>
         </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="visibility-card">
+      <mat-card-header>
+        <mat-card-title>Visibility</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="visibility-controls">
+          <mat-form-field subscriptSizing="dynamic" class="scope-field">
+            <mat-label>Telescope</mat-label>
+            <mat-select [formControl]="scopeControl" (selectionChange)="onScopeChange($event.value)">
+              @for (scope of activeTelescopes; track scope.scope_id) {
+                <mat-option [value]="scope.scope_id">{{ scope.name }}</mat-option>
+              } @empty {
+                <mat-option [value]="null" disabled>No active telescopes configured</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field subscriptSizing="dynamic" class="date-field">
+            <mat-label>Night of</mat-label>
+            <input matInput [matDatepicker]="nightPicker" [formControl]="dateControl"
+                   (dateChange)="onDateChange($event.value)">
+            <mat-datepicker-toggle matIconSuffix [for]="nightPicker"></mat-datepicker-toggle>
+            <mat-datepicker #nightPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        @if (scopeControl.value === null) {
+          <p class="visibility-hint">Pick a telescope to compute tonight's visibility.</p>
+        } @else if (visibilityLoading) {
+          <div class="visibility-loading">
+            <mat-spinner diameter="24"></mat-spinner>
+            <span>Computing…</span>
+          </div>
+        } @else if (visibilityError) {
+          <p class="visibility-error" role="alert">{{ visibilityError }}</p>
+        } @else if (visibility) {
+          @if (!visibility.visible) {
+            <p class="not-visible">
+              Not visible from {{ visibility.scope_name }} on the night of {{ dateControl.value | date: 'yyyy-MM-dd' }}
+              — it stays below the horizon all night (best altitude {{ visibility.max_altitude_deg }}°).
+            </p>
+          } @else {
+            <p class="visibility-summary">
+              Best altitude <strong>{{ visibility.max_altitude_deg }}°</strong>
+              at {{ formatTimeLabel(visibility.max_altitude_time) }} UTC from {{ visibility.scope_name }}.
+              @if (visibility.has_magnitude_estimate) {
+                Estimated magnitude <strong>{{ visibility.apparent_magnitude_at_max }}</strong>.
+              } @else {
+                <span class="muted">No absolute magnitude on file — apparent magnitude can't be estimated.</span>
+              }
+            </p>
+
+            <svg class="elevation-chart" [attr.viewBox]="chartViewBox" preserveAspectRatio="none">
+              <line class="horizon-line" x1="0" [attr.y1]="horizonY" [attr.x2]="600" [attr.y2]="horizonY"></line>
+              <polyline class="elevation-line" [attr.points]="chartPolylinePoints"></polyline>
+              @if (maxPoint; as p) {
+                <circle class="max-point" [attr.cx]="p.x" [attr.cy]="p.y" r="4"></circle>
+              }
+            </svg>
+            <div class="chart-axis-labels">
+              <span>{{ formatTimeLabel(visibility.night_start) }}</span>
+              <span class="axis-mid-label">altitude (horizon at 0°)</span>
+              <span>{{ formatTimeLabel(visibility.night_end) }}</span>
+            </div>
+          }
+        }
       </mat-card-content>
     </mat-card>
   </div>
