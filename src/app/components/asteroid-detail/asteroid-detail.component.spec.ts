@@ -4,7 +4,8 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { AsteroidDetailComponent } from './asteroid-detail.component';
-import { AsteroidsService, Asteroid, AsteroidTag } from '../../services/asteroids.service';
+import { AsteroidsService, Asteroid, AsteroidTag, AsteroidVisibilityResponse } from '../../services/asteroids.service';
+import { TelescopeService, Telescope } from '../../services/telescope.service';
 
 describe('AsteroidDetailComponent', () => {
   let component: AsteroidDetailComponent;
@@ -15,7 +16,9 @@ describe('AsteroidDetailComponent', () => {
     createTag: ReturnType<typeof vi.fn>;
     attachTag: ReturnType<typeof vi.fn>;
     detachTag: ReturnType<typeof vi.fn>;
+    getVisibility: ReturnType<typeof vi.fn>;
   };
+  let telescopeService: { getTelescopes: ReturnType<typeof vi.fn> };
   let router: { navigate: ReturnType<typeof vi.fn> };
   let snackBar: { open: ReturnType<typeof vi.fn> };
 
@@ -39,6 +42,30 @@ describe('AsteroidDetailComponent', () => {
     tags: [neoTag]
   };
 
+  const activeScope: Telescope = {
+    scope_id: 1, name: 'Active scope', descr: '', min_dec: -90, max_dec: 90,
+    focal: 1000, aperture: 200, lon: 21, lat: 52.2, alt: 100, sensor: null, active: true
+  };
+  const inactiveScope: Telescope = { ...activeScope, scope_id: 2, name: 'Inactive scope', active: false };
+
+  const visibleResponse: AsteroidVisibilityResponse = {
+    status: true,
+    scope_id: 1,
+    scope_name: 'Active scope',
+    night_start: '2026-07-19 20:00:00.000',
+    night_end: '2026-07-20 04:00:00.000',
+    samples: [
+      { time: '2026-07-19 20:00:00.000', altitude_deg: 10, azimuth_deg: 90, apparent_magnitude: 9.1 },
+      { time: '2026-07-20 00:00:00.000', altitude_deg: 45, azimuth_deg: 180, apparent_magnitude: 8.8 },
+      { time: '2026-07-20 04:00:00.000', altitude_deg: 5, azimuth_deg: 270, apparent_magnitude: 9.3 }
+    ],
+    max_altitude_deg: 45,
+    max_altitude_time: '2026-07-20 00:00:00.000',
+    apparent_magnitude_at_max: 8.8,
+    visible: true,
+    has_magnitude_estimate: true
+  };
+
   function makeAsteroidsService(overrides: Partial<typeof asteroidsService> = {}) {
     return {
       getAsteroid: vi.fn().mockReturnValue(of({ status: true, asteroid: { ...mockAsteroid, tags: [neoTag] }, msg: 'OK' })),
@@ -46,12 +73,18 @@ describe('AsteroidDetailComponent', () => {
       createTag: vi.fn(),
       attachTag: vi.fn(),
       detachTag: vi.fn(),
+      getVisibility: vi.fn().mockReturnValue(of(visibleResponse)),
       ...overrides
     };
   }
 
-  async function setup(id: string | null, overrides: Partial<typeof asteroidsService> = {}): Promise<void> {
+  async function setup(
+    id: string | null,
+    overrides: Partial<typeof asteroidsService> = {},
+    telescopes: Telescope[] = [activeScope, inactiveScope]
+  ): Promise<void> {
     asteroidsService = makeAsteroidsService(overrides);
+    telescopeService = { getTelescopes: vi.fn().mockReturnValue(of(telescopes)) };
     router = { navigate: vi.fn() };
     snackBar = { open: vi.fn() };
 
@@ -59,6 +92,7 @@ describe('AsteroidDetailComponent', () => {
       imports: [NoopAnimationsModule, AsteroidDetailComponent],
       providers: [
         { provide: AsteroidsService, useValue: asteroidsService },
+        { provide: TelescopeService, useValue: telescopeService },
         { provide: Router, useValue: router },
         { provide: MatSnackBar, useValue: snackBar },
         {
@@ -151,5 +185,64 @@ describe('AsteroidDetailComponent', () => {
     component.submitNewTag();
     expect(asteroidsService.createTag).not.toHaveBeenCalled();
     expect(asteroidsService.attachTag).not.toHaveBeenCalled();
+  });
+
+  it('should only offer active telescopes', async () => {
+    await setup('1');
+    expect(component.activeTelescopes).toEqual([activeScope]);
+  });
+
+  it('should not compute visibility until a telescope is selected', async () => {
+    await setup('1');
+    expect(asteroidsService.getVisibility).not.toHaveBeenCalled();
+    expect(component.visibility).toBeNull();
+  });
+
+  it('should compute visibility when a telescope is selected', async () => {
+    await setup('1');
+    component.onScopeChange(1);
+    expect(asteroidsService.getVisibility).toHaveBeenCalledWith(
+      1, expect.objectContaining({ scopeId: 1 })
+    );
+    expect(component.visibility).toEqual(visibleResponse);
+    expect(component.visibilityLoading).toBe(false);
+  });
+
+  it('should recompute visibility when the date changes', async () => {
+    await setup('1');
+    component.onScopeChange(1);
+    asteroidsService.getVisibility.mockClear();
+    component.onDateChange(new Date(2026, 0, 15));
+    expect(asteroidsService.getVisibility).toHaveBeenCalledWith(
+      1, expect.objectContaining({ scopeId: 1, date: '2026-01-15' })
+    );
+  });
+
+  it('should report a visibility error from the backend', async () => {
+    await setup('1', {
+      getVisibility: vi.fn().mockReturnValue(throwError(() => ({ error: { message: 'Telescope not found.' } })))
+    });
+    component.onScopeChange(1);
+    expect(component.visibility).toBeNull();
+    expect(component.visibilityError).toBe('Telescope not found.');
+  });
+
+  it('should compute chart geometry for the max-altitude sample', async () => {
+    await setup('1');
+    component.onScopeChange(1);
+    expect(component.maxPoint).not.toBeNull();
+    expect(component.maxPoint?.x).toBeCloseTo(300, 0); // middle sample of 3
+    expect(component.chartPolylinePoints.split(' ').length).toBe(3);
+  });
+
+  it('should surface the not-visible case distinctly', async () => {
+    const notVisible: AsteroidVisibilityResponse = {
+      ...visibleResponse,
+      visible: false,
+      max_altitude_deg: -5
+    };
+    await setup('1', { getVisibility: vi.fn().mockReturnValue(of(notVisible)) });
+    component.onScopeChange(1);
+    expect(component.visibility?.visible).toBe(false);
   });
 });

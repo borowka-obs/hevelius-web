@@ -2,6 +2,15 @@
 
 0.6.0 (unreleased)
 
+- Asteroid detail page reorganized into three widgets: grouped orbital
+  elements (identification / orbital elements / photometric), tags, and a
+  new **Visibility** widget — pick an active telescope (its location drives
+  the calculation) and a night (defaults to tonight, overridable via a date
+  picker) to see an altitude/time chart for the night, the peak altitude and
+  time, an estimated apparent magnitude when the asteroid's absolute
+  magnitude is known, or a clear "not visible" message when it never rises
+  above the horizon. The underlying orbital-mechanics computation runs on
+  the backend so the same logic can be reused by a future CLI command.
 - Added tags for asteroids (families such as amor/NEO/PHA, fast rotators,
   visited by spacecraft, etc.): filter the Asteroids list by one or more
   tags (match any or all), see tags as colored chips in the list, and
