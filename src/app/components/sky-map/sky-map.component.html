@@ -33,10 +33,10 @@
             </mat-chip-set>
           </div>
         }
-
-        <!-- Aladin host -->
-        <div #host class="aladin-host"></div>
       }
+
+      <!-- Aladin host must always be in the DOM so ViewChild resolves on ngAfterViewInit -->
+      <div #host class="aladin-host" [class.hidden]="loading || !!errorMsg"></div>
     </mat-card-content>
   </mat-card>
 </div>
