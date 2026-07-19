@@ -10,7 +10,6 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -48,7 +47,6 @@ function fovCorners(
   imports: [
     CommonModule,
     RouterModule,
-    MatCardModule,
     MatProgressSpinnerModule,
     MatChipsModule,
     MatIconModule
