@@ -167,6 +167,7 @@ export class ProjectDetailComponent implements OnInit {
         initialDescription: this.project.description ?? null,
         initialRa: this.project.ra,
         initialDecl: this.project.decl,
+        initialRotation: this.project.rotation ?? null,
         initialRegexps: this.project.regexps,
         initialActive: this.project.active,
         initialStartDate: this.project.start_date ?? null,

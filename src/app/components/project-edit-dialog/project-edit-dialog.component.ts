@@ -43,6 +43,7 @@ export interface ProjectEditDialogData {
   initialDescription?: string | null;
   initialRa?: number;
   initialDecl?: number;
+  initialRotation?: number | null;
   initialRegexps?: string;
   initialActive?: boolean;
   initialStartDate?: string | null;
@@ -112,12 +113,17 @@ export class ProjectEditDialogComponent {
       this.dialogData.initialEndDate != null && String(this.dialogData.initialEndDate).trim() !== ''
         ? String(this.dialogData.initialEndDate).trim().slice(0, 10)
         : '';
+    const rotStr =
+      this.dialogData.initialRotation != null && Number.isFinite(this.dialogData.initialRotation)
+        ? String(this.dialogData.initialRotation)
+        : '';
     this.form = this.fb.group({
       scope_id: [this.dialogData.initialScopeId, Validators.required],
       description: [this.dialogData.initialDescription ?? ''],
       regexps: [this.dialogData.initialRegexps ?? ''],
       ra: [raStr, [Validators.required, raFieldValidator]],
       decl: [decStr, [Validators.required, decFieldValidator]],
+      rotation: [rotStr],
       active: [this.dialogData.initialActive ?? true],
       start_date: [startStr],
       end_date: [endStr],
@@ -188,12 +194,15 @@ export class ProjectEditDialogComponent {
     const sd = String(v.start_date ?? '').trim().slice(0, 10);
     const ed = String(v.end_date ?? '').trim().slice(0, 10);
     const pubs = String(v.publications ?? '').trim();
+    const rotRaw = String(v.rotation ?? '').trim();
+    const rotation = rotRaw === '' ? null : Number(rotRaw);
     const body: ProjectUpdate = {
       scope_id: Number(v.scope_id),
       description: String(v.description ?? '').trim(),
       regexps: String(v.regexps ?? '').trim(),
       ra,
       decl,
+      rotation: Number.isFinite(rotation) ? rotation : null,
       active: Boolean(v.active),
       start_date: sd === '' ? null : sd,
       end_date: ed === '' ? null : ed,
