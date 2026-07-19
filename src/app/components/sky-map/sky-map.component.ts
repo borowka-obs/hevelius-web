@@ -111,21 +111,24 @@ export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
       import('aladin-lite').then((mod) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.A = (mod as any).default ?? mod;
-        this.aladin = this.A.aladin(this.hostEl.nativeElement, {
-          survey: 'P/DSS2/color',
-          fov: 180,
-          target: '180 0',
-          projection: 'AIT',
-          showReticle: true,
-          showZoomControl: true,
-          showFullscreenControl: false,
-          showLayersControl: true,
-          showGotoControl: true,
-          showShareControl: false,
-          cooFrame: 'ICRS'
+        // A.init resolves once the WASM backend is ready (aladin-lite v3 requirement)
+        this.A.init.then(() => {
+          this.aladin = this.A.aladin(this.hostEl.nativeElement, {
+            survey: 'https://alasky.cds.unistra.fr/DSS/DSScolor',
+            fov: 180,
+            target: '180 0',
+            projection: 'AIT',
+            showReticle: true,
+            showZoomControl: true,
+            showFullscreenControl: false,
+            showLayersControl: true,
+            showGotoControl: true,
+            showShareControl: false,
+            cooFrame: 'ICRS'
+          });
+          this.aladinReady = true;
+          this.maybeRender();
         });
-        this.aladinReady = true;
-        this.maybeRender();
       });
     });
   }

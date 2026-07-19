@@ -33,3 +33,7 @@
 .chip-hidden {
   opacity: 0.4;
 }
+
+.aladin-host.hidden {
+  display: none;
+}
