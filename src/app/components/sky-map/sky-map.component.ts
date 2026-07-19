@@ -144,33 +144,50 @@ export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private redrawAll(): void {
     if (!this.aladin || !this.A) return;
-    // v3 has removeOverlays() for graphic overlays and no single "remove all" for catalogs;
-    // re-create the aladin view is the safest reset — falling back to individual removes.
     try { this.aladin.removeOverlays(); } catch { /* ignore */ }
     try { this.aladin.removeCatalogs(); } catch { /* ignore */ }
+
+    // One catalog and one overlay per scope_id so they appear as a single named layer.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const catalogs = new Map<number, any>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const overlays = new Map<number, any>();
 
     for (const p of this.projects) {
       if (this.hiddenScopes.has(p.scope_id)) continue;
       if (p.ra == null || p.decl == null) continue;
+
       const color = scopeColor(p.scope_id);
       // API stores RA in hours; Aladin Lite expects degrees
       const raDeg = p.ra * 15;
       const hasFov = p.focal && p.resx && p.resy && p.pixel_x && p.pixel_y;
 
       if (hasFov) {
+        if (!overlays.has(p.scope_id)) {
+          const ov = this.A.graphicOverlay({ name: `Scope ${p.scope_id}`, color, lineWidth: 1.5 });
+          this.aladin.addOverlay(ov);
+          overlays.set(p.scope_id, ov);
+        }
         const wDeg = computeFovDeg(p.resx!, p.pixel_x!, p.focal!);
         const hDeg = computeFovDeg(p.resy!, p.pixel_y!, p.focal!);
         const corners = fovCorners(raDeg, p.decl, wDeg, hDeg, p.rotation ?? 0);
-        try {
-          const overlay = this.A.graphicOverlay({ color, lineWidth: 1.5 });
-          this.aladin.addOverlay(overlay);
-          overlay.add(this.A.polygon(corners));
-        } catch { /* ignore */ }
+        try { overlays.get(p.scope_id).add(this.A.polygon(corners)); } catch { /* ignore */ }
       } else {
-        try {
-          const cat = this.A.catalog({ name: p.name, sourceSize: 12, color });
+        if (!catalogs.has(p.scope_id)) {
+          const cat = this.A.catalog({
+            name: `Scope ${p.scope_id}`,
+            sourceSize: 12,
+            color,
+            onClick: 'showPopup',
+            hoverColor: '#ffffff',
+          });
           this.aladin.addCatalog(cat);
-          cat.addSources([this.A.source(raDeg, p.decl, { name: p.name })]);
+          catalogs.set(p.scope_id, cat);
+        }
+        try {
+          catalogs.get(p.scope_id).addSources([
+            this.A.source(raDeg, p.decl, { popupTitle: p.name, popupDesc: `Scope ${p.scope_id}` })
+          ]);
         } catch { /* ignore */ }
       }
     }
