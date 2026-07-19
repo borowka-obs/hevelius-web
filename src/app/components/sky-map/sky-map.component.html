@@ -1,42 +1,31 @@
 <div class="sky-map-page">
-  <mat-card class="map-card">
-    <mat-card-header>
-      <mat-card-title>All Projects — Sky Map</mat-card-title>
-    </mat-card-header>
+  @if (loading) {
+    <div class="center-spinner">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  }
 
-    <mat-card-content>
-      @if (loading) {
-        <div class="center-spinner">
-          <mat-spinner diameter="48"></mat-spinner>
-        </div>
-      }
+  @if (errorMsg) {
+    <div class="error-msg">{{ errorMsg }}</div>
+  }
 
-      @if (errorMsg) {
-        <div class="error-msg">{{ errorMsg }}</div>
-      }
-
-      @if (!loading && !errorMsg) {
-        <!-- Scope filter chips -->
-        @if (scopeIds.length > 1) {
-          <div class="scope-chips">
-            <mat-chip-set>
-              @for (id of scopeIds; track id) {
-                <mat-chip
-                  [style.--chip-color]="scopeColor(id)"
-                  [class.chip-hidden]="!isScopeVisible(id)"
-                  (click)="toggleScope(id)"
-                  [highlighted]="isScopeVisible(id)">
-                  <mat-icon matChipAvatar [style.color]="scopeColor(id)">lens</mat-icon>
-                  Scope {{ id }}
-                </mat-chip>
-              }
-            </mat-chip-set>
-          </div>
+  @if (!loading && !errorMsg && scopeIds.length > 1) {
+    <div class="scope-chips">
+      <mat-chip-set>
+        @for (id of scopeIds; track id) {
+          <mat-chip
+            [style.--chip-color]="scopeColor(id)"
+            [class.chip-hidden]="!isScopeVisible(id)"
+            (click)="toggleScope(id)"
+            [highlighted]="isScopeVisible(id)">
+            <mat-icon matChipAvatar [style.color]="scopeColor(id)">lens</mat-icon>
+            Scope {{ id }}
+          </mat-chip>
         }
-      }
+      </mat-chip-set>
+    </div>
+  }
 
-      <!-- Aladin host must always be in the DOM so ViewChild resolves on ngAfterViewInit -->
-      <div #host class="aladin-host" [class.hidden]="loading || !!errorMsg"></div>
-    </mat-card-content>
-  </mat-card>
+  <!-- Aladin host must always be in the DOM so ViewChild resolves on ngAfterViewInit -->
+  <div #host class="aladin-host" [class.hidden]="loading || !!errorMsg"></div>
 </div>

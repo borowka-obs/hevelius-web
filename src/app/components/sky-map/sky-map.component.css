@@ -1,24 +1,34 @@
 .sky-map-page {
-  padding: 16px;
-}
-
-.map-card {
-  max-width: 1200px;
-  margin: 0 auto;
+  position: relative;
+  padding: 0;
+  /* cancel the 20px margin-bottom that layout puts below mat-toolbar */
+  margin-top: -20px;
 }
 
 .aladin-host {
   width: 100%;
-  height: 600px;
+  /* 64px = mat-toolbar height */
+  height: calc(100vh - 64px);
   background: #000;
-  border-radius: 4px;
-  margin-top: 8px;
+  display: block;
+}
+
+.aladin-host.hidden {
+  display: none;
+}
+
+.scope-chips {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
 }
 
 .center-spinner {
   display: flex;
   justify-content: center;
-  padding: 40px;
+  align-items: center;
+  height: calc(100vh - 64px);
 }
 
 .error-msg {
@@ -26,14 +36,6 @@
   padding: 16px;
 }
 
-.scope-chips {
-  margin-bottom: 12px;
-}
-
 .chip-hidden {
   opacity: 0.4;
-}
-
-.aladin-host.hidden {
-  display: none;
 }
