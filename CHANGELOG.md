@@ -2,6 +2,11 @@
 
 0.6.0 (unreleased)
 
+- Added tags for asteroids (families such as amor/NEO/PHA, fast rotators,
+  visited by spacecraft, etc.): filter the Asteroids list by one or more
+  tags (match any or all), see tags as colored chips in the list, and
+  add/remove tags for a single asteroid from its detail page — typing a
+  name that doesn't exist yet creates the tag and attaches it in one step.
 - Added **Asteroids** page (`/asteroids`) listing minor planets from the MPC
   catalogue, with paging, sorting, and filtering (designation, number,
   numbered/provisional, absolute magnitude range); click a row to view an

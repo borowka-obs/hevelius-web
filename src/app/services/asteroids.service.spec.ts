@@ -1,12 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { AsteroidsService, Asteroid } from './asteroids.service';
+import { AsteroidsService, Asteroid, AsteroidTag } from './asteroids.service';
 import { LoginService } from './login.service';
 import { Hevelius } from 'src/hevelius';
 
 describe('AsteroidsService', () => {
   let service: AsteroidsService;
   let httpMock: HttpTestingController;
+
+  const mockTag: AsteroidTag = {
+    tag_id: 1,
+    name: 'neo',
+    description: 'Near-Earth object',
+    color: '#e53935',
+    asteroid_count: 1
+  };
 
   const mockAsteroid: Asteroid = {
     asteroid_id: 1,
@@ -21,7 +29,8 @@ describe('AsteroidsService', () => {
     mean_motion: 0.214,
     semimajor_axis: 2.77,
     absolute_magnitude: 3.34,
-    slope_parameter: 0.12
+    slope_parameter: 0.12,
+    tags: [mockTag]
   };
 
   beforeEach(() => {
@@ -81,7 +90,9 @@ describe('AsteroidsService', () => {
         mag_min: 4,
         mag_max: 10,
         sort_by: 'absolute_magnitude',
-        sort_order: 'desc'
+        sort_order: 'desc',
+        tags: 'neo,pha',
+        tags_mode: 'all'
       }).subscribe(response => {
         expect(response.total).toBe(0);
       });
@@ -94,6 +105,8 @@ describe('AsteroidsService', () => {
       expect(req.request.params.get('mag_max')).toBe('10');
       expect(req.request.params.get('sort_by')).toBe('absolute_magnitude');
       expect(req.request.params.get('sort_order')).toBe('desc');
+      expect(req.request.params.get('tags')).toBe('neo,pha');
+      expect(req.request.params.get('tags_mode')).toBe('all');
       req.flush(mockResponse);
     });
 
@@ -122,6 +135,85 @@ describe('AsteroidsService', () => {
       expect(req.request.method).toBe('GET');
       expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
       req.flush(mockResponse);
+    });
+  });
+
+  describe('listTags', () => {
+    it('should return the tags array', () => {
+      service.listTags().subscribe(tags => {
+        expect(tags).toEqual([mockTag]);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroid-tags`);
+      expect(req.request.method).toBe('GET');
+      req.flush({ tags: [mockTag] });
+    });
+  });
+
+  describe('createTag', () => {
+    it('should POST a new tag', () => {
+      const mockResponse = { status: true, tag_id: 1, tag: mockTag, msg: 'Tag created successfully.' };
+
+      service.createTag({ name: 'neo', description: 'Near-Earth object', color: '#e53935' }).subscribe(response => {
+        expect(response).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroid-tags`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ name: 'neo', description: 'Near-Earth object', color: '#e53935' });
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('updateTag', () => {
+    it('should PATCH the tag', () => {
+      const mockResponse = { status: true, tag: mockTag, msg: 'Tag updated.' };
+
+      service.updateTag(1, { color: '#000000' }).subscribe(response => {
+        expect(response).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroid-tags/1`);
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ color: '#000000' });
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('deleteTag', () => {
+    it('should DELETE the tag', () => {
+      service.deleteTag(1).subscribe(response => {
+        expect(response.status).toBe(true);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroid-tags/1`);
+      expect(req.request.method).toBe('DELETE');
+      req.flush({ status: true, msg: 'Tag deleted' });
+    });
+  });
+
+  describe('attachTag', () => {
+    it('should POST to the asteroid tags endpoint', () => {
+      service.attachTag(5, 1).subscribe(response => {
+        expect(response.status).toBe(true);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroids/5/tags`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ tag_id: 1 });
+      req.flush({ status: true, msg: 'Tag added' });
+    });
+  });
+
+  describe('detachTag', () => {
+    it('should DELETE the asteroid/tag pairing', () => {
+      service.detachTag(5, 1).subscribe(response => {
+        expect(response.status).toBe(true);
+      });
+
+      const req = httpMock.expectOne(`${Hevelius.apiUrl}/asteroids/5/tags/1`);
+      expect(req.request.method).toBe('DELETE');
+      req.flush({ status: true, msg: 'Tag removed' });
     });
   });
 });

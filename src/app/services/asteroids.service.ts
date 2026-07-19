@@ -2,7 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LoginService } from './login.service';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Hevelius } from 'src/hevelius';
+
+export interface AsteroidTag {
+  tag_id: number;
+  name: string;
+  description: string | null;
+  color: string | null;
+  asteroid_count?: number;
+}
 
 export interface Asteroid {
   asteroid_id: number;
@@ -18,6 +27,7 @@ export interface Asteroid {
   semimajor_axis: number;
   absolute_magnitude: number | null;
   slope_parameter: number | null;
+  tags: AsteroidTag[];
 }
 
 export interface AsteroidsListResponse {
@@ -44,6 +54,41 @@ export interface ListAsteroidsParams {
   numbered?: boolean;
   mag_min?: number;
   mag_max?: number;
+  /** Comma-separated tag names to filter by (e.g. "neo,pha"). */
+  tags?: string;
+  /** 'any' (default): at least one listed tag. 'all': every listed tag. */
+  tags_mode?: 'any' | 'all';
+}
+
+export interface AsteroidTagsListResponse {
+  tags: AsteroidTag[];
+}
+
+export interface AsteroidTagResponse {
+  status: boolean;
+  tag: AsteroidTag;
+  msg?: string;
+}
+
+export interface AsteroidTagCreateResponse extends AsteroidTagResponse {
+  tag_id: number;
+}
+
+export interface AsteroidTagCreateParams {
+  name: string;
+  description?: string | null;
+  color?: string | null;
+}
+
+export interface AsteroidTagUpdateParams {
+  name?: string;
+  description?: string | null;
+  color?: string | null;
+}
+
+export interface StatusMsgResponse {
+  status: boolean;
+  msg?: string;
 }
 
 @Injectable({
@@ -54,6 +99,7 @@ export class AsteroidsService {
   private loginService = inject(LoginService);
 
   private baseUrl = Hevelius.apiUrl + '/asteroids';
+  private tagsUrl = Hevelius.apiUrl + '/asteroid-tags';
 
   /** GET /api/asteroids — paginated asteroids with sorting and filtering. */
   listAsteroids(params: ListAsteroidsParams = {}): Observable<AsteroidsListResponse> {
@@ -70,6 +116,59 @@ export class AsteroidsService {
   getAsteroid(asteroidId: number): Observable<AsteroidDetailResponse> {
     return this.http.get<AsteroidDetailResponse>(
       `${this.baseUrl}/${asteroidId}`,
+      { headers: this.loginService.getAuthHeaders() }
+    );
+  }
+
+  /** GET /api/asteroid-tags — all tags with per-tag asteroid counts. */
+  listTags(): Observable<AsteroidTag[]> {
+    return this.http.get<AsteroidTagsListResponse>(
+      this.tagsUrl,
+      { headers: this.loginService.getAuthHeaders() }
+    ).pipe(
+      map(response => response.tags ?? [])
+    );
+  }
+
+  /** POST /api/asteroid-tags — create a new tag definition. */
+  createTag(params: AsteroidTagCreateParams): Observable<AsteroidTagCreateResponse> {
+    return this.http.post<AsteroidTagCreateResponse>(
+      this.tagsUrl,
+      params,
+      { headers: this.loginService.getAuthHeaders() }
+    );
+  }
+
+  /** PATCH /api/asteroid-tags/{id} — edit a tag's name, description, or color. */
+  updateTag(tagId: number, params: AsteroidTagUpdateParams): Observable<AsteroidTagResponse> {
+    return this.http.patch<AsteroidTagResponse>(
+      `${this.tagsUrl}/${tagId}`,
+      params,
+      { headers: this.loginService.getAuthHeaders() }
+    );
+  }
+
+  /** DELETE /api/asteroid-tags/{id} — delete a tag definition entirely. */
+  deleteTag(tagId: number): Observable<StatusMsgResponse> {
+    return this.http.delete<StatusMsgResponse>(
+      `${this.tagsUrl}/${tagId}`,
+      { headers: this.loginService.getAuthHeaders() }
+    );
+  }
+
+  /** POST /api/asteroids/{id}/tags — attach an existing tag to an asteroid. */
+  attachTag(asteroidId: number, tagId: number): Observable<StatusMsgResponse> {
+    return this.http.post<StatusMsgResponse>(
+      `${this.baseUrl}/${asteroidId}/tags`,
+      { tag_id: tagId },
+      { headers: this.loginService.getAuthHeaders() }
+    );
+  }
+
+  /** DELETE /api/asteroids/{id}/tags/{tagId} — detach a tag from an asteroid. */
+  detachTag(asteroidId: number, tagId: number): Observable<StatusMsgResponse> {
+    return this.http.delete<StatusMsgResponse>(
+      `${this.baseUrl}/${asteroidId}/tags/${tagId}`,
       { headers: this.loginService.getAuthHeaders() }
     );
   }

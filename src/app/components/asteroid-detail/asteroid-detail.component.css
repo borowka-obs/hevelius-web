@@ -30,3 +30,27 @@
 .fields-grid p {
   margin: 0.4rem 0;
 }
+
+.tags-card {
+  margin: 1rem 0;
+  max-width: 640px;
+}
+
+.tags-chip-set {
+  margin-bottom: 0.75rem;
+}
+
+.no-tags {
+  color: #757575;
+  font-size: 0.9rem;
+}
+
+.add-tag-form {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.add-tag-field {
+  flex: 1 1 auto;
+}

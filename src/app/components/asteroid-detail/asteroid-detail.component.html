@@ -42,5 +42,44 @@
         </div>
       </mat-card-content>
     </mat-card>
+
+    <mat-card class="tags-card">
+      <mat-card-header>
+        <mat-card-title>Tags</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-chip-set class="tags-chip-set">
+          @for (tag of asteroid.tags; track tag.tag_id) {
+            <mat-chip [style.background-color]="tag.color ?? undefined" [disabled]="tagBusy"
+                      (removed)="removeTag(tag)">
+              {{ tag.name }}
+              <button matChipRemove [attr.aria-label]="'Remove tag ' + tag.name" [disabled]="tagBusy">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+          } @empty {
+            <span class="no-tags">No tags yet.</span>
+          }
+        </mat-chip-set>
+
+        <div class="add-tag-form">
+          <mat-form-field subscriptSizing="dynamic" class="add-tag-field">
+            <mat-label>Add tag</mat-label>
+            <input matInput [formControl]="newTagControl" [matAutocomplete]="tagAuto"
+                   placeholder="Pick existing or type a new tag name"
+                   (keydown.enter)="submitNewTag()">
+            <mat-autocomplete #tagAuto="matAutocomplete" (optionSelected)="onTagOptionSelected($event)">
+              @for (tag of filteredTagOptions$ | async; track tag.tag_id) {
+                <mat-option [value]="tag.name">{{ tag.name }}</mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+          <button type="button" mat-raised-button color="primary" [disabled]="tagBusy || !newTagControl.value"
+                  (click)="submitNewTag()">
+            Add
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
 }
