@@ -28,7 +28,8 @@ import {
   subframeGoalSeconds,
   subframeProgressPercent
 } from '../../utils/project-integration';
-import { SkyViewComponent, computeFovDeg } from '../sky-view/sky-view.component';
+import { SkyViewComponent } from '../sky-view/sky-view.component';
+import { computeFovDeg } from '../../utils/fov';
 
 @Component({
   selector: 'app-project-detail',
@@ -153,6 +154,11 @@ export class ProjectDetailComponent implements OnInit {
     return this.coordsFormatter.formatDec(dec);
   }
 
+  formatRotation(value: number | null | undefined): string {
+    if (value == null) return '—';
+    return `${value}°`;
+  }
+
   getScopeName(): string {
     return this.telescope?.name ?? '—';
   }
@@ -160,7 +166,7 @@ export class ProjectDetailComponent implements OnInit {
   editProject(): void {
     if (!this.project) return;
     const ref = this.dialog.open(ProjectEditDialogComponent, {
-      width: '480px',
+      width: '520px',
       data: {
         projectId: this.project.project_id,
         initialScopeId: this.project.scope_id,
@@ -172,7 +178,12 @@ export class ProjectDetailComponent implements OnInit {
         initialActive: this.project.active,
         initialStartDate: this.project.start_date ?? null,
         initialEndDate: this.project.end_date ?? null,
-        initialPublications: this.project.publications ?? null
+        initialPublications: this.project.publications ?? null,
+        initialFocal: this.project.focal ?? null,
+        initialResx: this.project.resx ?? null,
+        initialResy: this.project.resy ?? null,
+        initialPixelX: this.project.pixel_x ?? null,
+        initialPixelY: this.project.pixel_y ?? null
       }
     });
     ref.afterClosed().subscribe((result: boolean | 'deleted' | undefined) => {

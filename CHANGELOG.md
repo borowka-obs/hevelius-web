@@ -6,6 +6,11 @@
   default rotation, camera details, FOV etc).
 - Default camera rotation for a telescope is now supported.
 - Camera rotation for a project is now supported.
+- Sky Map page (`/sky-map`) shows active projects on an Aladin Lite all-sky view
+  with per-telescope FOV overlays and scope filters.
+- Project detail includes a Sky View (DSS) with the project FOV rectangle.
+- Optical parameters (focal length, sensor size, pixel pitch) can be set when
+  creating or editing a project; create form auto-fills from the selected telescope.
 
 0.5.0 (2026-05-27)
 

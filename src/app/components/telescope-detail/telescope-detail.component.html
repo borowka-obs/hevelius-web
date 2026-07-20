@@ -27,7 +27,9 @@
           <mat-card-title>{{ telescope.name }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <p><strong>Description:</strong> {{ telescope.descr || '—' }}</p>
+          <div class="param-group">
+            <p><strong>Description:</strong> {{ telescope.descr || '—' }}</p>
+          </div>
 
           <div class="param-group">
             <p>
@@ -66,9 +68,9 @@
               <span class="param-sep">·</span>
               <strong>Scale:</strong> {{ formatAngularResolution() ?? '—' }}
             </p>
+            <p><strong>Default rotation:</strong> {{ formatDefaultRotation(telescope.default_rotation) }}</p>
           </div>
 
-          <p><strong>Default rotation:</strong> {{ telescope.default_rotation !== null ? (telescope.default_rotation + '°') : '—' }}</p>
           <p><strong>Active:</strong> {{ telescope.active ? 'Yes' : 'No' }}</p>
         </mat-card-content>
       </mat-card>

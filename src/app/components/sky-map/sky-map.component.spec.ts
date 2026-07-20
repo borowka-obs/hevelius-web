@@ -46,7 +46,7 @@ describe('SkyMapComponent', () => {
   });
 
   it('loads projects on init', () => {
-    expect(projectsService.getProjects).toHaveBeenCalledWith({ per_page: 1000 });
+    expect(projectsService.getProjects).toHaveBeenCalledWith({ per_page: 1000, page: 1 });
     expect(component.projects.length).toBe(2);
     expect(component.loading).toBe(false);
   });
@@ -82,5 +82,32 @@ describe('SkyMapComponent', () => {
     errFixture.detectChanges();
     expect(errFixture.componentInstance.errorMsg).toBe('Failed to load projects');
     expect(errFixture.componentInstance.loading).toBe(false);
+  });
+
+  it('loads additional pages when total exceeds per_page', async () => {
+    const page1 = {
+      projects: [makeProject()],
+      total: 2, page: 1, per_page: 1000, pages: 2
+    };
+    const page2 = {
+      projects: [makeProject({ project_id: 2, scope_id: 2, name: 'M42' })],
+      total: 2, page: 2, per_page: 1000, pages: 2
+    };
+    const multiPageService = {
+      getProjects: vi.fn()
+        .mockReturnValueOnce(of(page1))
+        .mockReturnValueOnce(of(page2))
+    };
+    await TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [SkyMapComponent, NoopAnimationsModule],
+      providers: [{ provide: ProjectsService, useValue: multiPageService }]
+    }).compileComponents();
+    const multiFixture = TestBed.createComponent(SkyMapComponent);
+    multiFixture.detectChanges();
+    expect(multiPageService.getProjects).toHaveBeenCalledTimes(2);
+    expect(multiPageService.getProjects).toHaveBeenNthCalledWith(1, { per_page: 1000, page: 1 });
+    expect(multiPageService.getProjects).toHaveBeenNthCalledWith(2, { per_page: 1000, page: 2 });
+    expect(multiFixture.componentInstance.projects.length).toBe(2);
   });
 });
