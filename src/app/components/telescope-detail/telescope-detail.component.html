@@ -28,12 +28,47 @@
         </mat-card-header>
         <mat-card-content>
           <p><strong>Description:</strong> {{ telescope.descr || '—' }}</p>
-          <p><strong>Focal length (mm):</strong> {{ telescope.focal ?? '—' }}</p>
-          <p><strong>Aperture:</strong> {{ formatApertureWithInches(telescope.aperture) }}</p>
-          <p><strong>Min Declination:</strong> {{ telescope.min_dec }}° <strong>Max Declination:</strong> {{ telescope.max_dec }}°</p>
-          <p><strong>Latitude:</strong> {{ formatLatitude(telescope.lat) }} <strong>Longitude:</strong> {{ formatLongitude(telescope.lon) }} <strong>Altitude:</strong> {{ telescope.alt ?? '—' }} m</p>
-          <p><strong>Sensor:</strong> {{ telescope.sensor?.name ?? '—' }}</p>
-          <p><strong>Default rotation:</strong> {{ telescope.default_rotation != null ? (telescope.default_rotation + '°') : '—' }}</p>
+
+          <div class="param-group">
+            <p>
+              <strong>Focal length:</strong> {{ telescope.focal !== null ? telescope.focal + ' mm' : '—' }}
+              <span class="param-sep">·</span>
+              <strong>Aperture:</strong> {{ formatApertureWithInches(telescope.aperture) }}
+              <span class="param-sep">·</span>
+              <strong>F-number:</strong> {{ formatFNumber() ?? '—' }}
+            </p>
+          </div>
+
+          <div class="param-group">
+            <p>
+              <strong>Min Declination:</strong> {{ telescope.min_dec }}°
+              <span class="param-sep">·</span>
+              <strong>Max Declination:</strong> {{ telescope.max_dec }}°
+            </p>
+            <p>
+              <strong>Latitude:</strong> {{ formatLatitude(telescope.lat) }}
+              <span class="param-sep">·</span>
+              <strong>Longitude:</strong> {{ formatLongitude(telescope.lon) }}
+              <span class="param-sep">·</span>
+              <strong>Altitude:</strong> {{ telescope.alt ?? '—' }} m
+            </p>
+          </div>
+
+          <div class="param-group">
+            <p><strong>Sensor:</strong> {{ telescope.sensor?.name ?? '—' }}</p>
+            <p>
+              <strong>Resolution:</strong> {{ formatSensorResolution() ?? '—' }}
+              <span class="param-sep">·</span>
+              <strong>Pixel size:</strong> {{ formatPixelSize() ?? '—' }}
+            </p>
+            <p>
+              <strong>FOV:</strong> {{ formatFov() ?? '—' }}
+              <span class="param-sep">·</span>
+              <strong>Scale:</strong> {{ formatAngularResolution() ?? '—' }}
+            </p>
+          </div>
+
+          <p><strong>Default rotation:</strong> {{ telescope.default_rotation !== null ? (telescope.default_rotation + '°') : '—' }}</p>
           <p><strong>Active:</strong> {{ telescope.active ? 'Yes' : 'No' }}</p>
         </mat-card-content>
       </mat-card>
