@@ -90,6 +90,11 @@ function numStr(v: number | null | undefined): string {
   return v != null && Number.isFinite(v) ? String(v) : '';
 }
 
+/** Format a coordinate for the form input, capped at 6 decimal digits. */
+function formatCoordInput(v: number): string {
+  return Number(v.toFixed(6)).toString();
+}
+
 @Component({
   selector: 'app-project-edit-dialog',
   templateUrl: './project-edit-dialog.component.html',
@@ -122,11 +127,11 @@ export class ProjectEditDialogComponent {
   constructor() {
     const raStr =
       this.dialogData.initialRa != null && Number.isFinite(this.dialogData.initialRa)
-        ? String(this.dialogData.initialRa)
+        ? formatCoordInput(this.dialogData.initialRa)
         : '';
     const decStr =
       this.dialogData.initialDecl != null && Number.isFinite(this.dialogData.initialDecl)
-        ? String(this.dialogData.initialDecl)
+        ? formatCoordInput(this.dialogData.initialDecl)
         : '';
     const startStr =
       this.dialogData.initialStartDate != null && String(this.dialogData.initialStartDate).trim() !== ''
