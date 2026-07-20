@@ -33,7 +33,7 @@
           (<strong>ID:</strong>
           <a [routerLink]="['/scopes', project.scope_id]">{{ project.scope_id }}</a>)
         </p>
-        <p><strong>RA:</strong> {{ formatRA(project.ra) }} <strong>Dec:</strong> {{ formatDec(project.decl) }} <strong>Rotation:</strong> {{ project.rotation != null ? (project.rotation + '°') : '—' }}</p>
+        <p><strong>RA:</strong> {{ formatRA(project.ra) }} <strong>Dec:</strong> {{ formatDec(project.decl) }} <strong>Rotation:</strong> {{ project.rotation !== null ? (project.rotation + '°') : '—' }}</p>
         <p><strong>Start date:</strong> {{ formatCalendarDate(project.start_date) }}</p>
         <p><strong>End date:</strong> {{ formatCalendarDate(project.end_date) }}</p>
         <p class="publications-row">

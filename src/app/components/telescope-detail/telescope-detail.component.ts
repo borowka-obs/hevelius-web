@@ -13,6 +13,7 @@ import { AddFilterToScopeDialogComponent } from '../add-filter-to-scope-dialog/a
 import { Filter } from '../../models/filter';
 import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope-form-dialog.component';
 import { ProjectsListComponent } from '../projects-list/projects-list.component';
+import { computeFovDeg } from '../sky-view/sky-view.component';
 import * as L from 'leaflet';
 
 @Component({
@@ -141,6 +142,64 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
     const roundedOneDecimal = Math.round(inches * 10) / 10;
     const inchText = Number.isInteger(roundedOneDecimal) ? `${roundedOneDecimal.toFixed(0)}` : `${roundedOneDecimal.toFixed(1)}`;
     return `${aperture}mm (${inchText}")`;
+  }
+
+  /** Focal ratio as F/N with one decimal place, or null when inputs are missing. */
+  formatFNumber(): string | null {
+    const focal = this.telescope?.focal;
+    const aperture = this.telescope?.aperture;
+    if (focal == null || aperture == null || aperture <= 0) {
+      return null;
+    }
+    return `F/${(focal / aperture).toFixed(1)}`;
+  }
+
+  /** Sensor resolution as width × height in pixels. */
+  formatSensorResolution(): string | null {
+    const s = this.telescope?.sensor;
+    if (!s?.resx || !s?.resy) {
+      return null;
+    }
+    return `${s.resx} × ${s.resy} px`;
+  }
+
+  /** Pixel size in μm; one value when square, otherwise X × Y. */
+  formatPixelSize(): string | null {
+    const s = this.telescope?.sensor;
+    if (!s?.pixel_x || !s?.pixel_y) {
+      return null;
+    }
+    if (Math.abs(s.pixel_x - s.pixel_y) < 0.005) {
+      return `${s.pixel_x} μm`;
+    }
+    return `${s.pixel_x} × ${s.pixel_y} μm`;
+  }
+
+  /** FOV width × height in degrees from sensor + focal length. */
+  formatFov(): string | null {
+    const t = this.telescope;
+    const s = t?.sensor;
+    if (!t?.focal || !s?.resx || !s?.resy || !s?.pixel_x || !s?.pixel_y) {
+      return null;
+    }
+    const w = computeFovDeg(s.resx, s.pixel_x, t.focal);
+    const h = computeFovDeg(s.resy, s.pixel_y, t.focal);
+    return `${w.toFixed(2)}° × ${h.toFixed(2)}°`;
+  }
+
+  /** Angular resolution (plate scale) in arcsec/pixel. */
+  formatAngularResolution(): string | null {
+    const t = this.telescope;
+    const s = t?.sensor;
+    if (!t?.focal || !s?.pixel_x || !s?.pixel_y || t.focal <= 0) {
+      return null;
+    }
+    const scaleX = (206.265 * s.pixel_x) / t.focal;
+    const scaleY = (206.265 * s.pixel_y) / t.focal;
+    if (Math.abs(scaleX - scaleY) < 0.005) {
+      return `${scaleX.toFixed(2)}″/px`;
+    }
+    return `${scaleX.toFixed(2)}″ × ${scaleY.toFixed(2)}″/px`;
   }
 
   hasMapCoordinates(): boolean {
