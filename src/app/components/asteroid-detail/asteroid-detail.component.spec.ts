@@ -44,7 +44,8 @@ describe('AsteroidDetailComponent', () => {
 
   const activeScope: Telescope = {
     scope_id: 1, name: 'Active scope', descr: '', min_dec: -90, max_dec: 90,
-    focal: 1000, aperture: 200, lon: 21, lat: 52.2, alt: 100, sensor: null, active: true
+    focal: 1000, aperture: 200, lon: 21, lat: 52.2, alt: 100, default_rotation: null,
+    sensor: null, active: true
   };
   const inactiveScope: Telescope = { ...activeScope, scope_id: 2, name: 'Inactive scope', active: false };
 
