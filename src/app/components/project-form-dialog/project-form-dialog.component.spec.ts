@@ -76,7 +76,7 @@ describe('ProjectFormDialogComponent', () => {
       providers: [
         { provide: ProjectsService, useValue: projectsService },
         { provide: CatalogsService, useValue: { searchObjects: vi.fn().mockReturnValue(of([])) } },
-        { provide: TelescopeService, useValue: { getTelescope: vi.fn().mockReturnValue(of({ focal: null, sensor: null })) } },
+        { provide: TelescopeService, useValue: { getTelescope: vi.fn().mockReturnValue(of({ focal: null, sensor: null, default_rotation: null })) } },
         CoordsFormatterService,
         { provide: MatDialogRef, useValue: { close: vi.fn() } },
         { provide: MatSnackBar, useValue: { open: vi.fn() } },

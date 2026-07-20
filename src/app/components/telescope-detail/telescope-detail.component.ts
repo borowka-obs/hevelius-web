@@ -13,7 +13,7 @@ import { AddFilterToScopeDialogComponent } from '../add-filter-to-scope-dialog/a
 import { Filter } from '../../models/filter';
 import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope-form-dialog.component';
 import { ProjectsListComponent } from '../projects-list/projects-list.component';
-import { computeFovDeg } from '../sky-view/sky-view.component';
+import { computeFovDeg } from '../../utils/fov';
 import * as L from 'leaflet';
 
 @Component({
@@ -185,6 +185,14 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
     const w = computeFovDeg(s.resx, s.pixel_x, t.focal);
     const h = computeFovDeg(s.resy, s.pixel_y, t.focal);
     return `${w.toFixed(2)}° × ${h.toFixed(2)}°`;
+  }
+
+  /** Camera default rotation, or em dash when unset. */
+  formatDefaultRotation(value: number | null | undefined): string {
+    if (value == null) {
+      return '—';
+    }
+    return `${value}°`;
   }
 
   /** Angular resolution (plate scale) in arcsec/pixel. */

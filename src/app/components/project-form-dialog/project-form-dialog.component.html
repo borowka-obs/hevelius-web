@@ -69,6 +69,14 @@
       }
     </mat-form-field>
     <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+      <mat-label>Rotation (°)</mat-label>
+      <input matInput formControlName="rotation" type="number" min="0" max="360" step="0.1" placeholder="e.g. 90.5">
+      <mat-hint>Camera position angle, degrees East of North (0–360). Leave empty to use telescope default.</mat-hint>
+      @if (form.get('rotation')?.touched && form.get('rotation')?.hasError('rotationRange')) {
+        <mat-error>Rotation must be between 0 and 360</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Publications</mat-label>
       <textarea matInput formControlName="publications" rows="2"></textarea>
       <mat-hint>Space-separated URLs (Facebook, Flickr, AstroBin, etc.). Optional</mat-hint>

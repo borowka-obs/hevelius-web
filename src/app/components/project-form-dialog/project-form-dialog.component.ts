@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,12 +11,11 @@ import { ProjectCreate } from '../../models/project';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CatalogsService, CatalogObject } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
-import { TelescopeService } from '../../services/telescope.service';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { finalize } from 'rxjs/operators';
+import { TelescopeService, Telescope } from '../../services/telescope.service';
+import { debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil, catchError } from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
 import { parseDecDegrees, parseRAHours } from '../../utils/coord-parse';
-import { computeFovDeg } from '../sky-view/sky-view.component';
-import { CommonModule } from '@angular/common';
+import { computeFovDeg } from '../../utils/fov';
 
 /** Longest-common-subsequence ratio, matching Python difflib.SequenceMatcher.ratio() semantics. */
 export function sequenceRatio(a: string, b: string): number {
@@ -65,6 +64,19 @@ function decFieldValidator(c: AbstractControl): ValidationErrors | null {
   return parseDecDegrees(raw) === null ? { decParse: true } : null;
 }
 
+/** Optional camera rotation in degrees East of North (0–360). Empty clears / omits. */
+function optionalRotation(c: AbstractControl): ValidationErrors | null {
+  const raw = String(c.value ?? '').trim();
+  if (!raw) {
+    return null;
+  }
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0 || n > 360) {
+    return { rotationRange: true };
+  }
+  return null;
+}
+
 export interface ProjectFormDialogData {
   scopes: { scope_id: number; name: string }[];
   existingProjects?: SimilarProject[];
@@ -76,7 +88,6 @@ export interface ProjectFormDialogData {
   styleUrls: ['./project-form-dialog.component.css'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -86,7 +97,7 @@ export interface ProjectFormDialogData {
     MatCheckboxModule
   ]
 })
-export class ProjectFormDialogComponent {
+export class ProjectFormDialogComponent implements OnDestroy {
   private fb = inject(FormBuilder);
   private projectsService = inject(ProjectsService);
   private catalogsService = inject(CatalogsService);
@@ -95,6 +106,7 @@ export class ProjectFormDialogComponent {
   private dialogRef = inject(MatDialogRef<ProjectFormDialogComponent>);
   private snackBar = inject(MatSnackBar);
   data = inject<ProjectFormDialogData>(MAT_DIALOG_DATA);
+  private destroy$ = new Subject<void>();
 
   form: FormGroup;
   catalogLookupPending = false;
@@ -109,6 +121,7 @@ export class ProjectFormDialogComponent {
       regexps: [''],
       ra: ['', [Validators.required, raFieldValidator]],
       decl: ['', [Validators.required, decFieldValidator]],
+      rotation: ['', optionalRotation],
       active: [true],
       start_date: [''],
       end_date: [''],
@@ -122,7 +135,8 @@ export class ProjectFormDialogComponent {
 
     this.form.get('name')!.valueChanges.pipe(
       debounceTime(300),
-      distinctUntilChanged()
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
     ).subscribe(name => {
       this.similarProjects = findSimilarProjects(
         String(name ?? ''),
@@ -130,24 +144,37 @@ export class ProjectFormDialogComponent {
       );
     });
 
-    this.form.get('scope_id')!.valueChanges.subscribe((scopeId: number | null) => {
-      if (!scopeId) return;
-      this.fovLoadPending = true;
-      this.telescopeService.getTelescope(scopeId).pipe(
-        finalize(() => { this.fovLoadPending = false; })
-      ).subscribe({
-        next: t => {
-          this.form.patchValue({
-            focal: t.focal ?? null,
-            resx: t.sensor?.resx ?? null,
-            resy: t.sensor?.resy ?? null,
-            pixel_x: t.sensor?.pixel_x ?? null,
-            pixel_y: t.sensor?.pixel_y ?? null
-          }, { emitEvent: false });
-        },
-        error: () => { /* leave fields as-is */ }
-      });
+    this.form.get('scope_id')!.valueChanges.pipe(
+      switchMap((scopeId: number | null) => {
+        if (!scopeId) {
+          return of(null as Telescope | null);
+        }
+        this.fovLoadPending = true;
+        return this.telescopeService.getTelescope(scopeId).pipe(
+          catchError(() => of(null as Telescope | null)),
+          finalize(() => { this.fovLoadPending = false; })
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe(t => {
+      if (!t) return;
+      this.form.patchValue({
+        focal: t.focal ?? null,
+        resx: t.sensor?.resx ?? null,
+        resy: t.sensor?.resy ?? null,
+        pixel_x: t.sensor?.pixel_x ?? null,
+        pixel_y: t.sensor?.pixel_y ?? null,
+        // Prefill rotation from telescope default when the field is still empty.
+        ...(String(this.form.get('rotation')?.value ?? '').trim() === '' && t.default_rotation != null
+          ? { rotation: String(t.default_rotation) }
+          : {})
+      }, { emitEvent: false });
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get fovChip(): string | null {
@@ -265,6 +292,13 @@ export class ProjectFormDialogComponent {
     const sd = String(value.start_date ?? '').trim().slice(0, 10);
     const ed = String(value.end_date ?? '').trim().slice(0, 10);
     const pubs = String(value.publications ?? '').trim();
+    const rotRaw = String(value.rotation ?? '').trim();
+    const rotation = rotRaw === '' ? null : Number(rotRaw);
+    const optNum = (x: unknown): number | null => {
+      if (x == null || x === '') return null;
+      const n = Number(x);
+      return Number.isFinite(n) ? n : null;
+    };
     const body: ProjectCreate = {
       name: value.name,
       scope_id: value.scope_id,
@@ -276,11 +310,12 @@ export class ProjectFormDialogComponent {
       ...(sd ? { start_date: sd } : {}),
       ...(ed ? { end_date: ed } : {}),
       ...(pubs ? { publications: pubs } : {}),
-      focal: value.focal != null ? Number(value.focal) : null,
-      resx: value.resx != null ? Number(value.resx) : null,
-      resy: value.resy != null ? Number(value.resy) : null,
-      pixel_x: value.pixel_x != null ? Number(value.pixel_x) : null,
-      pixel_y: value.pixel_y != null ? Number(value.pixel_y) : null
+      ...(rotation != null && Number.isFinite(rotation) ? { rotation } : {}),
+      focal: optNum(value.focal),
+      resx: optNum(value.resx),
+      resy: optNum(value.resy),
+      pixel_x: optNum(value.pixel_x),
+      pixel_y: optNum(value.pixel_y)
     };
     this.projectsService.createProject(body).subscribe({
       next: () => {
