@@ -37,6 +37,19 @@ function optionalNonNegativeNumber(c: AbstractControl): ValidationErrors | null 
   return null;
 }
 
+/** Optional camera rotation in degrees East of North (0–359.99). Empty clears. */
+function optionalDefaultRotation(c: AbstractControl): ValidationErrors | null {
+  const raw = String(c.value ?? '').trim();
+  if (!raw) {
+    return null;
+  }
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0 || n > 359.99) {
+    return { rotationRange: true };
+  }
+  return null;
+}
+
 function optionalDecLimit(c: AbstractControl): ValidationErrors | null {
   const raw = String(c.value ?? '').trim();
   if (!raw) {
@@ -126,6 +139,7 @@ export class TelescopeFormDialogComponent {
         lat: [numStr(t?.lat), latFieldValidator],
         alt: [numStr(t?.alt), optionalNonNegativeNumber],
         sensor_id: [t?.sensor?.sensor_id ?? null],
+        default_rotation: [numStr(t?.default_rotation), optionalDefaultRotation],
         active: [t?.active ?? true]
       },
       { validators: [minMaxDecOrderValidator] }
@@ -182,6 +196,11 @@ export class TelescopeFormDialogComponent {
       this.snackBar.open('Invalid longitude or latitude', 'Close', { duration: 4000 });
       return;
     }
+    const rotRaw = String(v.default_rotation ?? '').trim();
+    const defaultRotation = rotRaw === '' ? null : Number(rotRaw);
+    const default_rotation =
+      defaultRotation != null && Number.isFinite(defaultRotation) ? defaultRotation : null;
+
     if (this.mode === 'add') {
       const body: ScopeCreate = {
         name: v.name,
@@ -194,7 +213,8 @@ export class TelescopeFormDialogComponent {
         lat,
         alt: numOpt(v.alt),
         sensor_id: v.sensor_id != null && v.sensor_id !== '' ? Number(v.sensor_id) : undefined,
-        active: v.active
+        active: v.active,
+        default_rotation
       };
       this.telescopeService.createTelescope(body).subscribe({
         next: () => {
@@ -219,7 +239,8 @@ export class TelescopeFormDialogComponent {
         lat,
         alt: numOpt(v.alt),
         sensor_id: v.sensor_id != null && v.sensor_id !== '' ? Number(v.sensor_id) : 0,
-        active: v.active
+        active: v.active,
+        default_rotation
       };
       const scopeId = this.data.telescope!.scope_id;
       this.telescopeService.updateTelescope(scopeId, body).subscribe({

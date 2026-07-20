@@ -60,7 +60,8 @@ describe('TaskViewComponent', () => {
     alt: null as number | null,
     sensor: null,
     active: true,
-    filters: [{ filter_id: 1, short_name: 'L', full_name: 'Lum', active: true }]
+    filters: [{ filter_id: 1, short_name: 'L', full_name: 'Lum', active: true }],
+    default_rotation: null
   };
 
   beforeEach(async () => {

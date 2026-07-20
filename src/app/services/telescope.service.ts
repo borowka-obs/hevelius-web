@@ -30,6 +30,8 @@ export interface Telescope {
   } | null;
   filters?: Filter[];
   active: boolean;
+  /** Degrees East of North; null when unset. See scopes API in hevelius-backend. */
+  default_rotation: number | null;
 }
 
 export interface TelescopesListParams {
@@ -136,6 +138,7 @@ export interface ScopeCreate {
   alt?: number;
   sensor_id?: number;
   active?: boolean;
+  default_rotation?: number | null;
 }
 
 export interface ScopeUpdate {
@@ -150,4 +153,6 @@ export interface ScopeUpdate {
   alt?: number;
   sensor_id?: number;
   active?: boolean;
+  /** Send null to clear. */
+  default_rotation?: number | null;
 }

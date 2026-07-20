@@ -58,7 +58,8 @@ describe('TelescopeService', () => {
             height: 20
           },
           filters: [],
-          active: true
+          active: true,
+          default_rotation: null
         }
       ]
     };
@@ -99,7 +100,8 @@ describe('TelescopeService', () => {
         alt: null,
         sensor: null,
         filters: [],
-        active: false
+        active: false,
+        default_rotation: null
       }
     });
   });

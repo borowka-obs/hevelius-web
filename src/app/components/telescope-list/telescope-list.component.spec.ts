@@ -37,7 +37,8 @@ describe('TelescopeListComponent', () => {
         width: 20,
         height: 20
       },
-      active: true
+      active: true,
+      default_rotation: null
     },
     {
       scope_id: 2,
@@ -51,7 +52,8 @@ describe('TelescopeListComponent', () => {
       lat: null,
       alt: null,
       sensor: null,
-      active: false
+      active: false,
+      default_rotation: null
     }
   ];
 

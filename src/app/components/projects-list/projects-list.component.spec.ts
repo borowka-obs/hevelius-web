@@ -20,6 +20,7 @@ function minimalTelescope(partial: Partial<Telescope> & Pick<Telescope, 'scope_i
     lat: null,
     alt: null,
     sensor: null,
+    default_rotation: null,
     ...partial
   };
 }

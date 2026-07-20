@@ -33,6 +33,7 @@
           <p><strong>Min Declination:</strong> {{ telescope.min_dec }}° <strong>Max Declination:</strong> {{ telescope.max_dec }}°</p>
           <p><strong>Latitude:</strong> {{ formatLatitude(telescope.lat) }} <strong>Longitude:</strong> {{ formatLongitude(telescope.lon) }} <strong>Altitude:</strong> {{ telescope.alt ?? '—' }} m</p>
           <p><strong>Sensor:</strong> {{ telescope.sensor?.name ?? '—' }}</p>
+          <p><strong>Default rotation:</strong> {{ telescope.default_rotation != null ? (telescope.default_rotation + '°') : '—' }}</p>
           <p><strong>Active:</strong> {{ telescope.active ? 'Yes' : 'No' }}</p>
         </mat-card-content>
       </mat-card>
