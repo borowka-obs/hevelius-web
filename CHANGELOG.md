@@ -1,5 +1,12 @@
 # Hevelius Web Interface Changelog
 
+0.6.0 (unreleased)
+
+- Detailed telescope view extended: many new parameters shown (F number,
+  default rotation, camera details, FOV etc).
+- Default camera rotation for a telescope is now supported.
+- Camera rotation for a project is now supported.
+
 0.5.0 (2026-05-27)
 
 - Tweaked the interface to be more phone friendly
