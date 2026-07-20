@@ -11,20 +11,28 @@ It's in the very early stages of development. It requires [hevelius backend](htt
 to be running. There's also the [the runner component](https://github.com/tomaszmrugalski/hevelius-runner) that should be
 running on a machine that is controlling the telescope. The hevelius-web is not interacting with the runner directly.
 
-The software is implemented in Angular and Typescript.
+The web interface is implemented using Angular and Typescript.
 
 ## Status
 
-As of May 2025, the following features are available:
+As of July 2026, the following features are available:
 
-- Login
-- List of tasks
-- Adding new tasks
-- Editing tasks (long press a task)
-- List of telescopes
-- Catalogs (NGC,IC,Messier,Caldwell)
+- Login with JWT sessions (activity extends timeout); user profile with Gravatar
+- Tasks: list, add, edit; sorting, filtering, and pagination
+- Sensors: add, edit, list, sort camera sensors and their parameters.
+- Telescopes: add, edit, list, sort telescopes and their parameters.
+  detailed view (optics, sensor, FOV, location map), default camera
+  rotation; filters and sensors management
+- Projects: create/edit/delete, subframes and integration progress, publications
+  (AstroBin, Facebook, X, Flickr, and more), catalog lookup for RA/Dec on create.
+- Objects (`/objects`): search and filter by catalog, name, constellation, and
+  sky proximity; Catalogs page (`/catalogs`) lists installed catalogs
+- Sky Map (`/sky-map`): Aladin Lite all-sky view of active projects with FOV
+  overlays; project detail includes a DSS sky view with the project FOV
+- Night plan (experimental); About panel
 
-The interface is responsive and should work on any device. It was tested on desktop (Ubuntu 24, Windows), and mobile (iPhone 14 Pro).
+The interface is responsive (phone-friendly layouts for Objects, Catalogs, and
+projects). It was tested on desktop (Ubuntu, Windows) and mobile (iPhone).
 
 ## Documentation
 
