@@ -29,6 +29,7 @@ describe('AsteroidDetailComponent', () => {
     asteroid_id: 1,
     number: 1,
     designation: '00001',
+    name: 'Ceres',
     epoch: 'K25A2',
     mean_anomaly: 10.5,
     perihelion_arg: 73.6,

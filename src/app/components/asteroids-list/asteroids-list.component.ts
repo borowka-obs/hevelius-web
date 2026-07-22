@@ -75,9 +75,9 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
 
   get displayedColumns(): string[] {
     if (this.isMobile) {
-      return ['number', 'designation', 'absolute_magnitude'];
+      return ['number', 'designation', 'name', 'absolute_magnitude'];
     }
-    return ['number', 'designation', 'absolute_magnitude', 'semimajor_axis', 'eccentricity', 'inclination', 'tags'];
+    return ['number', 'designation', 'name', 'absolute_magnitude', 'semimajor_axis', 'eccentricity', 'inclination', 'tags'];
   }
 
   currentSort: {

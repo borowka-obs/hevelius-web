@@ -17,6 +17,7 @@ export interface Asteroid {
   asteroid_id: number;
   number: number | null;
   designation: string;
+  name: string | null;
   epoch: string;
   mean_anomaly: number;
   perihelion_arg: number;
