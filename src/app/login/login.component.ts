@@ -107,6 +107,10 @@ export class LoginComponent implements OnInit {
   }
 
 
+  goToForgotPassword() {
+    this.router.navigateByUrl('/forgot-password');
+  }
+
   showMessage(text: string) {
     this.snackBar.open(text, 'Close', {
       duration: 3000, // Duration in milliseconds

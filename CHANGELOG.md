@@ -2,6 +2,14 @@
 
 0.6.0 (unreleased)
 
+- Added self-service account management: the **User** page (`/user`) now
+  lets you edit your own first name, last name, phone, e-mail, and AAVSO
+  observer ID, and change your password (current + new password).
+- Added a **forgot password** flow: "Forgot your password?" on the login
+  page leads to `/forgot-password` (enter your username or e-mail; the
+  backend always replies with the same generic message so the page can't be
+  used to enumerate accounts) and `/reset-password?token=...` (set a new
+  password from the link's one-time token).
 - Asteroid detail page reorganized into three widgets: grouped orbital
   elements (identification / orbital elements / photometric), tags, and a
   new **Visibility** widget — pick an active telescope (its location drives

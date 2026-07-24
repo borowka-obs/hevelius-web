@@ -2,15 +2,96 @@
   <div class="user-header">
     <img [src]="avatarUrl" alt="User avatar" class="avatar-large">
     <div>
-      <h2>{{ user?.firstname }} {{ user?.lastname }}</h2>
-      <p>{{ user?.email || 'No e-mail on profile' }}</p>
+      <h2>{{ profile?.firstname || user?.firstname }} {{ profile?.lastname || user?.lastname }}</h2>
+      <p>{{ profile?.login || user?.login }}</p>
     </div>
   </div>
 
   <div class="user-details">
-    <p><strong>User ID:</strong> {{ user?.user_id }}</p>
-    <p><strong>AAVSO ID:</strong> {{ user?.aavso_id || '-' }}</p>
-    <p><strong>Phone:</strong> {{ user?.phone || '-' }}</p>
-    <p><strong>Permissions:</strong> {{ user?.permissions || '-' }}</p>
+    <p><strong>User ID:</strong> {{ profile?.user_id || user?.user_id }}</p>
+    <p><strong>Permissions:</strong> {{ profile?.permissions ?? user?.permissions ?? '-' }}</p>
+    <p><strong>Login enabled:</strong> {{ profile?.login_enabled ? 'Yes' : 'No' }}</p>
   </div>
+</mat-card>
+
+<mat-card class="user-card">
+  <h3>Edit profile</h3>
+  <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="form-grid">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>First name</mat-label>
+      <input matInput formControlName="firstname" maxlength="32">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Last name</mat-label>
+      <input matInput formControlName="lastname" maxlength="32">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Phone</mat-label>
+      <input matInput formControlName="phone" maxlength="32" type="tel">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" maxlength="64" type="email">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>AAVSO observer ID</mat-label>
+      <input matInput formControlName="aavso_id" maxlength="5">
+      @if (profileForm.get('aavso_id')?.hasError('maxlength')) {
+        <mat-error>AAVSO ID is at most 5 characters.</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="form-actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="savingProfile">
+        {{ savingProfile ? 'Saving…' : 'Save changes' }}
+      </button>
+    </div>
+  </form>
+</mat-card>
+
+<mat-card class="user-card">
+  <h3>Change password</h3>
+  <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-grid">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Current password</mat-label>
+      <input matInput [type]="hideCurrentPassword ? 'password' : 'text'" formControlName="current_password" autocomplete="current-password">
+      <button mat-icon-button matSuffix type="button" (click)="hideCurrentPassword = !hideCurrentPassword"
+              [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideCurrentPassword">
+        <mat-icon>{{ hideCurrentPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      @if (passwordForm.get('current_password')?.touched && passwordForm.get('current_password')?.hasError('required')) {
+        <mat-error>Current password is required.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>New password</mat-label>
+      <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="new_password" autocomplete="new-password">
+      <button mat-icon-button matSuffix type="button" (click)="hideNewPassword = !hideNewPassword"
+              [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideNewPassword">
+        <mat-icon>{{ hideNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      @if (passwordForm.get('new_password')?.touched && passwordForm.get('new_password')?.hasError('minlength')) {
+        <mat-error>Password must be at least 8 characters.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Confirm new password</mat-label>
+      <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="confirm_password" autocomplete="new-password">
+      @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirm_password')?.touched) {
+        <mat-error>Passwords do not match.</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="form-actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="changingPassword">
+        {{ changingPassword ? 'Changing…' : 'Change password' }}
+      </button>
+    </div>
+  </form>
 </mat-card>

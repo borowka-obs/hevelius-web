@@ -34,6 +34,11 @@ interface CurrentUser {
     phone?: string;
 }
 
+export interface StatusMsgResponse {
+    status: boolean;
+    msg?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -118,6 +123,23 @@ export class LoginService {
 
     isLoggedIn(): boolean {
         return !!this.getToken();
+    }
+
+    // Request a password reset email for a login or email address. Does not
+    // require authentication; the backend always returns a generic response
+    // (whether or not the account exists) to avoid account enumeration.
+    forgotPassword(loginOrEmail: string): Observable<StatusMsgResponse> {
+        return this.http.post<StatusMsgResponse>(Hevelius.apiUrl + '/auth/forgot-password', {
+            login_or_email: loginOrEmail
+        });
+    }
+
+    // Complete a password reset using the one-time token from the forgot-password email.
+    resetPassword(token: string, newPassword: string): Observable<StatusMsgResponse> {
+        return this.http.post<StatusMsgResponse>(Hevelius.apiUrl + '/auth/password-reset', {
+            token,
+            new_password: newPassword
+        });
     }
 
     getBackendVersion(): Observable<string> {
