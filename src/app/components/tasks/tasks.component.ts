@@ -20,7 +20,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 
@@ -60,7 +59,6 @@ import { TaskParams } from '../../models/task-response';
     MatButtonModule,
     MatIconModule,
     MatDialogModule,
-    MatSnackBarModule,
     MatSelectModule,
     MatTooltipModule,
     RouterModule,
