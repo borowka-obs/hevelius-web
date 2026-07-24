@@ -65,37 +65,81 @@ describe('UserComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('loads the profile and populates the edit form', () => {
+  it('loads the profile and shows it read-only, with no field in edit mode', () => {
     fixture.detectChanges();
     expect(userService.getProfile).toHaveBeenCalled();
-    expect(component.profileForm.value.firstname).toBe('Ada');
-    expect(component.profileForm.value.phone).toBe('555-0100');
-    expect(component.profileForm.value.aavso_id).toBe('AA001');
+    expect(component.editingField).toBeNull();
+    expect(component.fieldValue('firstname')).toBe('Ada');
+    expect(component.fieldValue('phone')).toBe('555-0100');
+    expect(component.fieldValue('aavso_id')).toBe('AA001');
   });
 
-  it('saveProfile updates the profile and syncs the cached login data', async () => {
+  it('startEdit switches a single field into edit mode', () => {
     fixture.detectChanges();
-    component.profileForm.patchValue({ phone: '555-9999' });
-    component.saveProfile();
+    component.startEdit('phone');
+    expect(component.editingField).toBe('phone');
+    expect(component.profileForm.get('phone')?.value).toBe('555-0100');
+  });
+
+  it('cancelEdit discards changes and exits edit mode', () => {
+    fixture.detectChanges();
+    component.startEdit('phone');
+    component.profileForm.get('phone')?.setValue('555-9999');
+    component.cancelEdit('phone');
+
+    expect(component.editingField).toBeNull();
+    expect(component.profileForm.get('phone')?.value).toBe('555-0100');
+    expect(userService.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('saveField updates only the edited field and syncs the cached login data', async () => {
+    fixture.detectChanges();
+    component.startEdit('phone');
+    component.profileForm.get('phone')?.setValue('555-9999');
+    component.saveField('phone');
     await fixture.whenStable();
 
-    expect(userService.updateProfile).toHaveBeenCalledWith(
-      expect.objectContaining({ firstname: 'Ada', phone: '555-9999' })
-    );
+    expect(userService.updateProfile).toHaveBeenCalledWith({ phone: '555-9999' });
     expect(loginService.loggedIn).toHaveBeenCalled();
-    expect(snackBar.open).toHaveBeenCalledWith('Profile updated.', 'Close', expect.anything());
+    expect(component.editingField).toBeNull();
+    expect(snackBar.open).toHaveBeenCalledWith('Phone updated.', 'Close', expect.anything());
   });
 
-  it('saveProfile surfaces backend error messages', async () => {
+  it('saveField surfaces backend error messages and stays in edit mode', async () => {
     userService.updateProfile.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 400, error: { msg: 'Bad request' } }))
     );
     fixture.detectChanges();
-    component.saveProfile();
+    component.startEdit('phone');
+    component.saveField('phone');
     await fixture.whenStable();
 
     expect(snackBar.open).toHaveBeenCalledWith('Bad request', 'Close', expect.anything());
-    expect(component.savingProfile).toBe(false);
+    expect(component.savingField).toBe(false);
+    expect(component.editingField).toBe('phone');
+  });
+
+  it('saveField rejects an invalid value without calling the API', () => {
+    fixture.detectChanges();
+    component.startEdit('aavso_id');
+    component.profileForm.get('aavso_id')?.setValue('TOOLONG');
+    component.saveField('aavso_id');
+
+    expect(userService.updateProfile).not.toHaveBeenCalled();
+    expect(component.editingField).toBe('aavso_id');
+  });
+
+  it('the password form is collapsed by default and toggles open/closed', () => {
+    fixture.detectChanges();
+    expect(component.showPasswordForm).toBe(false);
+
+    component.togglePasswordForm();
+    expect(component.showPasswordForm).toBe(true);
+
+    component.passwordForm.patchValue({ current_password: 'old-pw' });
+    component.togglePasswordForm();
+    expect(component.showPasswordForm).toBe(false);
+    expect(component.passwordForm.value.current_password).toBeFalsy();
   });
 
   it('changePassword rejects mismatched passwords before calling the API', async () => {
@@ -112,8 +156,9 @@ describe('UserComponent', () => {
     expect(userService.changePassword).not.toHaveBeenCalled();
   });
 
-  it('changePassword calls the API and resets the form on success', async () => {
+  it('changePassword calls the API and collapses the form on success', async () => {
     fixture.detectChanges();
+    component.togglePasswordForm();
     component.passwordForm.patchValue({
       current_password: 'old-pw',
       new_password: 'new-password-123',
@@ -129,5 +174,6 @@ describe('UserComponent', () => {
     });
     expect(snackBar.open).toHaveBeenCalledWith('Password changed.', 'Close', expect.anything());
     expect(component.passwordForm.value.current_password).toBeFalsy();
+    expect(component.showPasswordForm).toBe(false);
   });
 });

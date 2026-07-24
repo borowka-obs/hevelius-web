@@ -15,83 +15,169 @@
 </mat-card>
 
 <mat-card class="user-card">
-  <h3>Edit profile</h3>
-  <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="form-grid">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>First name</mat-label>
-      <input matInput formControlName="firstname" maxlength="32">
-    </mat-form-field>
+  <h3>Profile</h3>
+  <div [formGroup]="profileForm" class="detail-list">
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Last name</mat-label>
-      <input matInput formControlName="lastname" maxlength="32">
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Phone</mat-label>
-      <input matInput formControlName="phone" maxlength="32" type="tel">
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Email</mat-label>
-      <input matInput formControlName="email" maxlength="64" type="email">
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>AAVSO observer ID</mat-label>
-      <input matInput formControlName="aavso_id" maxlength="5">
-      @if (profileForm.get('aavso_id')?.hasError('maxlength')) {
-        <mat-error>AAVSO ID is at most 5 characters.</mat-error>
+    <div class="detail-row">
+      <div class="detail-label">First name</div>
+      @if (editingField === 'firstname') {
+        <mat-form-field appearance="outline" class="detail-input">
+          <input matInput formControlName="firstname" maxlength="32" (keyup.enter)="saveField('firstname')">
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="saveField('firstname')" [disabled]="savingField" aria-label="Save first name">
+          <mat-icon>check</mat-icon>
+        </button>
+        <button mat-icon-button (click)="cancelEdit('firstname')" aria-label="Cancel">
+          <mat-icon>close</mat-icon>
+        </button>
+      } @else {
+        <div class="detail-value">{{ fieldValue('firstname') || '—' }}</div>
+        <button mat-icon-button class="edit-btn" (click)="startEdit('firstname')" aria-label="Edit first name">
+          <mat-icon>edit</mat-icon>
+        </button>
       }
-    </mat-form-field>
-
-    <div class="form-actions">
-      <button mat-raised-button color="primary" type="submit" [disabled]="savingProfile">
-        {{ savingProfile ? 'Saving…' : 'Save changes' }}
-      </button>
     </div>
-  </form>
+
+    <div class="detail-row">
+      <div class="detail-label">Last name</div>
+      @if (editingField === 'lastname') {
+        <mat-form-field appearance="outline" class="detail-input">
+          <input matInput formControlName="lastname" maxlength="32" (keyup.enter)="saveField('lastname')">
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="saveField('lastname')" [disabled]="savingField" aria-label="Save last name">
+          <mat-icon>check</mat-icon>
+        </button>
+        <button mat-icon-button (click)="cancelEdit('lastname')" aria-label="Cancel">
+          <mat-icon>close</mat-icon>
+        </button>
+      } @else {
+        <div class="detail-value">{{ fieldValue('lastname') || '—' }}</div>
+        <button mat-icon-button class="edit-btn" (click)="startEdit('lastname')" aria-label="Edit last name">
+          <mat-icon>edit</mat-icon>
+        </button>
+      }
+    </div>
+
+    <div class="detail-row">
+      <div class="detail-label">Phone</div>
+      @if (editingField === 'phone') {
+        <mat-form-field appearance="outline" class="detail-input">
+          <input matInput formControlName="phone" maxlength="32" type="tel" (keyup.enter)="saveField('phone')">
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="saveField('phone')" [disabled]="savingField" aria-label="Save phone">
+          <mat-icon>check</mat-icon>
+        </button>
+        <button mat-icon-button (click)="cancelEdit('phone')" aria-label="Cancel">
+          <mat-icon>close</mat-icon>
+        </button>
+      } @else {
+        <div class="detail-value">{{ fieldValue('phone') || '—' }}</div>
+        <button mat-icon-button class="edit-btn" (click)="startEdit('phone')" aria-label="Edit phone">
+          <mat-icon>edit</mat-icon>
+        </button>
+      }
+    </div>
+
+    <div class="detail-row">
+      <div class="detail-label">Email</div>
+      @if (editingField === 'email') {
+        <mat-form-field appearance="outline" class="detail-input">
+          <input matInput formControlName="email" maxlength="64" type="email" (keyup.enter)="saveField('email')">
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="saveField('email')" [disabled]="savingField" aria-label="Save email">
+          <mat-icon>check</mat-icon>
+        </button>
+        <button mat-icon-button (click)="cancelEdit('email')" aria-label="Cancel">
+          <mat-icon>close</mat-icon>
+        </button>
+      } @else {
+        <div class="detail-value">{{ fieldValue('email') || '—' }}</div>
+        <button mat-icon-button class="edit-btn" (click)="startEdit('email')" aria-label="Edit email">
+          <mat-icon>edit</mat-icon>
+        </button>
+      }
+    </div>
+
+    <div class="detail-row">
+      <div class="detail-label">AAVSO observer ID</div>
+      @if (editingField === 'aavso_id') {
+        <mat-form-field appearance="outline" class="detail-input">
+          <input matInput formControlName="aavso_id" maxlength="5" (keyup.enter)="saveField('aavso_id')">
+          @if (profileForm.get('aavso_id')?.hasError('maxlength')) {
+            <mat-error>At most 5 characters.</mat-error>
+          }
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="saveField('aavso_id')" [disabled]="savingField" aria-label="Save AAVSO observer ID">
+          <mat-icon>check</mat-icon>
+        </button>
+        <button mat-icon-button (click)="cancelEdit('aavso_id')" aria-label="Cancel">
+          <mat-icon>close</mat-icon>
+        </button>
+      } @else {
+        <div class="detail-value">{{ fieldValue('aavso_id') || '—' }}</div>
+        <button mat-icon-button class="edit-btn" (click)="startEdit('aavso_id')" aria-label="Edit AAVSO observer ID">
+          <mat-icon>edit</mat-icon>
+        </button>
+      }
+    </div>
+
+  </div>
 </mat-card>
 
 <mat-card class="user-card">
-  <h3>Change password</h3>
-  <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-grid">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Current password</mat-label>
-      <input matInput [type]="hideCurrentPassword ? 'password' : 'text'" formControlName="current_password" autocomplete="current-password">
-      <button mat-icon-button matSuffix type="button" (click)="hideCurrentPassword = !hideCurrentPassword"
-              [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideCurrentPassword">
-        <mat-icon>{{ hideCurrentPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-      </button>
-      @if (passwordForm.get('current_password')?.touched && passwordForm.get('current_password')?.hasError('required')) {
-        <mat-error>Current password is required.</mat-error>
+  <h3>Security</h3>
+  <div class="detail-list">
+    <div class="detail-row">
+      <div class="detail-label">Password</div>
+      @if (!showPasswordForm) {
+        <div class="detail-value">••••••••</div>
+        <button mat-icon-button class="edit-btn" (click)="togglePasswordForm()" aria-label="Change password">
+          <mat-icon>edit</mat-icon>
+        </button>
       }
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>New password</mat-label>
-      <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="new_password" autocomplete="new-password">
-      <button mat-icon-button matSuffix type="button" (click)="hideNewPassword = !hideNewPassword"
-              [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideNewPassword">
-        <mat-icon>{{ hideNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-      </button>
-      @if (passwordForm.get('new_password')?.touched && passwordForm.get('new_password')?.hasError('minlength')) {
-        <mat-error>Password must be at least 8 characters.</mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Confirm new password</mat-label>
-      <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="confirm_password" autocomplete="new-password">
-      @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirm_password')?.touched) {
-        <mat-error>Passwords do not match.</mat-error>
-      }
-    </mat-form-field>
-
-    <div class="form-actions">
-      <button mat-raised-button color="primary" type="submit" [disabled]="changingPassword">
-        {{ changingPassword ? 'Changing…' : 'Change password' }}
-      </button>
     </div>
-  </form>
+
+    @if (showPasswordForm) {
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-grid password-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Current password</mat-label>
+          <input matInput [type]="hideCurrentPassword ? 'password' : 'text'" formControlName="current_password" autocomplete="current-password">
+          <button mat-icon-button matSuffix type="button" (click)="hideCurrentPassword = !hideCurrentPassword"
+                  [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideCurrentPassword">
+            <mat-icon>{{ hideCurrentPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (passwordForm.get('current_password')?.touched && passwordForm.get('current_password')?.hasError('required')) {
+            <mat-error>Current password is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>New password</mat-label>
+          <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="new_password" autocomplete="new-password">
+          <button mat-icon-button matSuffix type="button" (click)="hideNewPassword = !hideNewPassword"
+                  [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideNewPassword">
+            <mat-icon>{{ hideNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (passwordForm.get('new_password')?.touched && passwordForm.get('new_password')?.hasError('minlength')) {
+            <mat-error>Password must be at least 8 characters.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Confirm new password</mat-label>
+          <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="confirm_password" autocomplete="new-password">
+          @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirm_password')?.touched) {
+            <mat-error>Passwords do not match.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-button type="button" (click)="togglePasswordForm()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="changingPassword">
+            {{ changingPassword ? 'Changing…' : 'Change password' }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
 </mat-card>
