@@ -21,6 +21,45 @@
   margin: 8px 0;
 }
 
+.detail-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  flex: 0 0 130px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9em;
+}
+
+.detail-value {
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+}
+
+.detail-input {
+  flex: 1 1 auto;
+  /* Match the row's height instead of the form field's own bottom hint spacing. */
+  margin-top: 16px;
+}
+
+.edit-btn {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -31,10 +70,15 @@
   width: 100%;
 }
 
+.password-form {
+  padding-top: 8px;
+}
+
 .form-actions {
   grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 8px;
 }
 
@@ -43,6 +87,11 @@
     max-width: 100%;
     margin: 0 0 16px;
     border-radius: 0;
+  }
+
+  .detail-label {
+    flex-basis: 90px;
+    font-size: 0.85em;
   }
 
   .form-grid {

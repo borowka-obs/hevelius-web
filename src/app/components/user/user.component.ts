@@ -22,6 +22,16 @@ import { GravatarService } from '../../services/gravatar.service';
 import { TopBarService } from '../../services/top-bar.service';
 import { User } from '../../models/user';
 
+type ProfileField = 'firstname' | 'lastname' | 'phone' | 'email' | 'aavso_id';
+
+const PROFILE_FIELD_LABELS: Record<ProfileField, string> = {
+  firstname: 'First name',
+  lastname: 'Last name',
+  phone: 'Phone',
+  email: 'Email',
+  aavso_id: 'AAVSO observer ID'
+};
+
 /** Requires the confirm_password field to equal new_password. */
 function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
   const newPassword = group.get('new_password')?.value;
@@ -52,10 +62,18 @@ export class UserComponent implements OnInit {
     private formBuilder = inject(FormBuilder);
     private snackBar = inject(MatSnackBar);
 
+    readonly profileFields: ProfileField[] = ['firstname', 'lastname', 'phone', 'email', 'aavso_id'];
+    readonly fieldLabels = PROFILE_FIELD_LABELS;
+
     user: User | null = null;
     profile: UserProfile | null = null;
     avatarUrl = '';
-    savingProfile = false;
+
+    /** Field currently switched into edit mode, or null when the panel just shows details. */
+    editingField: ProfileField | null = null;
+    savingField = false;
+
+    showPasswordForm = false;
     changingPassword = false;
     hideCurrentPassword = true;
     hideNewPassword = true;
@@ -87,7 +105,7 @@ export class UserComponent implements OnInit {
 
         this.user = this.loginService.getUser();
         this.updateAvatar(this.user?.email, this.user?.user_id);
-        // Pre-fill from the cached login response so the form isn't empty while
+        // Pre-fill from the cached login response so the panel isn't empty while
         // /users/me loads (or if it's unreachable).
         this.profileForm.patchValue({
             firstname: this.user?.firstname ?? '',
@@ -122,29 +140,40 @@ export class UserComponent implements OnInit {
         this.avatarUrl = this.gravatarService.getAvatarUrl(email, fallbackId, 96);
     }
 
-    saveProfile(): void {
-        if (this.profileForm.invalid) {
-            this.profileForm.markAllAsTouched();
+    fieldValue(field: ProfileField): string {
+        return (this.profile?.[field] ?? this.user?.[field] ?? '') as string;
+    }
+
+    startEdit(field: ProfileField): void {
+        this.profileForm.get(field)?.setValue(this.fieldValue(field));
+        this.editingField = field;
+    }
+
+    cancelEdit(field: ProfileField): void {
+        this.profileForm.get(field)?.setValue(this.fieldValue(field));
+        this.profileForm.get(field)?.markAsUntouched();
+        this.editingField = null;
+    }
+
+    saveField(field: ProfileField): void {
+        const control = this.profileForm.get(field);
+        if (!control || control.invalid) {
+            control?.markAsTouched();
             return;
         }
-        this.savingProfile = true;
-        const v = this.profileForm.getRawValue();
-        const body: UserProfileUpdate = {
-            firstname: v.firstname?.trim() || null,
-            lastname: v.lastname?.trim() || null,
-            phone: v.phone?.trim() || null,
-            email: v.email?.trim() || null,
-            aavso_id: v.aavso_id?.trim() || null
-        };
+        this.savingField = true;
+        const raw = (control.value as string | null)?.trim() ?? '';
+        const body: UserProfileUpdate = { [field]: raw || null };
         this.userService.updateProfile(body).pipe(first()).subscribe({
             next: profile => {
-                this.savingProfile = false;
+                this.savingField = false;
                 this.applyProfile(profile);
                 this.mergeIntoStoredUser(profile);
-                this.showMessage('Profile updated.');
+                this.editingField = null;
+                this.showMessage(`${this.fieldLabels[field]} updated.`);
             },
             error: (err: HttpErrorResponse) => {
-                this.savingProfile = false;
+                this.savingField = false;
                 this.showMessage(err?.error?.msg || 'Failed to update profile.');
             }
         });
@@ -167,6 +196,13 @@ export class UserComponent implements OnInit {
         });
     }
 
+    togglePasswordForm(): void {
+        this.showPasswordForm = !this.showPasswordForm;
+        if (!this.showPasswordForm) {
+            this.passwordForm.reset();
+        }
+    }
+
     changePassword(): void {
         if (this.passwordForm.invalid) {
             this.passwordForm.markAllAsTouched();
@@ -181,6 +217,7 @@ export class UserComponent implements OnInit {
                 next: () => {
                     this.changingPassword = false;
                     this.passwordForm.reset();
+                    this.showPasswordForm = false;
                     this.showMessage('Password changed.');
                 },
                 error: (err: HttpErrorResponse) => {
