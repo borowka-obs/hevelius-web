@@ -6,7 +6,7 @@
 .about-status-list dt {
   font-weight: 500;
   margin-top: 0.75em;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .about-status-list dt:first-child {

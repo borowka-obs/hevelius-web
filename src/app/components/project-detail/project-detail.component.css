@@ -42,7 +42,7 @@ table {
 }
 
 .muted {
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--mat-sys-on-surface-variant);
   font-size: 0.85em;
   margin-left: 0.35rem;
 }

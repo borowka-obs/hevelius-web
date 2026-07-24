@@ -16,7 +16,7 @@ table {
   padding: 0;
   font: inherit;
   cursor: pointer;
-  color: var(--mat-primary-color, #1976d2);
+  color: var(--mat-sys-primary);
   text-decoration: underline;
 }
 
@@ -25,7 +25,7 @@ tr.clickable {
 }
 
 tr.clickable:hover {
-  background: #f5f5f5;
+  background: var(--mat-sys-surface-container-low);
 }
 
 .mobile-cards {
@@ -35,8 +35,8 @@ tr.clickable:hover {
 }
 
 .catalog-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 6px;
   padding: 12px 14px;
   cursor: pointer;
@@ -44,7 +44,7 @@ tr.clickable:hover {
 }
 
 .catalog-card:active {
-  background: #f5f5f5;
+  background: var(--mat-sys-surface-container-low);
 }
 
 .card-line1 {
@@ -57,25 +57,25 @@ tr.clickable:hover {
 .card-shortname {
   font-weight: 600;
   font-size: 1rem;
-  color: var(--mat-primary-color, #1976d2);
+  color: var(--mat-sys-primary);
 }
 
 .card-count {
   font-size: 0.85rem;
-  color: #616161;
+  color: var(--mat-sys-on-surface-variant);
   flex-shrink: 0;
 }
 
 .card-name {
   margin-top: 4px;
   font-size: 0.9rem;
-  color: #555;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .no-results {
   padding: 24px;
   text-align: center;
-  color: #757575;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 @media (max-width: 640px) {
