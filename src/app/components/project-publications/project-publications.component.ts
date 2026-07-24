@@ -48,7 +48,7 @@ import {
         border-radius: 2px;
       }
       .publication-empty {
-        color: rgba(0, 0, 0, 0.45);
+        color: var(--mat-sys-on-surface-variant);
       }
     `
   ]

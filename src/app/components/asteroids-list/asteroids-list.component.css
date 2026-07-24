@@ -5,7 +5,7 @@
 .filters {
   margin-bottom: 20px;
   overflow: hidden;
-  background-color: #f5f5f5;
+  background-color: var(--mat-sys-surface-container-low);
   border-radius: 4px;
 }
 
@@ -39,7 +39,7 @@
 .mag-label {
   flex: 0 0 100%;
   font-size: 0.85rem;
-  color: #616161;
+  color: var(--mat-sys-on-surface-variant);
   margin: 0;
 }
 
@@ -55,7 +55,7 @@
 .filter-error {
   flex: 1 1 100%;
   margin: 0;
-  color: #c62828;
+  color: var(--mat-sys-error);
   font-size: 0.875rem;
 }
 
@@ -81,7 +81,7 @@ table {
 }
 
 .asteroid-row:hover {
-  background-color: #f5f5f5;
+  background-color: var(--mat-sys-surface-container-high);
 }
 
 .paginator {
@@ -129,8 +129,8 @@ mat-chip {
 }
 
 .asteroid-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 6px;
   padding: 12px 14px;
   cursor: pointer;
@@ -150,14 +150,14 @@ mat-chip {
 
 .card-number {
   font-size: 0.85rem;
-  color: #616161;
+  color: var(--mat-sys-on-surface-variant);
   flex-shrink: 0;
 }
 
 .card-line2 {
   margin-top: 4px;
   font-size: 0.85rem;
-  color: #555;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .card-tags {
@@ -167,7 +167,7 @@ mat-chip {
 .no-results {
   padding: 24px;
   text-align: center;
-  color: #757575;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 @media (max-width: 640px) {

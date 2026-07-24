@@ -41,6 +41,7 @@
     "eslint": "^9.39.5",
     "hevelius-deploy-builder": "file:tools/hevelius-deploy-builder",
     "jsdom": "^25.0.1",
+    "sass": "^1.101.7",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
   },

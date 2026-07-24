@@ -60,7 +60,7 @@ mat-hint.coord-hint .coord-hint-preview {
 }
 
 .form-level-error {
-  color: var(--mat-form-field-error-text-color, #f44336);
+  color: var(--mat-sys-error);
   font-size: 12px;
   margin: -0.25rem 0 0 0;
   padding-left: 16px;

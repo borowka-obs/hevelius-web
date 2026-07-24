@@ -31,7 +31,7 @@
   align-items: center;
   min-height: 56px;
   gap: 8px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
 }
 
 .detail-row:last-child {
@@ -40,7 +40,7 @@
 
 .detail-label {
   flex: 0 0 130px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--mat-sys-on-surface-variant);
   font-size: 0.9em;
 }
 

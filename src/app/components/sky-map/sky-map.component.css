@@ -32,7 +32,7 @@
 }
 
 .error-msg {
-  color: #f44336;
+  color: var(--mat-sys-error);
   padding: 16px;
 }
 

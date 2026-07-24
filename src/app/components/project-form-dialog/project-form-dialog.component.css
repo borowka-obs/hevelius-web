@@ -11,9 +11,9 @@ mat-dialog-content form {
 
 .similar-warning {
   font-size: 12px;
-  color: #92400e;
-  background: #fef3c7;
-  border-left: 3px solid #d97706;
+  color: var(--mat-sys-on-tertiary-container);
+  background: var(--mat-sys-tertiary-container);
+  border-left: 3px solid var(--mat-sys-tertiary);
   border-radius: 4px;
   padding: 6px 10px;
   margin-top: -4px;
@@ -24,7 +24,7 @@ mat-dialog-content form {
 }
 
 .fov-section {
-  border-top: 1px solid rgba(0,0,0,0.12);
+  border-top: 1px solid var(--mat-sys-outline-variant);
   padding-top: 8px;
   margin-top: 4px;
 }
@@ -39,8 +39,8 @@ mat-dialog-content form {
 }
 
 .fov-chip {
-  background: #e3f2fd;
-  color: #1565c0;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
   border-radius: 12px;
   padding: 2px 10px;
   font-size: 12px;
@@ -55,6 +55,6 @@ mat-dialog-content form {
 
 .fov-hint {
   font-size: 11px;
-  color: rgba(0,0,0,0.54);
+  color: var(--mat-sys-on-surface-variant);
   margin-top: 4px;
 }
