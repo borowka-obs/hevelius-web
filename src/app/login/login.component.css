@@ -18,6 +18,17 @@
     text-align: center;
 }
 
+.forgot-password-link {
+    margin-top: 12px;
+    font-size: 0.9em;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #3f51b5;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 img {
     display: block;
     margin-left: auto;

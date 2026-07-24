@@ -42,4 +42,26 @@ describe('LoginService', () => {
     service.maybeRefreshToken();
     httpMock.expectNone(Hevelius.apiUrl + '/login/refresh');
   });
+
+  it('forgotPassword posts the login/email to the forgot-password endpoint', () => {
+    service.forgotPassword('user1').subscribe(res => {
+      expect(res.status).toBe(true);
+    });
+
+    const req = httpMock.expectOne(Hevelius.apiUrl + '/auth/forgot-password');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ login_or_email: 'user1' });
+    req.flush({ status: true, msg: 'If that account exists, a password reset email has been sent.' });
+  });
+
+  it('resetPassword posts the token and new password to the password-reset endpoint', () => {
+    service.resetPassword('abc123', 'new-password-123').subscribe(res => {
+      expect(res.status).toBe(true);
+    });
+
+    const req = httpMock.expectOne(Hevelius.apiUrl + '/auth/password-reset');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ token: 'abc123', new_password: 'new-password-123' });
+    req.flush({ status: true, msg: 'Password updated' });
+  });
 });

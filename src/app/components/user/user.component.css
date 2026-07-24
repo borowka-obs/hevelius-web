@@ -1,6 +1,6 @@
 .user-card {
   max-width: 640px;
-  margin: 0 auto;
+  margin: 0 auto 16px;
   padding: 16px;
 }
 
@@ -19,4 +19,41 @@
 
 .user-details p {
   margin: 8px 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .user-card {
+    max-width: 100%;
+    margin: 0 0 16px;
+    border-radius: 0;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
 }
