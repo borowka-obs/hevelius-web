@@ -54,6 +54,14 @@ html.theme-dark {
   --mat-toolbar-container-text-color: var(--hevelius-topbar-fg);
 }
 
+/* Icon buttons set their own icon color rather than inheriting the toolbar's
+ * text color, so they need an explicit override to stay legible against the
+ * dark blueberry background in both light and dark theme. */
+.mat-toolbar .mat-mdc-icon-button {
+  --mat-icon-button-icon-color: var(--hevelius-topbar-fg);
+  --mat-icon-button-state-layer-color: var(--hevelius-topbar-fg);
+}
+
 /* Tables: alternating row tint + a visible outer border, applied globally
  * so every mat-table in the app looks the same without per-component CSS. */
 table.mat-mdc-table {
