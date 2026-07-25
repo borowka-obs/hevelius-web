@@ -9,5 +9,5 @@ export class Hevelius {
     static version: string = packageJson.version;
 
     // Make sure there is no trailing slash
-    static apiUrl = 'http://localhost:5000/api';
+    static apiUrl = 'http://localhost:5001/api';
 }
