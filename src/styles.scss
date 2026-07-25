@@ -13,6 +13,29 @@ html {
     typography: Roboto,
     density: 0,
   ));
+
+  /* --- App-wide design tokens ---
+   * Kept in one place so the look stays consistent and easy to maintain;
+   * avoid re-declaring these per component. */
+
+  /* Distinct top bar color (deep "blueberry"), consistent in light and dark mode. */
+  --hevelius-topbar-bg: #352a63;
+  --hevelius-topbar-fg: #ffffff;
+
+  /* Shared corner radius for buttons: rectangular with a slight round-over. */
+  --hevelius-button-radius: 8px;
+
+  /* All standard button variants pick up the shared radius instead of Material's default pill shape. */
+  --mat-button-filled-container-shape: var(--hevelius-button-radius);
+  --mat-button-outlined-container-shape: var(--hevelius-button-radius);
+  --mat-button-protected-container-shape: var(--hevelius-button-radius);
+  --mat-button-text-container-shape: var(--hevelius-button-radius);
+  --mat-button-tonal-container-shape: var(--hevelius-button-radius);
+  --mat-button-toggle-shape: var(--hevelius-button-radius);
+
+  /* Give table row/header dividers a visible, theme-aware color. */
+  --mat-table-row-item-outline-color: var(--mat-sys-outline);
+  --mat-table-row-item-outline-width: 1px;
 }
 
 /* Applied by ThemeService when the user picks an explicit theme instead of "system". */
@@ -22,6 +45,23 @@ html.theme-light {
 
 html.theme-dark {
   color-scheme: dark;
+}
+
+/* Top bar: same distinct color regardless of theme, applied globally so every
+ * mat-toolbar (main layout, login, forgot/reset password) stays in sync. */
+.mat-toolbar {
+  --mat-toolbar-container-background-color: var(--hevelius-topbar-bg);
+  --mat-toolbar-container-text-color: var(--hevelius-topbar-fg);
+}
+
+/* Tables: alternating row tint + a visible outer border, applied globally
+ * so every mat-table in the app looks the same without per-component CSS. */
+table.mat-mdc-table {
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+tr.mat-mdc-row:nth-child(even) {
+  background-color: var(--mat-sys-surface-container-low);
 }
 
 html, body { height: 100%; }
