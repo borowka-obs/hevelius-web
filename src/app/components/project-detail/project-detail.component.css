@@ -70,3 +70,26 @@ table {
   margin-top: 4px;
   font-size: 0.85rem;
 }
+
+.subframes-section .table-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 8px;
+  }
+
+  .progress-cell {
+    min-width: 100px;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding: 4px 6px !important;
+  }
+}

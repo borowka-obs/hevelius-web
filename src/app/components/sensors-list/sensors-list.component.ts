@@ -63,7 +63,7 @@ export class SensorsListComponent implements OnInit, OnDestroy {
 
   get displayedColumns(): string[] {
     if (this.isMobile) {
-      return ['name', 'vendor', 'resolution', 'active', 'actions'];
+      return ['name', 'resolution', 'pixel_size', 'actions'];
     }
     return ['name', 'vendor', 'resolution', 'pixel_size', 'sensor_size', 'bits', 'active', 'actions'];
   }

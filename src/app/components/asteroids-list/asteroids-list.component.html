@@ -1,11 +1,13 @@
 <div class="container">
+  <div class="search-bar">
+    <mat-form-field class="search-field" subscriptSizing="dynamic" appearance="outline">
+      <mat-label>Search asteroids</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="Filter by designation…">
+    </mat-form-field>
+  </div>
+
   <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
     <form [formGroup]="filterForm" class="filter-form" (ngSubmit)="onFilterSubmit($event)">
-      <mat-form-field class="filter-field" subscriptSizing="dynamic">
-        <mat-label>Designation</mat-label>
-        <input matInput formControlName="designation" type="text" placeholder="e.g. 00001">
-      </mat-form-field>
-
       <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
         <mat-label>Number</mat-label>
         <input matInput formControlName="number" type="number" step="1" min="1">

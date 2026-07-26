@@ -2,6 +2,15 @@
   padding: 20px;
 }
 
+.search-bar {
+  margin-bottom: 12px;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 400px;
+}
+
 .filters {
   margin-bottom: 20px;
   overflow: hidden;
