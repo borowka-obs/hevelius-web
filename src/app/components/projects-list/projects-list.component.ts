@@ -230,7 +230,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     this.dataSource.data = list;
     if (!this.embedded()) {
       this.topBarService.updateState({
-        title: `Projects: ${list.length} item${list.length !== 1 ? 's' : ''}`
+        title: `${list.length} project${list.length !== 1 ? 's' : ''}`
       });
     }
   }

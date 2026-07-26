@@ -181,3 +181,26 @@
     }
   </div>
 </mat-card>
+
+<mat-card class="user-card">
+  <h3>Preferences</h3>
+  <div class="detail-list">
+    <div class="detail-row theme-row">
+      <div class="detail-label">Theme</div>
+      <mat-button-toggle-group [value]="themeService.current" (change)="setTheme($event.value)" aria-label="Theme">
+        <mat-button-toggle value="light" aria-label="Light theme">
+          <mat-icon>light_mode</mat-icon>
+          Light
+        </mat-button-toggle>
+        <mat-button-toggle value="dark" aria-label="Dark theme">
+          <mat-icon>dark_mode</mat-icon>
+          Dark
+        </mat-button-toggle>
+        <mat-button-toggle value="system" aria-label="Follow system theme">
+          <mat-icon>brightness_auto</mat-icon>
+          System
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
+</mat-card>

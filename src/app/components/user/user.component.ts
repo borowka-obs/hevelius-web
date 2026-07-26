@@ -13,6 +13,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { first } from 'rxjs/operators';
@@ -20,6 +21,7 @@ import { LoginService } from '../../services/login.service';
 import { UserService, UserProfile, UserProfileUpdate } from '../../services/user.service';
 import { GravatarService } from '../../services/gravatar.service';
 import { TopBarService } from '../../services/top-bar.service';
+import { ThemeService, ThemePreference } from '../../services/theme.service';
 import { User } from '../../models/user';
 
 type ProfileField = 'firstname' | 'lastname' | 'phone' | 'email' | 'aavso_id';
@@ -49,6 +51,7 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
+        MatButtonToggleModule,
         MatIconModule
     ],
     templateUrl: './user.component.html',
@@ -61,6 +64,7 @@ export class UserComponent implements OnInit {
     private topBarService = inject(TopBarService);
     private formBuilder = inject(FormBuilder);
     private snackBar = inject(MatSnackBar);
+    themeService = inject(ThemeService);
 
     readonly profileFields: ProfileField[] = ['firstname', 'lastname', 'phone', 'email', 'aavso_id'];
     readonly fieldLabels = PROFILE_FIELD_LABELS;
@@ -225,6 +229,10 @@ export class UserComponent implements OnInit {
                     this.showMessage(err?.error?.msg || 'Failed to change password.');
                 }
             });
+    }
+
+    setTheme(preference: ThemePreference): void {
+        this.themeService.setPreference(preference);
     }
 
     showMessage(text: string): void {

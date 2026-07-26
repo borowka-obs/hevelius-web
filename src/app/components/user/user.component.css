@@ -60,6 +60,12 @@
   margin-left: auto;
 }
 
+.theme-row {
+  flex-wrap: wrap;
+  row-gap: 8px;
+  padding: 8px 0;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

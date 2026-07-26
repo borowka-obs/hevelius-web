@@ -8,6 +8,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: 48px;
 }
 
 .full-width {
@@ -18,19 +19,17 @@
     text-align: center;
 }
 
-.forgot-password-link {
-    margin-top: 12px;
-    font-size: 0.9em;
-    background: none;
-    border: none;
-    padding: 0;
-    color: var(--mat-sys-primary);
-    text-decoration: underline;
-    cursor: pointer;
+.login-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
 }
 
 img {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 16px;
 }
