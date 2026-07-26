@@ -54,13 +54,14 @@
       <mat-icon>grain</mat-icon>
       <span>Asteroids</span>
     </button>
-    <button mat-menu-item (click)="openAboutDialog()">
-      <mat-icon>info</mat-icon>
-      <span>About</span>
-    </button>
+    <mat-divider></mat-divider>
     <button mat-menu-item routerLink="/user">
       <mat-icon>person</mat-icon>
       <span>User</span>
+    </button>
+    <button mat-menu-item (click)="openAboutDialog()">
+      <mat-icon>info</mat-icon>
+      <span>About</span>
     </button>
     <mat-divider></mat-divider>
     <button mat-menu-item (click)="logout()">
