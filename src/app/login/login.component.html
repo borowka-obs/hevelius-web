@@ -9,12 +9,12 @@
     <mat-card-content>
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column; align-items: center;">
   <img src="assets/images/hevelius.jpg" title="Johannes Hevelius" alt="Hevelius portrait"/>
-    <mat-form-field style="width: 240px;">
+    <mat-form-field appearance="outline" style="width: 240px;">
         <mat-label>Your username</mat-label>
         <input matInput formControlName="username">
     </mat-form-field>
 
-    <mat-form-field style="width: 240px;">
+    <mat-form-field appearance="outline" style="width: 240px;">
         <mat-label>Your password</mat-label>
         <input matInput [type]="hide ? 'password' : 'text'" formControlName="password">
         <button mat-icon-button matSuffix (click)="hide = !hide" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hide">
@@ -22,10 +22,14 @@
         </button>
     </mat-form-field>
 
-    <button mat-raised-button color="primary" type="submit">
-        Login
-    </button>
-    <button type="button" class="forgot-password-link" (click)="goToForgotPassword()">Forgot your password?</button>
+    <div class="login-actions">
+        <button mat-raised-button color="primary" type="submit">
+            Login
+        </button>
+        <button mat-stroked-button type="button" (click)="goToForgotPassword()">
+            Forgot your password?
+        </button>
+    </div>
 </form>
     </mat-card-content>
 </mat-card>

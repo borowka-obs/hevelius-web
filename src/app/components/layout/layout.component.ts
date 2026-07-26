@@ -15,7 +15,6 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AboutDialogComponent } from '../about/about-dialog.component';
 import { GravatarService } from '../../services/gravatar.service';
-import { ThemeService, ThemePreference } from '../../services/theme.service';
 
 @Component({
     selector: 'app-layout',
@@ -40,7 +39,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private loginService = inject(LoginService);
   private topBarService = inject(TopBarService);
   private gravatarService = inject(GravatarService);
-  themeService = inject(ThemeService);
 
   title = '';
   showFilter = false;
@@ -114,20 +112,5 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   navigateToUser() {
     this.router.navigate(['/user']);
-  }
-
-  setTheme(preference: ThemePreference) {
-    this.themeService.setPreference(preference);
-  }
-
-  get themeIcon(): string {
-    switch (this.themeService.current) {
-      case 'light':
-        return 'light_mode';
-      case 'dark':
-        return 'dark_mode';
-      default:
-        return 'brightness_auto';
-    }
   }
 }
