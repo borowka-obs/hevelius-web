@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { TelescopeService, Telescope, TelescopesListParams } from '../../services/telescope.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
@@ -8,7 +9,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
-import { RouterModule } from '@angular/router';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
 import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope-form-dialog.component';
@@ -51,19 +51,25 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private topBarService = inject(TopBarService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   dataSource = new MatTableDataSource<Telescope>();
   allTelescopes: Telescope[] = [];
-  displayedColumns: string[] = [
-    'name',
-    'descr',
-    'optics',
-    'min_dec',
-    'max_dec',
-    'sensor',
-    'active',
-    'actions'
-  ];
+
+  private readonly MOBILE_BREAKPOINT = 640;
+  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+
+  get displayedColumns(): string[] {
+    if (this.isMobile) {
+      return ['name', 'optics', 'sensor', 'active'];
+    }
+    return ['name', 'descr', 'optics', 'min_dec', 'max_dec', 'sensor', 'active', 'actions'];
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+  }
 
   currentSort: { sort_by: TelescopesListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
     sort_by: 'scope_id',
@@ -91,6 +97,10 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
   openAddTelescope(): void {
     const ref = this.dialog.open(TelescopeFormDialogComponent, { width: '480px', data: { mode: 'add' } });
     ref.afterClosed().subscribe(created => { if (created) this.loadTelescopes(); });
+  }
+
+  openTelescope(telescope: Telescope): void {
+    this.router.navigate(['/scopes', telescope.scope_id]);
   }
 
   openEditTelescope(telescope: Telescope): void {

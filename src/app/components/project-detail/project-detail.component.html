@@ -93,6 +93,7 @@
           Add subframe
         </button>
       </div>
+      <div class="table-container">
       <table mat-table [dataSource]="getSubframes()" class="mat-elevation-z8">
         <ng-container matColumnDef="filter">
           <th mat-header-cell *matHeaderCellDef>Filter</th>
@@ -151,6 +152,7 @@
           <td class="mat-cell" [attr.colspan]="subframesColumns.length">No subframes. Click "Add subframe" to add one.</td>
         </tr>
       </table>
+      </div>
     </div>
 
     <div class="tasks-section">

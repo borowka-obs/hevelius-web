@@ -5,7 +5,8 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { Subscription } from 'rxjs';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TopBarService } from '../../services/top-bar.service';
 import { MatTableModule } from '@angular/material/table';
@@ -97,9 +98,21 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   filterForm: FormGroup;
   isFilterVisible = false;
+  /** Quick search by designation, mirroring the projects list search bar. */
+  searchControl = new FormControl('');
 
   constructor() {
     this.initFilterForm();
+
+    this.subscriptions.push(
+      this.searchControl.valueChanges.pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      ).subscribe(value => {
+        this.filterForm.patchValue({ designation: value }, { emitEvent: false });
+        this.applyFilters();
+      })
+    );
 
     setTimeout(() => {
       this.topBarService.updateState({
@@ -192,6 +205,7 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
 
   clearFilters() {
     this.filterError = null;
+    this.searchControl.setValue('', { emitEvent: false });
     this.filterForm.reset({
       designation: null,
       number: null,

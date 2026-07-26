@@ -9,6 +9,28 @@
     </form>
   </div>
 
+  @if (isMobile) {
+    <div class="mobile-cards">
+      @for (telescope of dataSource.data; track telescope.scope_id) {
+        <div class="telescope-card" (click)="openTelescope(telescope)" (keyup.enter)="openTelescope(telescope)" tabindex="0" role="button">
+          <div class="card-line1">
+            <span class="card-name">{{ telescope.name }}</span>
+            <mat-icon [style.color]="telescope.active ? 'green' : 'red'">
+              {{ telescope.active ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+          </div>
+          <div class="card-line2">
+            {{ getOpticsLabel(telescope) }} · {{ telescope.sensor?.name ?? '-' }}
+          </div>
+          @if (telescope.descr) {
+            <div class="card-description">{{ telescope.descr }}</div>
+          }
+        </div>
+      } @empty {
+        <div class="no-results">No telescopes found.</div>
+      }
+    </div>
+  } @else {
   <div class="table-container">
     <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z8">
       <ng-container matColumnDef="name">
@@ -57,4 +79,5 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
   </div>
+  }
 </div>

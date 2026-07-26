@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, HostListener, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
@@ -64,8 +64,22 @@ export class ProjectDetailComponent implements OnInit {
   projectNavigation: Project[] = [];
   currentProjectIndex = -1;
   telescope: Telescope | null = null;
+
+  private readonly MOBILE_BREAKPOINT = 640;
+  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+  }
+
   /** Must match every `matColumnDef` in the template — extra or missing keys break the table. */
-  subframesColumns: string[] = ['filter', 'exposure_time', 'goal_count', 'progress', 'active', 'actions'];
+  get subframesColumns(): string[] {
+    if (this.isMobile) {
+      return ['filter', 'progress', 'actions'];
+    }
+    return ['filter', 'exposure_time', 'goal_count', 'progress', 'active', 'actions'];
+  }
 
   ngOnInit(): void {
     this.loadProjectNavigation();

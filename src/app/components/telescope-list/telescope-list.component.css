@@ -69,6 +69,60 @@ table {
   cursor: pointer;
 }
 
+.mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 0.5rem;
+}
+
+.telescope-card {
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 6px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.telescope-card:active {
+  background: var(--mat-sys-surface-container-high);
+}
+
+.card-line1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-name {
+  font-weight: 500;
+  color: var(--mat-sys-primary);
+  font-size: 1rem;
+}
+
+.card-line2 {
+  margin-top: 3px;
+  font-size: 0.85rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.card-description {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-results {
+  padding: 24px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
 @media (max-width: 640px) {
   .container {
     padding: 8px;
