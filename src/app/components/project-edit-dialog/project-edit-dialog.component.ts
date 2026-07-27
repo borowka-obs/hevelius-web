@@ -40,6 +40,7 @@ export class DeleteProjectConfirmDialogComponent {}
 
 export interface ProjectEditDialogData {
   projectId: number;
+  initialName: string;
   initialScopeId: number;
   initialDescription?: string | null;
   initialRa?: number;
@@ -146,6 +147,7 @@ export class ProjectEditDialogComponent {
         ? String(this.dialogData.initialRotation)
         : '';
     this.form = this.fb.group({
+      name: [this.dialogData.initialName, Validators.required],
       scope_id: [this.dialogData.initialScopeId, Validators.required],
       description: [this.dialogData.initialDescription ?? ''],
       regexps: [this.dialogData.initialRegexps ?? ''],
@@ -251,6 +253,7 @@ export class ProjectEditDialogComponent {
       return Number.isFinite(n) ? n : null;
     };
     const body: ProjectUpdate = {
+      name: String(v.name ?? '').trim(),
       scope_id: Number(v.scope_id),
       description: String(v.description ?? '').trim(),
       regexps: String(v.regexps ?? '').trim(),

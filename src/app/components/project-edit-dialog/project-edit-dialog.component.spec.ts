@@ -9,6 +9,7 @@ import { ProjectEditDialogComponent } from './project-edit-dialog.component';
 
 const DEFAULT_DATA = {
   projectId: 42,
+  initialName: 'M31',
   initialScopeId: 2,
   initialDescription: null,
   initialRa: 0.712,
@@ -95,8 +96,26 @@ describe('ProjectEditDialogComponent', () => {
     component.save();
     expect(projectsService.updateProject).toHaveBeenCalledWith(
       42,
-      expect.objectContaining({ scope_id: 2, ra: 0.712, decl: 41.27, active: true })
+      expect.objectContaining({ name: 'M31', scope_id: 2, ra: 0.712, decl: 41.27, active: true })
     );
+  });
+
+  it('pre-fills name from dialog data', () => {
+    expect(component.form.get('name')?.value).toBe('M31');
+  });
+
+  it('save includes the edited name in the update payload', () => {
+    component.form.patchValue({ name: 'M31 Renamed', scope_id: 2, ra: '0.712', decl: '41.27', active: true, regexps: '', start_date: '', end_date: '', publications: '' });
+    component.save();
+    expect(projectsService.updateProject).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ name: 'M31 Renamed' })
+    );
+  });
+
+  it('marks the form invalid when name is cleared', () => {
+    component.form.patchValue({ name: '' });
+    expect(component.form.get('name')?.hasError('required')).toBe(true);
   });
 
   it('save includes description in the update payload', () => {
