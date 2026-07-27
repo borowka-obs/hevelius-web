@@ -100,6 +100,14 @@ describe('AsteroidsListComponent', () => {
     );
   });
 
+  it('should send the quick search box value as the search param', () => {
+    component.searchControl.setValue('vesta', { emitEvent: false });
+    component.applyFilters();
+    expect(asteroidsService.listAsteroids).toHaveBeenCalledWith(
+      expect.objectContaining({ search: 'vesta' })
+    );
+  });
+
   it('should send tags and tags_mode when tags are selected', () => {
     component.filterForm.patchValue({ tags: ['neo', 'pha'], tags_mode: 'all' });
     component.applyFilters();
@@ -118,9 +126,11 @@ describe('AsteroidsListComponent', () => {
 
   it('should clear filters and reload', () => {
     component.filterForm.patchValue({ designation: '00001', number: 1, tags: ['neo'] });
+    component.searchControl.setValue('vesta', { emitEvent: false });
     component.clearFilters();
     expect(component.filterForm.value.designation).toBeNull();
     expect(component.filterForm.value.tags).toEqual([]);
+    expect(component.searchControl.value).toBe('');
     expect(asteroidsService.listAsteroids.mock.calls.length).toBeGreaterThan(1);
   });
 
