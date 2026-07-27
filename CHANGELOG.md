@@ -1,6 +1,6 @@
 # Hevelius Web Interface Changelog
 
-0.6.0 (unreleased)
+0.6.0 (2026-07-25)
 
 - Added self-service account management: the **User** page (`/user`) now
   lets you edit your own first name, last name, phone, e-mail, and AAVSO
