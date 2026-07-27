@@ -51,6 +51,8 @@ export interface ListAsteroidsParams {
   sort_by?: string;
   sort_order?: string;
   designation?: string;
+  /** Quick search across designation, proper name, and MPC number. */
+  search?: string;
   number?: number;
   numbered?: boolean;
   mag_min?: number;

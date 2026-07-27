@@ -19,6 +19,7 @@ interface LoadAsteroidsParams {
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
   designation?: string;
+  search?: string;
   number?: number;
   numbered?: boolean;
   mag_min?: number;
@@ -98,7 +99,7 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   filterForm: FormGroup;
   isFilterVisible = false;
-  /** Quick search by designation, mirroring the projects list search bar. */
+  /** Quick search across designation, name, and MPC number. */
   searchControl = new FormControl('');
 
   constructor() {
@@ -108,8 +109,7 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
       this.searchControl.valueChanges.pipe(
         debounceTime(300),
         distinctUntilChanged()
-      ).subscribe(value => {
-        this.filterForm.patchValue({ designation: value }, { emitEvent: false });
+      ).subscribe(() => {
         this.applyFilters();
       })
     );
@@ -164,6 +164,8 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   private getFilterParams(): Partial<LoadAsteroidsParams> {
     const v = this.filterForm.value;
     const out: Partial<LoadAsteroidsParams> = {};
+    const search = (this.searchControl.value ?? '').trim();
+    if (search !== '') out.search = search;
     if (v.designation != null && v.designation !== '') out.designation = String(v.designation).trim();
     const number = v.number != null && v.number !== '' ? Number(v.number) : null;
     if (number != null && !Number.isNaN(number)) out.number = number;
