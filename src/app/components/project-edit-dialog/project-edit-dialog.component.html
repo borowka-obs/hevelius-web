@@ -2,6 +2,14 @@
 <mat-dialog-content>
   <form [formGroup]="form" class="dialog-form">
     <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" required>
+      @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
+        <mat-error>Name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Telescope</mat-label>
       <mat-select formControlName="scope_id" required>
         @for (t of activeTelescopes; track t.scope_id) {

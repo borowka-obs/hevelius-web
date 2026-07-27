@@ -183,6 +183,7 @@ export class ProjectDetailComponent implements OnInit {
       width: '520px',
       data: {
         projectId: this.project.project_id,
+        initialName: this.project.name,
         initialScopeId: this.project.scope_id,
         initialDescription: this.project.description ?? null,
         initialRa: this.project.ra,
