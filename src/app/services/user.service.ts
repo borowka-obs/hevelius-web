@@ -32,6 +32,34 @@ export interface PasswordChangeRequest {
   new_password: string;
 }
 
+// See UsersMePreferencesResource in hevelius-backend's
+// hevelius/api/routes/auth_users.py for the source of truth.
+export interface UserPreferences {
+  default_exposure: number | null;
+  default_filter: number | null;
+  default_scope: number | null;
+  task_binning: number | null;
+  task_guiding: number | null;
+  task_dither: number | null;
+  min_alt: number | null;
+  limit_min_moon_dist: number | null;
+  limit_max_sun_alt: number | null;
+  limit_max_moon_phase: number | null;
+}
+
+export interface UserPreferencesUpdate {
+  default_exposure?: number | null;
+  default_filter?: number | null;
+  default_scope?: number | null;
+  task_binning?: number | null;
+  task_guiding?: number | null;
+  task_dither?: number | null;
+  min_alt?: number | null;
+  limit_min_moon_dist?: number | null;
+  limit_max_sun_alt?: number | null;
+  limit_max_moon_phase?: number | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -49,5 +77,13 @@ export class UserService {
 
   changePassword(body: PasswordChangeRequest): Observable<StatusMsgResponse> {
     return this.http.post<StatusMsgResponse>(`${this.apiUrl}/password`, body);
+  }
+
+  getPreferences(): Observable<UserPreferences> {
+    return this.http.get<UserPreferences>(`${this.apiUrl}/preferences`);
+  }
+
+  updatePreferences(body: UserPreferencesUpdate): Observable<UserPreferences> {
+    return this.http.patch<UserPreferences>(`${this.apiUrl}/preferences`, body);
   }
 }
