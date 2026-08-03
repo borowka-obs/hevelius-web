@@ -78,4 +78,51 @@ describe('UserService', () => {
     expect(req.request.body).toEqual({ current_password: 'old-pw', new_password: 'new-password-123' });
     req.flush({ status: true, msg: 'Password updated' });
   });
+
+  it('getPreferences fetches the current user preferences', () => {
+    service.getPreferences().subscribe(prefs => {
+      expect(prefs.default_exposure).toBe(75);
+      expect(prefs.default_scope).toBeNull();
+    });
+
+    const req = httpMock.expectOne(`${Hevelius.apiUrl}/users/me/preferences`);
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      default_exposure: 75,
+      default_filter: null,
+      default_scope: null,
+      task_binning: 2,
+      task_guiding: 1,
+      task_dither: null,
+      min_alt: 35,
+      limit_min_moon_dist: 0,
+      limit_max_sun_alt: -12,
+      limit_max_moon_phase: null
+    });
+  });
+
+  it('updatePreferences PATCHes only the provided preference fields', () => {
+    service
+      .updatePreferences({ default_exposure: 300, default_scope: null })
+      .subscribe(prefs => {
+        expect(prefs.default_exposure).toBe(300);
+        expect(prefs.default_scope).toBeNull();
+      });
+
+    const req = httpMock.expectOne(`${Hevelius.apiUrl}/users/me/preferences`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ default_exposure: 300, default_scope: null });
+    req.flush({
+      default_exposure: 300,
+      default_filter: null,
+      default_scope: null,
+      task_binning: 2,
+      task_guiding: 1,
+      task_dither: null,
+      min_alt: 35,
+      limit_min_moon_dist: 0,
+      limit_max_sun_alt: -12,
+      limit_max_moon_phase: null
+    });
+  });
 });

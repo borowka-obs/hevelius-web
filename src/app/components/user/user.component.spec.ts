@@ -202,6 +202,27 @@ describe('UserComponent', () => {
     expect(component.editingPreference).toBe('default_exposure');
   });
 
+  it('savePreference rejects a fractional exposure without calling the API', () => {
+    fixture.detectChanges();
+    component.startEditPreference('default_exposure');
+    component.preferencesForm.get('default_exposure')?.setValue(1.5);
+    component.savePreference('default_exposure');
+
+    expect(component.preferencesForm.get('default_exposure')?.hasError('integer')).toBe(true);
+    expect(userService.updatePreferences).not.toHaveBeenCalled();
+    expect(component.editingPreference).toBe('default_exposure');
+  });
+
+  it('shows a snackbar when preferences fail to load', () => {
+    userService.getPreferences.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 500 }))
+    );
+    fixture.detectChanges();
+
+    expect(snackBar.open).toHaveBeenCalledWith('Failed to load preferences.', 'Close', expect.anything());
+    expect(component.preferences).toBeNull();
+  });
+
   it('savePreference surfaces backend error messages and stays in edit mode', async () => {
     userService.updatePreferences.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 404, error: { message: 'default_scope does not reference an existing telescope' } }))
