@@ -39,6 +39,12 @@ const PROFILE_FIELD_LABELS: Record<ProfileField, string> = {
 };
 
 type PreferenceField = 'default_scope' | 'default_filter' | 'default_exposure';
+type PreferenceFieldKind = 'scope' | 'filter' | 'exposure';
+
+interface PreferenceFieldConfig {
+  field: PreferenceField;
+  kind: PreferenceFieldKind;
+}
 
 const PREFERENCE_FIELD_LABELS: Record<PreferenceField, string> = {
   default_scope: 'Default telescope',
@@ -46,11 +52,35 @@ const PREFERENCE_FIELD_LABELS: Record<PreferenceField, string> = {
   default_exposure: 'Default exposure'
 };
 
+const PREFERENCE_FIELDS: PreferenceFieldConfig[] = [
+  { field: 'default_scope', kind: 'scope' },
+  { field: 'default_filter', kind: 'filter' },
+  { field: 'default_exposure', kind: 'exposure' }
+];
+
 /** Requires the confirm_password field to equal new_password. */
 function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
   const newPassword = group.get('new_password')?.value;
   const confirm = group.get('confirm_password')?.value;
   return newPassword && confirm && newPassword !== confirm ? { passwordMismatch: true } : null;
+}
+
+/** Allows null/empty (cleared preference); otherwise requires an integer >= min. */
+function optionalIntegerMinValidator(min: number) {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const raw = control.value;
+    if (raw == null || raw === '') {
+      return null;
+    }
+    const n = typeof raw === 'number' ? raw : Number(raw);
+    if (!Number.isFinite(n) || !Number.isInteger(n)) {
+      return { integer: true };
+    }
+    if (n < min) {
+      return { min: { min, actual: n } };
+    }
+    return null;
+  };
 }
 
 @Component({
@@ -83,6 +113,7 @@ export class UserComponent implements OnInit {
 
     readonly profileFields: ProfileField[] = ['firstname', 'lastname', 'phone', 'email', 'aavso_id'];
     readonly fieldLabels = PROFILE_FIELD_LABELS;
+    readonly preferenceFields = PREFERENCE_FIELDS;
     readonly preferenceFieldLabels = PREFERENCE_FIELD_LABELS;
 
     user: User | null = null;
@@ -124,7 +155,7 @@ export class UserComponent implements OnInit {
     preferencesForm: FormGroup = this.formBuilder.group({
         default_scope: [null],
         default_filter: [null],
-        default_exposure: [null, [Validators.min(1)]]
+        default_exposure: [null, [optionalIntegerMinValidator(1)]]
     });
 
     ngOnInit(): void {
@@ -157,7 +188,7 @@ export class UserComponent implements OnInit {
         this.userService.getPreferences().pipe(first()).subscribe({
             next: preferences => this.applyPreferences(preferences),
             error: () => {
-                // Preferences panel just stays empty if /users/me/preferences is unreachable.
+                this.showMessage('Failed to load preferences.');
             }
         });
 
@@ -276,6 +307,18 @@ export class UserComponent implements OnInit {
         return exposure == null ? '—' : `${exposure} s`;
     }
 
+    displayPreference(field: PreferenceField): string {
+        const value = this.preferences?.[field] ?? null;
+        switch (field) {
+            case 'default_scope':
+                return this.displayScope(value);
+            case 'default_filter':
+                return this.displayFilter(value);
+            case 'default_exposure':
+                return this.displayExposure(value);
+        }
+    }
+
     startEditPreference(field: PreferenceField): void {
         this.preferencesForm.get(field)?.setValue(this.preferences?.[field] ?? null);
         this.editingPreference = field;
@@ -294,7 +337,11 @@ export class UserComponent implements OnInit {
             return;
         }
         this.savingPreference = true;
-        const body: UserPreferencesUpdate = { [field]: control.value };
+        let value = control.value;
+        if (field === 'default_exposure' && (value === '' || value == null)) {
+            value = null;
+        }
+        const body: UserPreferencesUpdate = { [field]: value };
         this.userService.updatePreferences(body).pipe(first()).subscribe({
             next: preferences => {
                 this.savingPreference = false;

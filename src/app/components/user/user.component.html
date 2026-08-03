@@ -204,80 +204,57 @@
     </div>
 
     <div [formGroup]="preferencesForm">
-
-      <div class="detail-row">
-        <div class="detail-label">Default telescope</div>
-        @if (editingPreference === 'default_scope') {
-          <mat-form-field appearance="outline" class="detail-input">
-            <mat-select formControlName="default_scope">
-              <mat-option [value]="null">—</mat-option>
-              @for (t of telescopes; track t.scope_id) {
-                <mat-option [value]="t.scope_id">{{ t.name }}</mat-option>
+      @for (pref of preferenceFields; track pref.field) {
+        <div class="detail-row">
+          <div class="detail-label">{{ preferenceFieldLabels[pref.field] }}</div>
+          @if (editingPreference === pref.field) {
+            <mat-form-field appearance="outline" class="detail-input">
+              @switch (pref.kind) {
+                @case ('scope') {
+                  <mat-select formControlName="default_scope">
+                    <mat-option [value]="null">—</mat-option>
+                    @for (t of telescopes; track t.scope_id) {
+                      <mat-option [value]="t.scope_id">{{ t.name }}</mat-option>
+                    }
+                  </mat-select>
+                }
+                @case ('filter') {
+                  <mat-select formControlName="default_filter">
+                    <mat-option [value]="null">—</mat-option>
+                    @for (f of filters; track f.filter_id) {
+                      <mat-option [value]="f.filter_id">{{ f.short_name }}</mat-option>
+                    }
+                  </mat-select>
+                }
+                @case ('exposure') {
+                  <input matInput type="number" min="1" step="1" formControlName="default_exposure"
+                         (keyup.enter)="savePreference('default_exposure')">
+                  @if (preferencesForm.get('default_exposure')?.hasError('min')) {
+                    <mat-error>Must be at least 1 second.</mat-error>
+                  }
+                  @if (preferencesForm.get('default_exposure')?.hasError('integer')) {
+                    <mat-error>Must be a whole number of seconds.</mat-error>
+                  }
+                }
               }
-            </mat-select>
-          </mat-form-field>
-          <button mat-icon-button color="primary" (click)="savePreference('default_scope')" [disabled]="savingPreference" aria-label="Save default telescope">
-            <mat-icon>check</mat-icon>
-          </button>
-          <button mat-icon-button (click)="cancelEditPreference('default_scope')" aria-label="Cancel">
-            <mat-icon>close</mat-icon>
-          </button>
-        } @else {
-          <div class="detail-value">{{ displayScope(preferences?.default_scope ?? null) }}</div>
-          <button mat-icon-button class="edit-btn" (click)="startEditPreference('default_scope')" aria-label="Edit default telescope">
-            <mat-icon>edit</mat-icon>
-          </button>
-        }
-      </div>
-
-      <div class="detail-row">
-        <div class="detail-label">Default filter</div>
-        @if (editingPreference === 'default_filter') {
-          <mat-form-field appearance="outline" class="detail-input">
-            <mat-select formControlName="default_filter">
-              <mat-option [value]="null">—</mat-option>
-              @for (f of filters; track f.filter_id) {
-                <mat-option [value]="f.filter_id">{{ f.short_name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <button mat-icon-button color="primary" (click)="savePreference('default_filter')" [disabled]="savingPreference" aria-label="Save default filter">
-            <mat-icon>check</mat-icon>
-          </button>
-          <button mat-icon-button (click)="cancelEditPreference('default_filter')" aria-label="Cancel">
-            <mat-icon>close</mat-icon>
-          </button>
-        } @else {
-          <div class="detail-value">{{ displayFilter(preferences?.default_filter ?? null) }}</div>
-          <button mat-icon-button class="edit-btn" (click)="startEditPreference('default_filter')" aria-label="Edit default filter">
-            <mat-icon>edit</mat-icon>
-          </button>
-        }
-      </div>
-
-      <div class="detail-row">
-        <div class="detail-label">Default exposure</div>
-        @if (editingPreference === 'default_exposure') {
-          <mat-form-field appearance="outline" class="detail-input">
-            <input matInput type="number" min="1" formControlName="default_exposure" (keyup.enter)="savePreference('default_exposure')">
-            @if (preferencesForm.get('default_exposure')?.hasError('min')) {
-              <mat-error>Must be at least 1 second.</mat-error>
-            }
-          </mat-form-field>
-          <button mat-icon-button color="primary" (click)="savePreference('default_exposure')" [disabled]="savingPreference" aria-label="Save default exposure">
-            <mat-icon>check</mat-icon>
-          </button>
-          <button mat-icon-button (click)="cancelEditPreference('default_exposure')" aria-label="Cancel">
-            <mat-icon>close</mat-icon>
-          </button>
-        } @else {
-          <div class="detail-value">{{ displayExposure(preferences?.default_exposure ?? null) }}</div>
-          <button mat-icon-button class="edit-btn" (click)="startEditPreference('default_exposure')" aria-label="Edit default exposure">
-            <mat-icon>edit</mat-icon>
-          </button>
-        }
-      </div>
-
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="savePreference(pref.field)"
+                    [disabled]="savingPreference"
+                    [attr.aria-label]="'Save ' + preferenceFieldLabels[pref.field]">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelEditPreference(pref.field)" aria-label="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          } @else {
+            <div class="detail-value">{{ displayPreference(pref.field) }}</div>
+            <button mat-icon-button class="edit-btn" (click)="startEditPreference(pref.field)"
+                    [attr.aria-label]="'Edit ' + preferenceFieldLabels[pref.field]">
+              <mat-icon>edit</mat-icon>
+            </button>
+          }
+        </div>
+      }
     </div>
   </div>
 </mat-card>
