@@ -1,5 +1,16 @@
 # Hevelius Web Interface Changelog
 
+unreleased
+
+- **Night Plan** page rewritten against the new scheduler API
+  (`GET /api/night-plan`) and added to the main menu. You now pick the
+  telescope (defaulted from your `default_scope` preference, but always
+  overridable) and the night (defaults to tonight), and each entry — tasks and
+  projects alike — shows its maximum altitude, Moon separation, and best time
+  to observe. An **Explain** toggle lists the candidates the scheduler left out
+  together with the constraints they failed, which answers "why isn't my target
+  showing up?".
+
 0.6.0 (2026-07-25)
 
 - Added self-service account management: the **User** page (`/user`) now

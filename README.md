@@ -29,7 +29,10 @@ As of July 2026, the following features are available:
   sky proximity; Catalogs page (`/catalogs`) lists installed catalogs
 - Sky Map (`/sky-map`): Aladin Lite all-sky view of active projects with FOV
   overlays; project detail includes a DSS sky view with the project FOV
-- Night plan (experimental); About panel
+- Night plan (`/night-plan`): per-telescope, per-night plan of tasks and
+  projects with max altitude, Moon separation, and best observing time, plus an
+  "explain" mode listing excluded candidates and the constraints they failed
+- About panel
 
 The interface is responsive (phone-friendly layouts for Objects, Catalogs, and
 projects). It was tested on desktop (Ubuntu, Windows) and mobile (iPhone).

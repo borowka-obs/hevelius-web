@@ -1,59 +1,33 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { DataSource } from '@angular/cdk/collections';
-import { Task } from '../models/task';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { Hevelius } from 'src/hevelius';
-
-interface NightPlanParams {
-    scope_id?: number;
-}
-
-interface NightPlanResponse {
-    tasks: Task[];
-}
+import { NightPlanParams, NightPlanResponse } from '../models/night-plan';
 
 @Injectable({
     providedIn: 'root'
 })
-export class NightPlanService implements DataSource<Task> {
+export class NightPlanService {
     private http = inject(HttpClient);
 
-    private tasks = new BehaviorSubject<Task[]>([]);
-    private defaultScopeId = 3;
-    private taskCount = new BehaviorSubject<number>(0);
+    private apiUrl = `${Hevelius.apiUrl}/night-plan`;
 
-    connect(): Observable<Task[]> {
-        return this.tasks.asObservable();
-    }
-
-    disconnect(): void {
-        this.tasks.complete();
-        this.taskCount.complete();
-    }
-
-    getTaskCount(): Observable<number> {
-        return this.taskCount.asObservable();
-    }
-
-    loadNightPlan(params: NightPlanParams = {}) {
-        if (!params.scope_id) {
-            params.scope_id = this.defaultScopeId;
+    /**
+     * GET /api/night-plan — the plan for one telescope and one night.
+     *
+     * `scope_id` is always sent explicitly; the backend requires it even when
+     * the user has a `default_scope` preference. `date` is omitted when unset,
+     * which lets the backend pick the current night itself.
+     */
+    getNightPlan(params: NightPlanParams): Observable<NightPlanResponse> {
+        let httpParams = new HttpParams().set('scope_id', String(params.scope_id));
+        if (params.date) {
+            httpParams = httpParams.set('date', params.date);
+        }
+        if (params.explain) {
+            httpParams = httpParams.set('explain', 'true');
         }
 
-        this.http.post<NightPlanResponse>(`${Hevelius.apiUrl}/night-plan`, params)
-            .subscribe({
-                next: (data) => {
-                    if (data && data.tasks) {
-                        this.tasks.next(data.tasks);
-                        this.taskCount.next(data.tasks.length);
-                    }
-                },
-                error: (error) => {
-                    console.log('Error when requesting night plan data:', error);
-                    this.tasks.next([]);
-                    this.taskCount.next(0);
-                }
-            });
+        return this.http.get<NightPlanResponse>(this.apiUrl, { params: httpParams });
     }
 }
