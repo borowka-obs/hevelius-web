@@ -1,39 +1,154 @@
-<table mat-table [dataSource]="dataSource">
-  <ng-container matColumnDef="task_id">
-    <th mat-header-cell *matHeaderCellDef>No.</th>
-    <td mat-cell *matCellDef="let task">{{ task.task_id }}</td>
-  </ng-container>
+<div class="container">
+  <div class="plan-controls">
+    <mat-form-field subscriptSizing="dynamic" class="scope-field">
+      <mat-label>Telescope</mat-label>
+      <mat-select [formControl]="scopeControl" (selectionChange)="onScopeChange($event.value)">
+        @for (scope of activeTelescopes; track scope.scope_id) {
+          <mat-option [value]="scope.scope_id">{{ scope.name }}</mat-option>
+        } @empty {
+          <mat-option [value]="null" disabled>No active telescopes configured</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
 
-  <ng-container matColumnDef="user_id">
-    <th mat-header-cell *matHeaderCellDef>Owner</th>
-    <td mat-cell *matCellDef="let task">{{ task.aavso_id }}</td>
-  </ng-container>
+    <mat-form-field subscriptSizing="dynamic" class="date-field">
+      <mat-label>Night of</mat-label>
+      <input matInput [matDatepicker]="nightPicker" [formControl]="dateControl"
+             (dateChange)="onDateChange($event.value)">
+      <mat-datepicker-toggle matIconSuffix [for]="nightPicker"></mat-datepicker-toggle>
+      <mat-datepicker #nightPicker></mat-datepicker>
+    </mat-form-field>
 
-  <ng-container matColumnDef="state">
-    <th mat-header-cell *matHeaderCellDef>State</th>
-    <td mat-cell *matCellDef="let task">{{ task.state }}</td>
-  </ng-container>
+    <button type="button" mat-button (click)="resetToTonight()">Tonight</button>
 
-  <ng-container matColumnDef="object">
-    <th mat-header-cell *matHeaderCellDef>Target</th>
-    <td mat-cell *matCellDef="let task">{{ task.object }}</td>
-  </ng-container>
+    <mat-slide-toggle
+      [formControl]="explainControl"
+      (change)="onExplainChange($event.checked)"
+      matTooltip="Also list the tasks and projects that were left out, and why">
+      Explain
+    </mat-slide-toggle>
+  </div>
 
-  <ng-container matColumnDef="ra">
-    <th mat-header-cell *matHeaderCellDef>RA</th>
-    <td mat-cell *matCellDef="let task">{{ formatRA(task.ra) }}</td>
-  </ng-container>
+  @if (loading) {
+    <div class="plan-loading">
+      <mat-spinner diameter="24"></mat-spinner>
+      <span>Computing the plan…</span>
+    </div>
+  } @else if (error) {
+    <p class="plan-error" role="alert">{{ error }}</p>
+  } @else if (plan) {
+    <p class="plan-summary">
+      {{ items.length }} item{{ items.length === 1 ? '' : 's' }} for
+      <strong>{{ plan.scope_name || scopeControl.value }}</strong>
+      on the night of <strong>{{ plan.date }}</strong>.
+      @if (plan.night_start && plan.night_end) {
+        Night runs {{ formatTimeLabel(plan.night_start) }}–{{ formatTimeLabel(plan.night_end) }} UTC.
+      }
+      @if (plan.moon_phase !== null && plan.moon_phase !== undefined) {
+        Moon {{ (plan.moon_phase * 100).toFixed(0) }}% illuminated.
+      }
+    </p>
 
-  <ng-container matColumnDef="decl">
-    <th mat-header-cell *matHeaderCellDef>Dec</th>
-    <td mat-cell *matCellDef="let task">{{ formatDec(task.decl) }}</td>
-  </ng-container>
+    @if (items.length === 0) {
+      <p class="plan-empty">
+        Nothing is observable on this night for this telescope.
+        @if (!explainControl.value) {
+          Turn on <strong>Explain</strong> to see why each candidate was excluded.
+        }
+      </p>
+    } @else {
+      <div class="table-container">
+        <table mat-table [dataSource]="items" [trackBy]="trackItem" class="mat-elevation-z8">
+          <ng-container matColumnDef="kind">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let item">
+              <mat-icon
+                [matTooltip]="item.kind === 'project' ? 'Project' : 'Task'"
+                class="kind-icon">{{ item.kind === 'project' ? 'folder' : 'list' }}</mat-icon>
+            </td>
+          </ng-container>
 
-  <ng-container matColumnDef="exposure">
-    <th mat-header-cell *matHeaderCellDef>Exposure</th>
-    <td mat-cell *matCellDef="let task">{{ task.exposure }}</td>
-  </ng-container>
+          <ng-container matColumnDef="object">
+            <th mat-header-cell *matHeaderCellDef>Target</th>
+            <td mat-cell *matCellDef="let item">
+              @let link = getItemLink(item);
+              @if (link) {
+                <a [routerLink]="link">{{ item.object }}</a>
+              } @else {
+                {{ item.object }}
+              }
+            </td>
+          </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-</table>
+          <ng-container matColumnDef="ra">
+            <th mat-header-cell *matHeaderCellDef>RA</th>
+            <td mat-cell *matCellDef="let item">{{ formatRA(item.ra) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="decl">
+            <th mat-header-cell *matHeaderCellDef>Dec</th>
+            <td mat-cell *matCellDef="let item">{{ formatDec(item.decl) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="max_altitude">
+            <th mat-header-cell *matHeaderCellDef>Max alt</th>
+            <td mat-cell *matCellDef="let item">{{ formatDegrees(item.max_altitude_deg) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="moon_separation">
+            <th mat-header-cell *matHeaderCellDef>Moon sep</th>
+            <td mat-cell *matCellDef="let item">{{ formatDegrees(item.moon_separation_deg) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="best_time">
+            <th mat-header-cell *matHeaderCellDef>Best time (UTC)</th>
+            <td mat-cell *matCellDef="let item">{{ formatTimeLabel(item.best_time) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="exposure">
+            <th mat-header-cell *matHeaderCellDef>Exposure</th>
+            <td mat-cell *matCellDef="let item">{{ item.exposure ?? '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="state">
+            <th mat-header-cell *matHeaderCellDef>State</th>
+            <td mat-cell *matCellDef="let item">{{ getStateLabel(item.state) }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    }
+
+    @if (explainControl.value) {
+      <div class="excluded-section">
+        <h3>Excluded ({{ excluded.length }})</h3>
+        @if (excluded.length === 0) {
+          <p class="plan-empty">Nothing was excluded — every candidate made it into the plan.</p>
+        } @else {
+          <ul class="excluded-list">
+            @for (item of excluded; track trackItem($index, item)) {
+              <li class="excluded-item">
+                <span class="excluded-name">
+                  @let link = getItemLink(item);
+                  @if (link) {
+                    <a [routerLink]="link">{{ item.object }}</a>
+                  } @else {
+                    {{ item.object }}
+                  }
+                  <span class="excluded-kind">({{ item.kind }})</span>
+                </span>
+                <ul class="excluded-reasons">
+                  @for (reason of item.reasons; track reason) {
+                    <li>{{ reason }}</li>
+                  }
+                </ul>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  }
+</div>

@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { NightPlanService } from './night-plan.service';
 import { provideHttpClient } from '@angular/common/http';
 import { Hevelius } from 'src/hevelius';
-import { Task } from '../models/task';
+import { NightPlanResponse } from '../models/night-plan';
 
 describe('NightPlanService', () => {
   let service: NightPlanService;
@@ -28,69 +28,74 @@ describe('NightPlanService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should load night plan with default scope_id', () => {
-    const mockTasks = {
-      tasks: [
+  it('should GET the night plan with an explicit scope_id', () => {
+    const mockResponse: NightPlanResponse = {
+      status: true,
+      scope_id: 5,
+      scope_name: 'Test scope',
+      date: '2026-08-06',
+      night_start: '2026-08-06 20:11:00',
+      night_end: '2026-08-07 03:02:00',
+      moon_phase: 0.42,
+      items: [
         {
+          kind: 'task',
           task_id: 1,
-          user_id: 1,
-          aavso_id: 'TEST1',
-          object: 'Test Object 1',
-          ra: 12.34,
-          decl: 56.78,
-          exposure: 60,
-          state: 1
-        },
-        {
-          task_id: 2,
-          user_id: 1,
-          aavso_id: 'TEST2',
-          object: 'Test Object 2',
-          ra: 23.45,
-          decl: 67.89,
-          exposure: 120,
-          state: 1
+          object: 'M31',
+          ra: 0.712,
+          decl: 41.27,
+          exposure: 300,
+          state: 1,
+          max_altitude_deg: 62.3,
+          best_time: '2026-08-07 01:20:00',
+          moon_separation_deg: 88.1
         }
-      ] as Task[]
+      ]
     };
 
-    service.loadNightPlan();
+    let received: NightPlanResponse | null = null;
+    service.getNightPlan({ scope_id: 5 }).subscribe(response => { received = response; });
 
-    const req = httpMock.expectOne(`${Hevelius.apiUrl}/night-plan`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ scope_id: 3 }); // Default scope_id
+    const req = httpMock.expectOne(r => r.url === `${Hevelius.apiUrl}/night-plan`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('scope_id')).toBe('5');
+    expect(req.request.params.has('date')).toBe(false);
+    expect(req.request.params.has('explain')).toBe(false);
 
-    req.flush(mockTasks);
-
-    service.connect().subscribe(tasks => {
-      expect(tasks).toEqual(mockTasks.tasks);
-    });
-
-    service.getTaskCount().subscribe(count => {
-      expect(count).toBe(2);
-    });
+    req.flush(mockResponse);
+    expect(received).toEqual(mockResponse);
   });
 
-  it('should load night plan with custom scope_id', () => {
-    service.loadNightPlan({ scope_id: 5 });
+  it('should pass date and explain when set', () => {
+    service.getNightPlan({ scope_id: 3, date: '2026-08-06', explain: true }).subscribe();
 
-    const req = httpMock.expectOne(`${Hevelius.apiUrl}/night-plan`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ scope_id: 5 });
+    const req = httpMock.expectOne(r => r.url === `${Hevelius.apiUrl}/night-plan`);
+    expect(req.request.params.get('scope_id')).toBe('3');
+    expect(req.request.params.get('date')).toBe('2026-08-06');
+    expect(req.request.params.get('explain')).toBe('true');
+
+    req.flush({ scope_id: 3, date: '2026-08-06', items: [], excluded: [] } as NightPlanResponse);
   });
 
-  it('should handle error response', () => {
-    service.loadNightPlan();
+  it('should omit explain when it is false', () => {
+    service.getNightPlan({ scope_id: 3, explain: false }).subscribe();
 
-    const req = httpMock.expectOne(`${Hevelius.apiUrl}/night-plan`);
-    req.error(new ErrorEvent('Network error'));
+    const req = httpMock.expectOne(r => r.url === `${Hevelius.apiUrl}/night-plan`);
+    expect(req.request.params.has('explain')).toBe(false);
 
-    service.connect().subscribe(tasks => {
-      expect(tasks).toEqual([]);
+    req.flush({ scope_id: 3, date: '2026-08-06', items: [] } as NightPlanResponse);
+  });
+
+  it('should surface errors to the caller', () => {
+    let errored = false;
+    service.getNightPlan({ scope_id: 3 }).subscribe({
+      next: () => { /* not reached */ },
+      error: () => { errored = true; }
     });
 
-    service.getTaskCount().subscribe(count => {
-      expect(count).toBe(0);
-    });
+    const req = httpMock.expectOne(r => r.url === `${Hevelius.apiUrl}/night-plan`);
+    req.flush({ msg: 'boom' }, { status: 500, statusText: 'Server Error' });
+
+    expect(errored).toBe(true);
   });
 });
