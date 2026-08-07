@@ -9,6 +9,8 @@ import { TelescopeService, Telescope } from '../../services/telescope.service';
 import { UserService, UserPreferences } from '../../services/user.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { NightPlanResponse } from '../../models/night-plan';
+import { Task } from '../../models/task';
+import { Project } from '../../models/project';
 
 function makeTelescope(scopeId: number, name: string, active = true): Telescope {
   return {
@@ -29,43 +31,63 @@ function makeTelescope(scopeId: number, name: string, active = true): Telescope 
 }
 
 const PLAN: NightPlanResponse = {
-  status: true,
   scope_id: 7,
   scope_name: 'Scope 7',
-  date: '2026-08-06',
-  night_start: '2026-08-06 20:11:00',
-  night_end: '2026-08-07 03:02:00',
-  moon_phase: 0.42,
+  night_date: '2026-08-06',
+  night_start_utc: '2026-08-06T20:11:00Z',
+  night_end_utc: '2026-08-07T03:02:00Z',
+  moon_illumination_pct: 42,
   items: [
     {
       kind: 'task',
-      task_id: 1,
-      object: 'M31',
-      ra: 0.712,
-      decl: 41.27,
-      exposure: 300,
-      state: 1,
-      max_altitude_deg: 62.3,
-      best_time: '2026-08-07 01:20:00',
-      moon_separation_deg: 88.1
+      task: {
+        task_id: 1,
+        user_id: 3,
+        aavso_id: '',
+        object: 'M31',
+        ra: 0.712,
+        decl: 41.27,
+        exposure: 300,
+        state: 1
+      } as Task,
+      visibility: {
+        altitude_deg: 62.3,
+        check_time_utc: '2026-08-07T01:20:00Z',
+        moon_separation_deg: 88.1
+      }
     },
     {
       kind: 'project',
-      project_id: 4,
-      object: 'Veil Nebula',
-      ra: 20.85,
-      decl: 31.0,
-      max_altitude_deg: 71.0,
-      best_time: '2026-08-07 00:05:00',
-      moon_separation_deg: 61.4
+      project: {
+        project_id: 4,
+        name: 'Veil Nebula',
+        scope_id: 7,
+        ra: 20.85,
+        decl: 31.0,
+        active: true,
+        subframes: [
+          {
+            id: 1,
+            project_id: 4,
+            filter_id: 5,
+            exposure_time: 300,
+            active: true
+          }
+        ]
+      } as Project,
+      visibility: {
+        altitude_deg: 71.0,
+        check_time_utc: '2026-08-07T00:05:00Z',
+        moon_separation_deg: 61.4
+      }
     }
   ],
   excluded: [
     {
       kind: 'task',
       task_id: 9,
-      object: 'M42',
-      reasons: ['max altitude 4° below min_alt 30°']
+      name: 'M42',
+      reason: 'below_min_altitude'
     }
   ]
 };
@@ -177,7 +199,7 @@ describe('NightPlanComponent', () => {
 
     expect(nightPlanService.getNightPlan.mock.calls[1][0].explain).toBe(true);
     expect(component.excluded.length).toBe(1);
-    expect(component.excluded[0].reasons[0]).toContain('min_alt');
+    expect(component.formatExclusionReason(component.excluded[0].reason)).toContain('altitude');
   });
 
   it('should show an error message when the plan cannot be loaded', async () => {
@@ -197,7 +219,7 @@ describe('NightPlanComponent', () => {
 
     expect(component.formatDegrees(62.34)).toBe('62.3°');
     expect(component.formatDegrees(null)).toBe('—');
-    expect(component.formatTimeLabel('2026-08-07 01:20:00')).toBe('01:20');
+    expect(component.formatTimeLabel('2026-08-07T01:20:00Z')).toBe('01:20');
     expect(component.formatTimeLabel(null)).toBe('—');
   });
 
@@ -206,6 +228,19 @@ describe('NightPlanComponent', () => {
 
     expect(component.getItemLink(PLAN.items[1])).toEqual(['/projects', 4]);
     expect(component.getItemLink(PLAN.items[0])).toBeNull();
+  });
+
+  it('should read nested task/project fields for the table', async () => {
+    await setup();
+
+    expect(component.getItemName(PLAN.items[0])).toBe('M31');
+    expect(component.getItemName(PLAN.items[1])).toBe('Veil Nebula');
+    expect(component.getItemRa(PLAN.items[0])).toBe(0.712);
+    expect(component.getItemDec(PLAN.items[1])).toBe(31.0);
+    expect(component.getItemExposure(PLAN.items[0])).toBe(300);
+    expect(component.getItemExposure(PLAN.items[1])).toBe(300);
+    expect(component.getItemState(PLAN.items[0])).toBe(1);
+    expect(component.getItemState(PLAN.items[1])).toBeNull();
   });
 
   it('should format coordinates through the shared formatter', async () => {
