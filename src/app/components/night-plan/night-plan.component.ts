@@ -28,6 +28,20 @@ import {
     NightPlanResponse
 } from '../../models/night-plan';
 
+/** Human-readable labels for scheduler exclusion reason codes. */
+const EXCLUSION_REASON_LABELS: Record<string, string> = {
+    wrong_state: 'Wrong state',
+    outside_date_window: 'Outside date window',
+    outside_mount_dec_range: 'Outside mount Dec range',
+    filter_not_on_scope: 'Filter not on this telescope',
+    already_complete: 'Already complete',
+    missing_coordinates: 'Missing coordinates',
+    below_min_altitude: 'Below minimum altitude',
+    sun_too_high: 'Sun too high',
+    moon_too_close: 'Moon too close',
+    moon_phase_too_bright: 'Moon phase too bright'
+};
+
 @Component({
     selector: 'app-night-plan',
     templateUrl: './night-plan.component.html',
@@ -47,7 +61,7 @@ import {
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule
-]
+    ]
 })
 export class NightPlanComponent implements OnInit, OnDestroy {
     private nightPlanService = inject(NightPlanService);
@@ -205,6 +219,39 @@ export class NightPlanComponent implements OnInit, OnDestroy {
         return `${year}-${month}-${day}`;
     }
 
+    /** Target name: task object or project name. */
+    getItemName(item: NightPlanItem | NightPlanExcludedItem): string {
+        if ('name' in item && item.name) {
+            return item.name;
+        }
+        const planItem = item as NightPlanItem;
+        return planItem.task?.object || planItem.project?.name || '—';
+    }
+
+    getItemRa(item: NightPlanItem): number | null | undefined {
+        return item.task?.ra ?? item.project?.ra;
+    }
+
+    getItemDec(item: NightPlanItem): number | null | undefined {
+        return item.task?.decl ?? item.project?.decl;
+    }
+
+    getItemExposure(item: NightPlanItem): number | string {
+        if (item.kind === 'task') {
+            return item.task?.exposure ?? '—';
+        }
+        const pending = item.project?.subframes;
+        if (!pending?.length) {
+            return '—';
+        }
+        // Show the first pending subframe's exposure; projects can have several.
+        return pending[0].exposure_time ?? '—';
+    }
+
+    getItemState(item: NightPlanItem): number | null | undefined {
+        return item.kind === 'task' ? item.task?.state : null;
+    }
+
     formatRA(ra: number | null | undefined): string {
         if (ra === null || ra === undefined) {
             return '';
@@ -227,7 +274,7 @@ export class NightPlanComponent implements OnInit, OnDestroy {
         return `${value.toFixed(1)}°`;
     }
 
-    /** HH:MM extracted from a "YYYY-MM-DD HH:MM:SS.sss" UTC timestamp. */
+    /** HH:MM extracted from a UTC timestamp (ISO-8601 or space-separated). */
     formatTimeLabel(time: string | null | undefined): string {
         if (!time) {
             return '—';
@@ -243,16 +290,33 @@ export class NightPlanComponent implements OnInit, OnDestroy {
         return this.taskStates.getState(state);
     }
 
-    /** Router link to the task's project or the project itself; null for tasks. */
-    getItemLink(item: NightPlanItem | NightPlanExcludedItem): unknown[] | null {
-        if (item.kind === 'project' && item.project_id != null) {
-            return ['/projects', item.project_id];
+    formatExclusionReason(reason: string | null | undefined): string {
+        if (!reason) {
+            return '—';
         }
-        return null;
+        return EXCLUSION_REASON_LABELS[reason] ?? reason.replace(/_/g, ' ');
     }
 
-    trackItem = (_index: number, item: NightPlanItem | NightPlanExcludedItem): string =>
-        `${item.kind}-${item.task_id ?? item.project_id ?? item.object}`;
+    /** Router link to the project's detail page; null for tasks. */
+    getItemLink(item: NightPlanItem | NightPlanExcludedItem): unknown[] | null {
+        if (item.kind !== 'project') {
+            return null;
+        }
+        const projectId = (item as NightPlanItem).project?.project_id
+            ?? (item as NightPlanExcludedItem).project_id;
+        return projectId != null ? ['/projects', projectId] : null;
+    }
+
+    trackItem = (_index: number, item: NightPlanItem | NightPlanExcludedItem): string => {
+        const planItem = item as NightPlanItem;
+        const excluded = item as NightPlanExcludedItem;
+        const id = planItem.task?.task_id
+            ?? planItem.project?.project_id
+            ?? excluded.task_id
+            ?? excluded.project_id
+            ?? this.getItemName(item);
+        return `${item.kind}-${id}`;
+    };
 
     ngOnDestroy(): void {
         this.topBarService.resetState();

@@ -4,6 +4,7 @@ import { NightPlanService } from './night-plan.service';
 import { provideHttpClient } from '@angular/common/http';
 import { Hevelius } from 'src/hevelius';
 import { NightPlanResponse } from '../models/night-plan';
+import { Task } from '../models/task';
 
 describe('NightPlanService', () => {
   let service: NightPlanService;
@@ -30,25 +31,30 @@ describe('NightPlanService', () => {
 
   it('should GET the night plan with an explicit scope_id', () => {
     const mockResponse: NightPlanResponse = {
-      status: true,
       scope_id: 5,
       scope_name: 'Test scope',
-      date: '2026-08-06',
-      night_start: '2026-08-06 20:11:00',
-      night_end: '2026-08-07 03:02:00',
-      moon_phase: 0.42,
+      night_date: '2026-08-06',
+      night_start_utc: '2026-08-06T20:11:00Z',
+      night_end_utc: '2026-08-07T03:02:00Z',
+      moon_illumination_pct: 42,
       items: [
         {
           kind: 'task',
-          task_id: 1,
-          object: 'M31',
-          ra: 0.712,
-          decl: 41.27,
-          exposure: 300,
-          state: 1,
-          max_altitude_deg: 62.3,
-          best_time: '2026-08-07 01:20:00',
-          moon_separation_deg: 88.1
+          task: {
+            task_id: 1,
+            user_id: 3,
+            aavso_id: '',
+            object: 'M31',
+            ra: 0.712,
+            decl: 41.27,
+            exposure: 300,
+            state: 1
+          } as Task,
+          visibility: {
+            altitude_deg: 62.3,
+            check_time_utc: '2026-08-07T01:20:00Z',
+            moon_separation_deg: 88.1
+          }
         }
       ]
     };
@@ -74,7 +80,12 @@ describe('NightPlanService', () => {
     expect(req.request.params.get('date')).toBe('2026-08-06');
     expect(req.request.params.get('explain')).toBe('true');
 
-    req.flush({ scope_id: 3, date: '2026-08-06', items: [], excluded: [] } as NightPlanResponse);
+    req.flush({
+      scope_id: 3,
+      night_date: '2026-08-06',
+      items: [],
+      excluded: []
+    } as NightPlanResponse);
   });
 
   it('should omit explain when it is false', () => {
@@ -83,7 +94,7 @@ describe('NightPlanService', () => {
     const req = httpMock.expectOne(r => r.url === `${Hevelius.apiUrl}/night-plan`);
     expect(req.request.params.has('explain')).toBe(false);
 
-    req.flush({ scope_id: 3, date: '2026-08-06', items: [] } as NightPlanResponse);
+    req.flush({ scope_id: 3, night_date: '2026-08-06', items: [] } as NightPlanResponse);
   });
 
   it('should surface errors to the caller', () => {
