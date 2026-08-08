@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import { NightPlanComponent } from './night-plan.component';
 import { NightPlanService } from '../../services/night-plan.service';
@@ -144,8 +144,11 @@ describe('NightPlanComponent', () => {
     const params = nightPlanService.getNightPlan.mock.calls[0][0];
     expect(params.scope_id).toBe(7);
     expect(params.explain).toBe(false);
-    expect(params.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Omit date so the backend picks the telescope's current observing night.
+    expect(params.date).toBeUndefined();
     expect(component.items.length).toBe(2);
+    // Date picker reflects the night the backend returned.
+    expect(component.dateControl.value).toEqual(new Date(2026, 7, 6));
   });
 
   it('should only offer active telescopes', async () => {
@@ -174,7 +177,30 @@ describe('NightPlanComponent', () => {
     await setup();
 
     expect(component.scopeControl.value).toBeNull();
-    expect(component.error).toBeTruthy();
+    expect(component.error).toBe('No active telescope available to plan for.');
+    expect(nightPlanService.getNightPlan).not.toHaveBeenCalled();
+  });
+
+  it('should still plan with default_scope when the telescope list fails', async () => {
+    telescopeService.getTelescopes.mockReturnValue(throwError(() => new Error('scopes down')));
+    await setup();
+
+    expect(component.scopeControl.value).toBe(7);
+    expect(nightPlanService.getNightPlan).toHaveBeenCalledTimes(1);
+    expect(nightPlanService.getNightPlan.mock.calls[0][0].scope_id).toBe(7);
+    expect(component.error).toBeNull();
+    expect(component.activeTelescopes.map(t => t.scope_id)).toEqual([7]);
+    // Placeholder name replaced from the plan response.
+    expect(component.activeTelescopes[0].name).toBe('Scope 7');
+  });
+
+  it('should report a telescope load failure when there is no default_scope', async () => {
+    telescopeService.getTelescopes.mockReturnValue(throwError(() => new Error('scopes down')));
+    userService.getPreferences.mockReturnValue(of({ default_scope: null } as UserPreferences));
+    await setup();
+
+    expect(component.scopeControl.value).toBeNull();
+    expect(component.error).toBe('Could not load telescopes.');
     expect(nightPlanService.getNightPlan).not.toHaveBeenCalled();
   });
 
@@ -191,6 +217,47 @@ describe('NightPlanComponent', () => {
     component.onDateChange(new Date(2026, 0, 15));
 
     expect(nightPlanService.getNightPlan.mock.calls[1][0].date).toBe('2026-01-15');
+  });
+
+  it('should omit date again when Tonight is clicked', async () => {
+    await setup();
+    component.onDateChange(new Date(2026, 0, 15));
+    component.resetToTonight();
+
+    const lastParams = nightPlanService.getNightPlan.mock.calls.at(-1)[0];
+    expect(lastParams.date).toBeUndefined();
+  });
+
+  it('should ignore a stale plan response when a newer request finishes first', async () => {
+    const slowPlan$ = new Subject<NightPlanResponse>();
+    const fastPlan: NightPlanResponse = {
+      ...PLAN,
+      scope_id: 3,
+      scope_name: 'Scope 3',
+      items: []
+    };
+
+    nightPlanService.getNightPlan
+      .mockReturnValueOnce(of(PLAN))
+      .mockReturnValueOnce(slowPlan$.asObservable())
+      .mockReturnValueOnce(of(fastPlan));
+
+    await setup();
+    expect(component.items.length).toBe(2);
+
+    component.onScopeChange(7); // starts slow request
+    component.onScopeChange(3); // cancels it; fast response wins
+
+    expect(component.scopeControl.value).toBe(3);
+    expect(component.items).toEqual([]);
+    expect(component.plan?.scope_id).toBe(3);
+
+    // Late response from the cancelled request must not overwrite state.
+    slowPlan$.next(PLAN);
+    slowPlan$.complete();
+
+    expect(component.plan?.scope_id).toBe(3);
+    expect(component.items).toEqual([]);
   });
 
   it('should request the excluded items when explain is turned on', async () => {
