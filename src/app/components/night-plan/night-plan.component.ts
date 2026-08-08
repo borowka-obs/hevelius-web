@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { EMPTY, Subject, forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap, takeUntil } from 'rxjs/operators';
 
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,6 +25,7 @@ import { TopBarService } from '../../services/top-bar.service';
 import {
     NightPlanExcludedItem,
     NightPlanItem,
+    NightPlanParams,
     NightPlanResponse
 } from '../../models/night-plan';
 
@@ -83,6 +84,15 @@ export class NightPlanComponent implements OnInit, OnDestroy {
     loading = false;
     error: string | null = null;
 
+    /**
+     * When set, sent as the `date` query param. When null, the param is omitted
+     * so the backend picks the observing night in progress at the telescope.
+     */
+    private explicitNightDate: string | null = null;
+
+    private readonly loadTrigger$ = new Subject<void>();
+    private readonly destroy$ = new Subject<void>();
+
     private readonly MOBILE_BREAKPOINT = 640;
     isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
 
@@ -117,40 +127,90 @@ export class NightPlanComponent implements OnInit, OnDestroy {
             this.topBarService.updateState({ title: 'Night plan' });
         });
 
+        this.loadTrigger$.pipe(
+            switchMap(() => this.fetchNightPlan()),
+            takeUntil(this.destroy$)
+        ).subscribe(response => {
+            this.loading = false;
+            this.plan = response;
+            this.items = response?.items ?? [];
+            this.excluded = response?.excluded ?? [];
+            this.syncDateControlFromPlan(response);
+            this.ensureScopeLabel(response);
+            this.updateTitle();
+        });
+
         this.loading = true;
         // Telescope list and the user's default_scope are both needed before the
         // first plan request; a missing preferences call must not block the page.
         forkJoin({
             telescopes: this.telescopeService.getTelescopes().pipe(
-                catchError(() => of([] as Telescope[]))
+                map(list => ({ ok: true as const, list })),
+                catchError(() => of({ ok: false as const, list: [] as Telescope[] }))
             ),
             preferences: this.userService.getPreferences().pipe(
                 catchError(() => of(null as UserPreferences | null))
             )
-        }).subscribe(({ telescopes, preferences }) => {
-            this.telescopes = telescopes;
+        }).pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(({ telescopes, preferences }) => {
+            this.telescopes = telescopes.list;
             this.loading = false;
 
-            const scopeId = this.pickInitialScope(preferences?.default_scope ?? null);
+            const defaultScope = preferences?.default_scope ?? null;
+            const scopeId = this.pickInitialScope(defaultScope, telescopes.ok);
             if (scopeId === null) {
-                this.error = 'No active telescope available to plan for.';
+                this.error = telescopes.ok
+                    ? 'No active telescope available to plan for.'
+                    : 'Could not load telescopes.';
                 return;
             }
+
+            if (!telescopes.ok) {
+                // List failed, but default_scope is still usable for the plan request.
+                this.telescopes = [this.makeScopePlaceholder(scopeId)];
+            }
+
             this.scopeControl.setValue(scopeId);
             this.loadNightPlan();
         });
     }
 
     /**
-     * The user's `default_scope` wins when it names an active telescope;
-     * otherwise fall back to the first active one so the page shows something.
+     * Prefer the user's `default_scope` when it names an active telescope;
+     * otherwise the first active scope. If the telescope list itself failed,
+     * still trust a saved `default_scope` so the page can load a plan.
      */
-    private pickInitialScope(defaultScope: number | null): number | null {
+    private pickInitialScope(defaultScope: number | null, telescopesLoaded: boolean): number | null {
         const active = this.activeTelescopes;
         if (defaultScope !== null && active.some(t => t.scope_id === defaultScope)) {
             return defaultScope;
         }
-        return active.length > 0 ? active[0].scope_id : null;
+        if (active.length > 0) {
+            return active[0].scope_id;
+        }
+        if (!telescopesLoaded && defaultScope !== null) {
+            return defaultScope;
+        }
+        return null;
+    }
+
+    private makeScopePlaceholder(scopeId: number): Telescope {
+        return {
+            scope_id: scopeId,
+            name: `Scope ${scopeId}`,
+            descr: '',
+            min_dec: -90,
+            max_dec: 90,
+            focal: null,
+            aperture: null,
+            lon: null,
+            lat: null,
+            alt: null,
+            sensor: null,
+            active: true,
+            default_rotation: null
+        };
     }
 
     onScopeChange(scopeId: number | null): void {
@@ -159,7 +219,9 @@ export class NightPlanComponent implements OnInit, OnDestroy {
     }
 
     onDateChange(newDate: Date | null): void {
-        this.dateControl.setValue(newDate ?? new Date());
+        const date = newDate ?? new Date();
+        this.dateControl.setValue(date);
+        this.explicitNightDate = this.formatDateForApi(date);
         this.loadNightPlan();
     }
 
@@ -168,42 +230,66 @@ export class NightPlanComponent implements OnInit, OnDestroy {
         this.loadNightPlan();
     }
 
-    /** Jump to tonight; the backend decides which night "tonight" is. */
+    /** Jump to tonight; omit `date` so the backend picks the current night. */
     resetToTonight(): void {
-        this.dateControl.setValue(new Date());
+        this.explicitNightDate = null;
         this.loadNightPlan();
     }
 
     loadNightPlan(): void {
+        if (this.scopeControl.value === null || this.scopeControl.value === undefined) {
+            return;
+        }
+        this.loadTrigger$.next();
+    }
+
+    private fetchNightPlan() {
         const scopeId = this.scopeControl.value;
         if (scopeId === null || scopeId === undefined) {
-            return;
+            return EMPTY;
         }
 
         this.loading = true;
         this.error = null;
 
-        this.nightPlanService.getNightPlan({
+        const params: NightPlanParams = {
             scope_id: scopeId,
-            date: this.formatDateForApi(this.dateControl.value ?? new Date()),
             explain: this.explainControl.value
-        }).subscribe({
-            next: response => {
-                this.loading = false;
-                this.plan = response;
-                this.items = response?.items ?? [];
-                this.excluded = response?.excluded ?? [];
-                this.updateTitle();
-            },
-            error: err => {
+        };
+        if (this.explicitNightDate) {
+            params.date = this.explicitNightDate;
+        }
+
+        return this.nightPlanService.getNightPlan(params).pipe(
+            catchError(err => {
                 this.loading = false;
                 this.plan = null;
                 this.items = [];
                 this.excluded = [];
                 this.error = err?.error?.msg || err?.error?.message || 'Could not load the night plan.';
                 this.updateTitle();
-            }
-        });
+                return EMPTY;
+            })
+        );
+    }
+
+    /** Keep the date picker in sync when the backend chose the night. */
+    private syncDateControlFromPlan(response: NightPlanResponse): void {
+        if (this.explicitNightDate || !response?.night_date) {
+            return;
+        }
+        this.dateControl.setValue(this.parseNightDate(response.night_date), { emitEvent: false });
+    }
+
+    /** Replace a placeholder scope label with the name from the plan response. */
+    private ensureScopeLabel(response: NightPlanResponse): void {
+        if (!response?.scope_name) {
+            return;
+        }
+        const scope = this.telescopes.find(t => t.scope_id === response.scope_id);
+        if (scope && scope.name === `Scope ${response.scope_id}`) {
+            scope.name = response.scope_name;
+        }
     }
 
     private updateTitle(): void {
@@ -217,6 +303,12 @@ export class NightPlanComponent implements OnInit, OnDestroy {
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    /** Parse YYYY-MM-DD as a local calendar date (avoids UTC midnight shifts). */
+    private parseNightDate(yyyyMmDd: string): Date {
+        const [year, month, day] = yyyyMmDd.split('-').map(Number);
+        return new Date(year, month - 1, day);
     }
 
     /** Target name: task object or project name. */
@@ -319,6 +411,9 @@ export class NightPlanComponent implements OnInit, OnDestroy {
     };
 
     ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+        this.loadTrigger$.complete();
         this.topBarService.resetState();
     }
 }
