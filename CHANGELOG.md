@@ -2,6 +2,25 @@
 
 unreleased
 
+- **Observability charts** for tasks, projects and asteroids (#171). Every
+  target now gets an elevation-versus-time chart for the night, showing the
+  altitude track against shaded twilight, the horizon, the Moon's track and its
+  separation from the target, and the stretches where the target actually clears
+  all of its constraints. Hovering reads out altitude, azimuth and Moon distance
+  at any moment, and the night can be stepped a day at a time.
+  - For **tasks** and **projects** the whole curve is computed in your browser,
+    so opening a chart puts no load on the backend at all. Task charts also draw
+    the task's own limits (`min_alt`, `max_sun_alt`, `moon_distance`,
+    `max_moon_phase`) and shade the window that satisfies them.
+  - **Asteroids** keep using the backend ephemeris for their position — their
+    orbit has to be propagated — but the chart around it (twilight, Moon, Moon
+    separation, hover readout) is now computed locally, so the asteroid page
+    gained all of those without a backend change.
+- **New task detail page** at `/tasks/:id`, reached by clicking a task ID in the
+  tasks list. It shows the task's coordinates, telescope, exposure, filter,
+  constraints and projects, alongside its observability chart and a sky view.
+  Editing still opens the same dialog as before, from the Edit button.
+
 - **Night Plan** page rewritten against the new scheduler API
   (`GET /api/night-plan`) and added to the main menu. You now pick the
   telescope (defaulted from your `default_scope` preference, but always

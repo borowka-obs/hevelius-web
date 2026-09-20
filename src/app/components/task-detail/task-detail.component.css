@@ -1,0 +1,50 @@
+.container {
+  padding: 20px;
+}
+
+.status-line {
+  padding: 20px;
+}
+
+.task-actions-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.task-card {
+  margin: 1rem 0;
+  max-width: 600px;
+}
+
+.observability-card {
+  margin: 1rem 0;
+}
+
+.sky-view-card {
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.sky-view-card mat-card-content.mat-mdc-card-content {
+  padding: 0;
+}
+
+/* Constraint chips read as a list rather than a run-on sentence. */
+.constraints-row span:not(.muted)::after {
+  content: ' · ';
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.constraints-row span:not(.muted):last-child::after {
+  content: '';
+}
+
+.projects-row a {
+  margin-right: 0.5rem;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}

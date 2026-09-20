@@ -20,4 +20,20 @@ describe('app routes', () => {
     expect(paths).toContain('projects');
     expect(paths).toContain('tasks');
   });
+
+  it('registers detail routes for a single task and project', () => {
+    const layout = routes.find(r => r.path === '');
+    const paths = (layout?.children ?? []).map(c => c.path);
+    expect(paths).toContain('tasks/:id');
+    expect(paths).toContain('projects/:id');
+  });
+
+  it('keeps the tasks list route ahead of the task detail route', () => {
+    // 'tasks' must match before 'tasks/:id', or /tasks would resolve to a
+    // detail page for a task with no id.
+    const children = routes.find(r => r.path === '')?.children ?? [];
+    const listIndex = children.findIndex(c => c.path === 'tasks');
+    const detailIndex = children.findIndex(c => c.path === 'tasks/:id');
+    expect(listIndex).toBeLessThan(detailIndex);
+  });
 });

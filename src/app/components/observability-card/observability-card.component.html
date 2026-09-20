@@ -1,0 +1,81 @@
+<div class="observability-controls">
+  @if (showScopePicker) {
+    <mat-form-field subscriptSizing="dynamic" class="scope-field">
+      <mat-label>Telescope</mat-label>
+      <mat-select [ngModel]="scopeId" (ngModelChange)="onScopeChange($event)">
+        @for (scope of telescopes; track scope.scope_id) {
+          <mat-option [value]="scope.scope_id">{{ scope.name }}</mat-option>
+        } @empty {
+          <mat-option [value]="null" disabled>No telescopes available</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  <div class="night-picker">
+    <button
+      type="button"
+      mat-icon-button
+      aria-label="Previous night"
+      matTooltip="Previous night"
+      (click)="shiftNight(-1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <mat-form-field subscriptSizing="dynamic" class="date-field">
+      <mat-label>Night of</mat-label>
+      <input
+        matInput
+        [matDatepicker]="nightPicker"
+        [ngModel]="date"
+        (dateChange)="onDateChange($event.value)" />
+      <mat-datepicker-toggle matIconSuffix [for]="nightPicker"></mat-datepicker-toggle>
+      <mat-datepicker #nightPicker></mat-datepicker>
+    </mat-form-field>
+
+    <button
+      type="button"
+      mat-icon-button
+      aria-label="Next night"
+      matTooltip="Next night"
+      (click)="shiftNight(1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>
+
+@if (!hasTargetCoordinates) {
+  <p class="observability-hint">
+    This {{ source === 'samples' ? 'object' : 'target' }} has no coordinates, so its elevation can't be
+    plotted.
+  </p>
+} @else if (!hasSiteCoordinates) {
+  <p class="observability-hint">
+    @if (selectedTelescope) {
+      {{ selectedTelescope.name }} has no latitude and longitude on file, so elevation can't be computed.
+      Add them on the telescope's page to see this chart.
+    } @else {
+      Pick a telescope to compute this target's elevation.
+    }
+  </p>
+} @else if (loading) {
+  <div class="observability-loading">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span>Computing…</span>
+  </div>
+} @else if (externalError || computeError) {
+  <p class="observability-error" role="alert">{{ externalError || computeError }}</p>
+} @else if (curve) {
+  <p class="observability-summary">
+    @if (transitSummary) {
+      Highest at <strong>{{ transitSummary }}</strong> from {{ curve.site.name || 'this site' }}.
+    }
+    @if (observableSummary) {
+      Observable <strong>{{ observableSummary }}</strong> UTC.
+    } @else {
+      <span class="muted">No window meets every constraint tonight.</span>
+    }
+  </p>
+
+  <app-elevation-chart [curve]="curve"></app-elevation-chart>
+}

@@ -4,6 +4,7 @@ import { ForgotPasswordComponent } from './forgot-password/forgot-password.compo
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { LayoutComponent } from './components/layout/layout.component';
 import { TasksComponent } from './components/tasks/tasks.component';
+import { TaskDetailComponent } from './components/task-detail/task-detail.component';
 import { NightPlanComponent } from './components/night-plan/night-plan.component';
 import { TelescopeListComponent } from './components/telescope-list/telescope-list.component';
 import { TelescopeDetailComponent } from './components/telescope-detail/telescope-detail.component';
@@ -29,6 +30,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: 'tasks', component: TasksComponent },
+      { path: 'tasks/:id', component: TaskDetailComponent },
       { path: 'night-plan', component: NightPlanComponent },
       { path: 'scopes', component: TelescopeListComponent },
       { path: 'scopes/:id', component: TelescopeDetailComponent },

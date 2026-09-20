@@ -8,6 +8,8 @@ import {
   AsteroidVisibilityResponse
 } from '../../services/asteroids.service';
 import { TelescopeService, Telescope } from '../../services/telescope.service';
+import { AltAzSample, ExtraSeries } from '../../models/observability';
+import { ObservabilityCardComponent } from '../observability-card/observability-card.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,7 +44,8 @@ import { map, startWith } from 'rxjs/operators';
     MatAutocompleteModule,
     ReactiveFormsModule,
     AsyncPipe,
-    DatePipe
+    DatePipe,
+    ObservabilityCardComponent
   ]
 })
 export class AsteroidDetailComponent implements OnInit {
@@ -61,17 +64,23 @@ export class AsteroidDetailComponent implements OnInit {
   filteredTagOptions$: Observable<AsteroidTag[]>;
 
   // Visibility widget
-  private readonly CHART_WIDTH = 600;
-  private readonly CHART_HEIGHT = 200;
-  private readonly ALT_MIN = -20;
-  private readonly ALT_MAX = 90;
-
   telescopes: Telescope[] = [];
   scopeControl = new FormControl<number | null>(null);
   dateControl = new FormControl<Date>(new Date());
   visibility: AsteroidVisibilityResponse | null = null;
   visibilityLoading = false;
   visibilityError: string | null = null;
+
+  /**
+   * Chart inputs, held as stable references.
+   *
+   * These are bound as component inputs, so they must only change identity when
+   * the data behind them actually changes — a getter building a new array each
+   * time would make the chart recompute on every change-detection pass.
+   */
+  visibilitySamples: AltAzSample[] | null = null;
+  visibilityExtraSeries: ExtraSeries | null = null;
+  selectedDate: Date = new Date();
 
   get activeTelescopes(): Telescope[] {
     return this.telescopes.filter(t => t.active);
@@ -209,6 +218,7 @@ export class AsteroidDetailComponent implements OnInit {
 
   onDateChange(newDate: Date | null): void {
     this.dateControl.setValue(newDate ?? new Date());
+    this.selectedDate = this.dateControl.value ?? new Date();
     this.loadVisibility();
   }
 
@@ -216,6 +226,7 @@ export class AsteroidDetailComponent implements OnInit {
     const scopeId = this.scopeControl.value;
     if (!this.asteroid || scopeId == null) {
       this.visibility = null;
+      this.adaptVisibilityForChart();
       return;
     }
     this.visibilityLoading = true;
@@ -227,10 +238,12 @@ export class AsteroidDetailComponent implements OnInit {
       next: response => {
         this.visibilityLoading = false;
         this.visibility = response;
+        this.adaptVisibilityForChart();
       },
       error: err => {
         this.visibilityLoading = false;
         this.visibility = null;
+        this.adaptVisibilityForChart();
         this.visibilityError = err?.error?.message || err?.error?.msg || 'Could not compute visibility.';
       }
     });
@@ -249,37 +262,47 @@ export class AsteroidDetailComponent implements OnInit {
     return match ? `${match[1]}:${match[2]}` : iso;
   }
 
-  private altToY(altitudeDeg: number): number {
-    const clamped = Math.max(this.ALT_MIN, Math.min(this.ALT_MAX, altitudeDeg));
-    const frac = (clamped - this.ALT_MIN) / (this.ALT_MAX - this.ALT_MIN);
-    return this.CHART_HEIGHT - frac * this.CHART_HEIGHT;
+  /**
+   * Adapt the backend response into the shape the shared chart expects.
+   *
+   * An asteroid's position is propagated from orbital elements, which is the
+   * backend's job — but Sun, Moon, twilight and Moon separation are still
+   * derived in the browser from these alt/az samples, so this chart gets the
+   * same features as the locally computed ones on tasks and projects.
+   */
+  private adaptVisibilityForChart(): void {
+    const response = this.visibility;
+    if (!response || response.samples.length === 0) {
+      this.visibilitySamples = null;
+      this.visibilityExtraSeries = null;
+      return;
+    }
+
+    this.visibilitySamples = response.samples.map(s => ({
+      time: parseBackendUtc(s.time),
+      altitudeDeg: s.altitude_deg,
+      azimuthDeg: s.azimuth_deg
+    }));
+
+    // Apparent magnitude, surfaced in the chart's hover readout.
+    this.visibilityExtraSeries = response.has_magnitude_estimate
+      ? {
+          label: 'Magnitude',
+          values: response.samples.map(s => s.apparent_magnitude),
+          unit: 'mag'
+        }
+      : null;
   }
 
-  get chartViewBox(): string {
-    return `0 0 ${this.CHART_WIDTH} ${this.CHART_HEIGHT}`;
-  }
+}
 
-  get horizonY(): number {
-    return this.altToY(0);
-  }
-
-  get chartPolylinePoints(): string {
-    if (!this.visibility || this.visibility.samples.length === 0) return '';
-    const n = this.visibility.samples.length;
-    return this.visibility.samples
-      .map((s, i) => {
-        const x = n > 1 ? (i / (n - 1)) * this.CHART_WIDTH : 0;
-        return `${x.toFixed(1)},${this.altToY(s.altitude_deg).toFixed(1)}`;
-      })
-      .join(' ');
-  }
-
-  get maxPoint(): { x: number; y: number } | null {
-    if (!this.visibility || this.visibility.samples.length === 0) return null;
-    const n = this.visibility.samples.length;
-    const idx = this.visibility.samples.findIndex(s => s.time === this.visibility!.max_altitude_time);
-    if (idx < 0) return null;
-    const x = n > 1 ? (idx / (n - 1)) * this.CHART_WIDTH : 0;
-    return { x, y: this.altToY(this.visibility.samples[idx].altitude_deg) };
-  }
+/**
+ * Parse a backend "YYYY-MM-DD HH:MM:SS.sss" timestamp as UTC.
+ *
+ * The backend sends these without a zone designator; left as-is, `new Date()`
+ * would read them as browser-local and shift the whole night.
+ */
+export function parseBackendUtc(timestamp: string): Date {
+  const normalized = timestamp.trim().replace(' ', 'T');
+  return new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(normalized) ? normalized : `${normalized}Z`);
 }

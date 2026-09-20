@@ -1,0 +1,63 @@
+:host {
+  display: block;
+}
+
+.observability-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.scope-field {
+  min-width: 200px;
+}
+
+.night-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.date-field {
+  width: 170px;
+}
+
+.observability-hint,
+.observability-error,
+.observability-summary {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.observability-hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.observability-error {
+  color: var(--mat-sys-error);
+}
+
+.observability-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (max-width: 640px) {
+  .observability-controls {
+    gap: 0.5rem;
+  }
+
+  .scope-field {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+}

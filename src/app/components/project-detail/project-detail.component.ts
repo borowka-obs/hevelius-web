@@ -29,6 +29,7 @@ import {
   subframeProgressPercent
 } from '../../utils/project-integration';
 import { SkyViewComponent } from '../sky-view/sky-view.component';
+import { ObservabilityCardComponent } from '../observability-card/observability-card.component';
 import { computeFovDeg } from '../../utils/fov';
 
 @Component({
@@ -47,7 +48,8 @@ import { computeFovDeg } from '../../utils/fov';
     DatePipe,
     TasksComponent,
     ProjectPublicationsComponent,
-    SkyViewComponent
+    SkyViewComponent,
+    ObservabilityCardComponent
   ]
 })
 export class ProjectDetailComponent implements OnInit {
@@ -64,6 +66,19 @@ export class ProjectDetailComponent implements OnInit {
   projectNavigation: Project[] = [];
   currentProjectIndex = -1;
   telescope: Telescope | null = null;
+
+  /** The night the observability chart is showing; defaults to tonight. */
+  observabilityDate = new Date();
+
+  /**
+   * Chart inputs, held as stable references.
+   *
+   * These are bound as component inputs, so they must only change identity when
+   * the project or telescope actually changes — a getter building a new array
+   * each time would make the chart recompute on every change-detection pass.
+   */
+  telescopes: Telescope[] = [];
+  observabilityWarnings: string[] = [];
 
   private readonly MOBILE_BREAKPOINT = 640;
   isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
@@ -107,9 +122,11 @@ export class ProjectDetailComponent implements OnInit {
     this.telescopeService.getTelescope(scopeId).subscribe({
       next: t => {
         this.telescope = t;
+        this.refreshObservabilityInputs();
       },
       error: () => {
         this.telescope = null;
+        this.refreshObservabilityInputs();
       }
     });
   }
@@ -337,6 +354,38 @@ export class ProjectDetailComponent implements OnInit {
   get fovHeightDeg(): number {
     const p = this.project!;
     return computeFovDeg(p.resy!, p.pixel_y!, p.focal!);
+  }
+
+  /** Rebuild every chart input at once, after the project or telescope changes. */
+  private refreshObservabilityInputs(): void {
+    this.telescopes = this.telescope ? [this.telescope] : [];
+    this.observabilityWarnings = this.buildObservabilityWarnings();
+  }
+
+  /** A project has coordinates to plot only once both RA and Dec are set. */
+  get hasObservabilityTarget(): boolean {
+    return this.project?.ra != null && this.project?.decl != null;
+  }
+
+  /**
+   * A project carries no per-task observing limits, but the mount still has a
+   * declination range, and a target outside it can never be pointed at.
+   */
+  private buildObservabilityWarnings(): string[] {
+    const warnings: string[] = [];
+    const scope = this.telescope;
+    const decl = this.project?.decl;
+    if (scope && decl != null && (decl < scope.min_dec || decl > scope.max_dec)) {
+      warnings.push(
+        `Declination ${decl.toFixed(1)}° is outside ${scope.name}'s range ` +
+          `(${scope.min_dec}° to ${scope.max_dec}°), so the mount cannot point there.`
+      );
+    }
+    return warnings;
+  }
+
+  onObservabilityDateChange(date: Date): void {
+    this.observabilityDate = date;
   }
 
   deleteSubframe(sub: ProjectSubframe): void {

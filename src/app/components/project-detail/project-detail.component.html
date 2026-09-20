@@ -67,6 +67,26 @@
       </mat-card-content>
     </mat-card>
 
+    @if (hasObservabilityTarget) {
+      <mat-card class="observability-card">
+        <mat-card-header>
+          <mat-card-title>Observability</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <app-observability-card
+            source="fixed"
+            [targetName]="project.name"
+            [raHours]="project.ra!"
+            [decDeg]="project.decl!"
+            [telescopes]="telescopes"
+            [scopeId]="project.scope_id"
+            [date]="observabilityDate"
+            [warnings]="observabilityWarnings"
+            (dateChange)="onObservabilityDateChange($event)"></app-observability-card>
+        </mat-card-content>
+      </mat-card>
+    }
+
     @if (hasFov) {
       <mat-card class="sky-view-card">
         <mat-card-header>

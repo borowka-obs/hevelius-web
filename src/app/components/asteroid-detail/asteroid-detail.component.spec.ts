@@ -229,12 +229,62 @@ describe('AsteroidDetailComponent', () => {
     expect(component.visibilityError).toBe('Telescope not found.');
   });
 
-  it('should compute chart geometry for the max-altitude sample', async () => {
+  it('should adapt the backend track for the shared elevation chart', async () => {
     await setup('1');
     component.onScopeChange(1);
-    expect(component.maxPoint).not.toBeNull();
-    expect(component.maxPoint?.x).toBeCloseTo(300, 0); // middle sample of 3
-    expect(component.chartPolylinePoints.split(' ').length).toBe(3);
+
+    const samples = component.visibilitySamples!;
+    expect(samples).toHaveLength(3);
+    expect(samples[1].altitudeDeg).toBe(45);
+    expect(samples[1].azimuthDeg).toBe(180);
+  });
+
+  it('should read backend timestamps as UTC, not browser-local', async () => {
+    await setup('1');
+    component.onScopeChange(1);
+    // "2026-07-19 20:00:00.000" carries no zone designator; treating it as
+    // local time would shift the whole night by the browser's offset.
+    expect(component.visibilitySamples![0].time.toISOString()).toBe('2026-07-19T20:00:00.000Z');
+  });
+
+  it('should expose apparent magnitude as an extra series', async () => {
+    await setup('1');
+    component.onScopeChange(1);
+    expect(component.visibilityExtraSeries).toEqual({
+      label: 'Magnitude',
+      values: [9.1, 8.8, 9.3],
+      unit: 'mag'
+    });
+  });
+
+  it('should omit the magnitude series when the backend has no estimate', async () => {
+    await setup('1', {
+      getVisibility: vi
+        .fn()
+        .mockReturnValue(of({ ...visibleResponse, has_magnitude_estimate: false }))
+    });
+    component.onScopeChange(1);
+    expect(component.visibilityExtraSeries).toBeNull();
+  });
+
+  it('should keep the adapted track stable across change detection', async () => {
+    await setup('1');
+    component.onScopeChange(1);
+    const samples = component.visibilitySamples;
+    const extra = component.visibilityExtraSeries;
+
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    // Identity must survive a render pass: these are bound as chart inputs, and
+    // a new array each time would retrigger the curve computation forever.
+    expect(component.visibilitySamples).toBe(samples);
+    expect(component.visibilityExtraSeries).toBe(extra);
+  });
+
+  it('should have no track to plot before a telescope is chosen', async () => {
+    await setup('1');
+    expect(component.visibilitySamples).toBeNull();
   });
 
   it('should surface the not-visible case distinctly', async () => {
