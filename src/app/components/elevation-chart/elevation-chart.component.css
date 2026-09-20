@@ -1,0 +1,200 @@
+/* Chart colours live here as tokens. `light-dark()` follows the `color-scheme`
+ * that ThemeService sets on <html>, so the chart tracks the app theme without
+ * any JavaScript or media queries. */
+:host {
+  display: block;
+
+  /* Progressively deeper sky as twilight advances. Tuned so "night" reads as
+   * genuinely dark in light mode without turning the plot into a black box in
+   * dark mode. */
+  --chart-twilight-day: light-dark(rgba(120, 170, 225, 0.10), rgba(120, 170, 225, 0.06));
+  --chart-twilight-civil: light-dark(rgba(58, 86, 140, 0.16), rgba(90, 120, 185, 0.14));
+  --chart-twilight-nautical: light-dark(rgba(40, 60, 110, 0.26), rgba(70, 95, 160, 0.22));
+  --chart-twilight-astronomical: light-dark(rgba(28, 40, 82, 0.36), rgba(52, 70, 130, 0.30));
+  --chart-twilight-night: light-dark(rgba(18, 26, 60, 0.46), rgba(38, 50, 105, 0.40));
+
+  --chart-moon: light-dark(#b08900, #e0c060);
+  --chart-observable: light-dark(#1b7f4b, #5fd39a);
+}
+
+.chart-wrapper {
+  display: block;
+}
+
+/* width/height:auto keeps the viewBox scaling uniform, which is what lets the
+ * pointer-to-data mapping use a single scale factor. */
+.elevation-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 4px;
+  touch-action: none;
+}
+
+.twilight-day { fill: var(--chart-twilight-day); }
+.twilight-civil { fill: var(--chart-twilight-civil); }
+.twilight-nautical { fill: var(--chart-twilight-nautical); }
+.twilight-astronomical { fill: var(--chart-twilight-astronomical); }
+.twilight-night { fill: var(--chart-twilight-night); }
+
+.gridline {
+  stroke: var(--mat-sys-outline-variant);
+  stroke-width: 0.5;
+  opacity: 0.6;
+}
+
+.gridline-vertical {
+  opacity: 0.35;
+}
+
+.horizon-line {
+  stroke: var(--mat-sys-on-surface);
+  stroke-width: 1.25;
+  opacity: 0.75;
+}
+
+.min-alt-line {
+  stroke: var(--mat-sys-error);
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
+  opacity: 0.85;
+}
+
+/* The full track, including the parts that fail a constraint. */
+.target-line {
+  fill: none;
+  stroke: var(--mat-sys-primary);
+  stroke-width: 1.5;
+  opacity: 0.35;
+}
+
+/* Overdrawn where every constraint is satisfied, so the usable window pops. */
+.target-line-observable {
+  fill: none;
+  stroke: var(--chart-observable);
+  stroke-width: 2.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.moon-line {
+  fill: none;
+  stroke: var(--chart-moon);
+  stroke-width: 1.25;
+  stroke-dasharray: 6 4;
+  opacity: 0.8;
+}
+
+.window-bar {
+  fill: var(--chart-observable);
+  opacity: 0.75;
+}
+
+.transit-point {
+  fill: var(--mat-sys-primary);
+}
+
+.transit-label,
+.axis-label {
+  fill: var(--mat-sys-on-surface-variant);
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.transit-label {
+  text-anchor: middle;
+  fill: var(--mat-sys-primary);
+  font-weight: 600;
+}
+
+.y-axis-label { text-anchor: end; }
+.x-axis-label { text-anchor: middle; }
+.threshold-label {
+  text-anchor: end;
+  fill: var(--mat-sys-error);
+}
+
+.hover-guide {
+  stroke: var(--mat-sys-on-surface);
+  stroke-width: 0.75;
+  stroke-dasharray: 3 3;
+  opacity: 0.6;
+}
+
+.hover-point {
+  fill: var(--mat-sys-on-surface);
+}
+
+.chart-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--mat-sys-on-surface);
+  /* Reserve the row so the layout doesn't jump as the pointer enters and leaves. */
+  min-height: 1.4rem;
+}
+
+.readout-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.swatch {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.swatch-target { background: var(--mat-sys-primary); opacity: 0.5; }
+.swatch-observable { background: var(--chart-observable); height: 4px; }
+.swatch-moon { background: var(--chart-moon); }
+.swatch-night {
+  background: var(--chart-twilight-night);
+  height: 12px;
+  width: 12px;
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.legend-moon-phase {
+  margin-left: auto;
+}
+
+.chart-warning {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--mat-sys-error);
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (max-width: 640px) {
+  .chart-readout,
+  .chart-legend {
+    font-size: 0.72rem;
+  }
+
+  .legend-moon-phase {
+    margin-left: 0;
+  }
+}

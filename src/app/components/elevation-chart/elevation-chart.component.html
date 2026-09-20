@@ -1,0 +1,137 @@
+@if (curve; as c) {
+  @if (geometry; as g) {
+    <div class="chart-wrapper">
+      <svg
+        #svg
+        class="elevation-chart"
+        [attr.viewBox]="'0 0 ' + viewWidth + ' ' + viewHeight"
+        role="img"
+        [attr.aria-label]="ariaLabel"
+        (pointermove)="onPointerMove($event)"
+        (pointerleave)="onPointerLeave()">
+
+        <!-- Sky darkness, drawn first so everything else sits on top of it. -->
+        @for (band of g.twilight; track $index) {
+          <rect
+            [class]="'twilight twilight-' + band.kind"
+            [attr.x]="band.x"
+            [attr.y]="plotTop"
+            [attr.width]="band.width"
+            [attr.height]="plotBottom - plotTop"></rect>
+        }
+
+        <!-- Altitude gridlines -->
+        @for (tick of g.yTicks; track tick.label) {
+          <line
+            class="gridline"
+            [attr.x1]="plotLeft"
+            [attr.y1]="tick.position"
+            [attr.x2]="plotRight"
+            [attr.y2]="tick.position"></line>
+          <text class="axis-label y-axis-label" [attr.x]="plotLeft - 8" [attr.y]="tick.position + 4">
+            {{ tick.label }}
+          </text>
+        }
+
+        <!-- Hour marks -->
+        @for (tick of g.xTicks; track tick.label) {
+          <line
+            class="gridline gridline-vertical"
+            [attr.x1]="tick.position"
+            [attr.y1]="plotTop"
+            [attr.x2]="tick.position"
+            [attr.y2]="plotBottom"></line>
+          <text class="axis-label x-axis-label" [attr.x]="tick.position" [attr.y]="plotBottom + 18">
+            {{ tick.label }}
+          </text>
+        }
+
+        <!-- Horizon: the altitude that actually matters. -->
+        <line
+          class="horizon-line"
+          [attr.x1]="plotLeft"
+          [attr.y1]="g.horizonY"
+          [attr.x2]="plotRight"
+          [attr.y2]="g.horizonY"></line>
+
+        @if (g.minAltY !== null) {
+          <line
+            class="min-alt-line"
+            [attr.x1]="plotLeft"
+            [attr.y1]="g.minAltY"
+            [attr.x2]="plotRight"
+            [attr.y2]="g.minAltY"></line>
+          <text class="axis-label threshold-label" [attr.x]="plotRight - 4" [attr.y]="g.minAltY - 5">
+            min {{ c.constraints.minAltDeg }}°
+          </text>
+        }
+
+        <polyline class="moon-line" [attr.points]="g.moonPoints"></polyline>
+
+        <!-- Full track muted, then the constraint-satisfying stretches on top. -->
+        <polyline class="target-line" [attr.points]="g.targetPoints"></polyline>
+        @for (segment of g.observableSegments; track $index) {
+          <polyline class="target-line-observable" [attr.points]="segment"></polyline>
+        }
+
+        @if (g.transit; as transit) {
+          <circle class="transit-point" [attr.cx]="transit.x" [attr.cy]="transit.y" r="4"></circle>
+          <text class="transit-label" [attr.x]="transit.x" [attr.y]="transit.y - 10">{{ transit.label }}</text>
+        }
+
+        <!-- Observable stretches as a strip, which reads better than more shading. -->
+        @for (bar of g.windowBars; track $index) {
+          <rect
+            class="window-bar"
+            [attr.x]="bar.x"
+            [attr.y]="barTop"
+            [attr.width]="bar.width"
+            [attr.height]="barHeight"
+            rx="2"></rect>
+        }
+
+        @if (hover; as point) {
+          <line
+            class="hover-guide"
+            [attr.x1]="point.x"
+            [attr.y1]="plotTop"
+            [attr.x2]="point.x"
+            [attr.y2]="plotBottom"></line>
+          <circle class="hover-point" [attr.cx]="point.x" [attr.cy]="point.y" r="4"></circle>
+        }
+      </svg>
+
+      <div class="chart-readout" aria-live="polite">
+        @if (hover; as point) {
+          <span class="readout-time">
+            {{ point.timeUtc }} UTC <span class="muted">({{ point.timeLocal }} local)</span>
+          </span>
+          <span>alt <strong>{{ point.altitudeDeg | number: '1.1-1' }}°</strong></span>
+          <span>az {{ point.azimuthDeg | number: '1.0-0' }}°</span>
+          @if (point.moonSeparationDeg !== null) {
+            <span>Moon {{ point.moonSeparationDeg | number: '1.0-0' }}° away</span>
+          }
+          @if (point.extraValue) {
+            <span>{{ point.extraLabel }} {{ point.extraValue }}</span>
+          }
+        } @else {
+          <span class="muted">Hover the chart for altitude, azimuth and Moon separation at any moment.</span>
+        }
+      </div>
+
+      <div class="chart-legend">
+        <span class="legend-item"><span class="swatch swatch-target"></span>Target</span>
+        <span class="legend-item"><span class="swatch swatch-observable"></span>Observable</span>
+        <span class="legend-item"><span class="swatch swatch-moon"></span>Moon</span>
+        <span class="legend-item"><span class="swatch swatch-night"></span>Astronomical night</span>
+        <span class="legend-item legend-moon-phase">
+          Moon {{ c.moonIlluminationPct | number: '1.0-0' }}% illuminated
+        </span>
+      </div>
+
+      @for (warning of c.warnings; track warning) {
+        <p class="chart-warning">{{ warning }}</p>
+      }
+    </div>
+  }
+}

@@ -1,0 +1,120 @@
+@if (loading) {
+  <p class="status-line">Loading…</p>
+} @else if (notFound || !task) {
+  <div class="container">
+    <p class="status-line">Task not found.</p>
+    <button mat-raised-button color="primary" (click)="backToList()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to tasks
+    </button>
+  </div>
+} @else {
+  <div class="container">
+    <div class="task-actions-top">
+      <button mat-raised-button color="primary" (click)="backToList()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to tasks
+      </button>
+      @let editReason = getTaskEditReason();
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="editTask()"
+        [disabled]="editReason !== null"
+        [matTooltip]="editReason || 'Edit task'">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+    </div>
+
+    <mat-card class="task-card">
+      <mat-card-header>
+        <mat-card-title>{{ task.object || 'Task ' + task.task_id }}</mat-card-title>
+        <mat-card-subtitle>Task {{ task.task_id }} — {{ getStateLabel(task.state) }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p><strong>RA:</strong> {{ formatRA(task.ra) }} <strong>Dec:</strong> {{ formatDec(task.decl) }}</p>
+        <p>
+          <strong>Telescope:</strong>
+          @if (hasScope) {
+            <a [routerLink]="['/scopes', task.scope_id]">{{ task.scope_name || task.scope_id }}</a>
+          } @else {
+            –
+          }
+        </p>
+        <p>
+          <strong>Exposure:</strong> {{ task.exposure }}s
+          @if (task.filter) { <strong>Filter:</strong> {{ task.filter }} }
+          @if (task.binning) { <strong>Binning:</strong> {{ task.binning }} }
+        </p>
+        @if (task.descr) {
+          <p><strong>Description:</strong> {{ task.descr }}</p>
+        }
+        @if (task.comment) {
+          <p><strong>Comment:</strong> {{ task.comment }}</p>
+        }
+        <p><strong>Owner:</strong> {{ task.user_login || task.user_id }}</p>
+        @if (task.created) {
+          <p><strong>Created:</strong> {{ task.created | date: 'medium' }}</p>
+        }
+        @if (task.performed) {
+          <p><strong>Performed:</strong> {{ task.performed | date: 'medium' }}</p>
+        }
+        @if (task.project_ids?.length) {
+          <p class="projects-row">
+            <strong>Projects:</strong>
+            @for (projectId of task.project_ids; track projectId) {
+              <a [routerLink]="['/projects', projectId]">{{ projectId }}</a>
+            }
+          </p>
+        }
+
+        <p class="constraints-row">
+          <strong>Constraints:</strong>
+          @for (label of constraintLabels; track label) {
+            <span>{{ label }}</span>
+          } @empty {
+            <span class="muted">none set</span>
+          }
+        </p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="observability-card">
+      <mat-card-header>
+        <mat-card-title>Observability</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <app-observability-card
+          source="fixed"
+          [targetName]="task.object || 'Task ' + task.task_id"
+          [raHours]="task.ra"
+          [decDeg]="task.decl"
+          [telescopes]="telescopes"
+          [scopeId]="task.scope_id ?? null"
+          [date]="observabilityDate"
+          [constraints]="constraints"
+          [warnings]="observabilityWarnings"
+          (dateChange)="onObservabilityDateChange($event)"></app-observability-card>
+      </mat-card-content>
+    </mat-card>
+
+    @if (hasFov) {
+      <mat-card class="sky-view-card">
+        <mat-card-header>
+          <mat-card-title>Sky View</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <app-sky-view
+            [ra]="task.ra"
+            [dec]="task.decl"
+            [fovWidthDeg]="fovWidthDeg"
+            [fovHeightDeg]="fovHeightDeg"
+            [rotation]="telescope?.default_rotation ?? 0"
+            [fovMultiplier]="4" />
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+}
