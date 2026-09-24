@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -98,6 +98,7 @@ function minMaxDecOrderValidator(g: AbstractControl): ValidationErrors | null {
   templateUrl: './telescope-form-dialog.component.html',
   styleUrls: ['./telescope-form-dialog.component.css'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,

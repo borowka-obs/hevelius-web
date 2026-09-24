@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, HostListener, inject, input } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, HostListener, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { LoginService } from '../../services/login.service';
 import { TasksService } from '../../services/tasks.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
@@ -49,6 +49,7 @@ import { TaskParams } from '../../models/task-response';
         ])
     ],
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
     ReactiveFormsModule,
     MatTableModule,

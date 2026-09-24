@@ -4,5 +4,12 @@
     "outDir": "../out-tsc/spec",
     "types": ["node"]
   },
-  "include": ["**/*.spec.ts", "**/*.d.ts", "vitest-env.d.ts"]
+  "include": [
+    "**/*.spec.ts",
+    "**/*.d.ts",
+    "vitest-env.d.ts"
+  ],
+  "angularCompilerOptions": {
+    "strictTemplates": false
+  }
 }

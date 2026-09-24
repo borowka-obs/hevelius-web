@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogsService, CatalogObject, InstalledCatalog } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
@@ -60,6 +60,7 @@ interface LoadObjectsParams {
       ])
     ])
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     MatTableModule,
     MatSortModule,

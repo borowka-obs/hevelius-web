@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SensorsService } from '../../services/sensors.service';
 import { Sensor, SensorsListParams } from '../../models/sensor';
@@ -40,6 +40,7 @@ export type ActiveFilter = 'active' | 'inactive' | 'all';
     ])
   ],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     ReactiveFormsModule,
     MatTableModule,

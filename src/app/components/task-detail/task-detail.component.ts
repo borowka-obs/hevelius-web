@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -42,6 +42,7 @@ import { currentNightDate } from '../../utils/night-date';
     ObservabilityCardComponent
   ],
   templateUrl: './task-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./task-detail.component.css']
 })
 export class TaskDetailComponent implements OnInit {

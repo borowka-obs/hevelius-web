@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, input, effect, untracked, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, input, effect, untracked, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
@@ -43,6 +43,7 @@ import { ProjectPublicationsComponent } from '../project-publications/project-pu
     ])
   ],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     ReactiveFormsModule,
     MatTableModule,

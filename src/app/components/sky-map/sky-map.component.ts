@@ -6,7 +6,8 @@ import {
   ElementRef,
   ViewChild,
   inject,
-  NgZone
+  NgZone,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -40,6 +41,7 @@ function scopeColor(scopeId: number): string {
     MatIconModule
   ],
   templateUrl: './sky-map.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./sky-map.component.css']
 })
 export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {

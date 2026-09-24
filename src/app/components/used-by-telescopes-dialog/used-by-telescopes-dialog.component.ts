@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { Filter } from '../../models/filter';
@@ -14,6 +14,7 @@ export interface UsedByTelescopesDialogData {
   templateUrl: './used-by-telescopes-dialog.component.html',
   styleUrls: ['./used-by-telescopes-dialog.component.css'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatDialogModule, MatButtonModule]
 })
 export class UsedByTelescopesDialogComponent {

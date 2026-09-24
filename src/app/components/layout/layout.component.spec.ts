@@ -7,7 +7,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { LoginService } from '../../services/login.service';
 import { of } from 'rxjs';
@@ -37,7 +37,7 @@ describe('LayoutComponent', () => {
           provide: LoginService,
           useValue: { currentUser$: of(null), logout: vi.fn() }
         },
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting()
       ]
     }).compileComponents();

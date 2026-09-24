@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import {
     AbstractControl,
     UntypedFormGroup,
@@ -32,6 +32,7 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
     templateUrl: './reset-password.component.html',
     styleUrls: ['./reset-password.component.css'],
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         ReactiveFormsModule,
         MatFormFieldModule,
