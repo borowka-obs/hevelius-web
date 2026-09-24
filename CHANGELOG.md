@@ -16,9 +16,10 @@ unreleased
     orbit has to be propagated — but the chart around it (twilight, Moon, Moon
     separation, hover readout) is now computed locally, so the asteroid page
     gained all of those without a backend change.
-- **New task detail page** at `/tasks/:id`, reached by clicking a task ID in the
-  tasks list. It shows the task's coordinates, telescope, exposure, filter,
-  constraints and projects, alongside its observability chart and a sky view.
+- **New task detail page** at `/tasks/:id`, reached by clicking a task's object
+  name in the tasks list, or the chart icon in its Actions column. It shows the
+  task's coordinates, telescope, exposure, filter, constraints and projects,
+  alongside its observability chart and a sky view.
   Editing still opens the same dialog as before, from the Edit button.
 
 - **Night Plan** page rewritten against the new scheduler API

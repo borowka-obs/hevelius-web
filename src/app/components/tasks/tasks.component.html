@@ -83,7 +83,9 @@
 
       <ng-container matColumnDef="object">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Object</th>
-        <td mat-cell *matCellDef="let task">{{task.object}}</td>
+        <td mat-cell *matCellDef="let task">
+          <a [routerLink]="['/tasks', task.task_id]">{{task.object || 'Task ' + task.task_id}}</a>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="ra">
@@ -104,6 +106,14 @@
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
         <td mat-cell *matCellDef="let task">
+          <a
+            mat-icon-button
+            color="primary"
+            [routerLink]="['/tasks', task.task_id]"
+            matTooltip="Task details and observability chart"
+            aria-label="Task details">
+            <mat-icon>insights</mat-icon>
+          </a>
           @let reason = getTaskEditReason(task);
           @if (reason === null) {
             <button
