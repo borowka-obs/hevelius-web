@@ -62,13 +62,13 @@ describe('ElevationChartComponent', () => {
 
   it('draws one point per target sample', () => {
     render(makeCurve());
-    const points = component.geometry!.targetPoints.trim().split(' ');
+    const points = component.geometry!.targetSegments[0].trim().split(' ');
     expect(points).toHaveLength(5);
   });
 
   it('keeps every plotted point inside the plot area', () => {
     render(makeCurve());
-    component.geometry!.targetPoints.split(' ').forEach(pair => {
+    component.geometry!.targetSegments[0].split(' ').forEach(pair => {
       const [x, y] = pair.split(',').map(Number);
       expect(x).toBeGreaterThanOrEqual(component.plotLeft);
       expect(x).toBeLessThanOrEqual(component.plotRight);
@@ -77,9 +77,44 @@ describe('ElevationChartComponent', () => {
     });
   });
 
+  it('cuts the track where it drops below the plot instead of running along the floor', () => {
+    const dipping = [sample(0, 10), sample(60, -40), sample(120, -45), sample(180, -10), sample(240, 5)];
+    render(makeCurve({ target: dipping, nightEnd: dipping[4].time, observableWindows: [] }));
+    const segments = component.geometry!.targetSegments;
+    expect(segments).toHaveLength(2);
+    // 10° → −40° crosses −20° at 60% of the first hour; that point ends on the floor.
+    expect(segments[0].split(' ')).toHaveLength(2);
+    const [, floorY] = segments[0].split(' ')[1].split(',').map(Number);
+    expect(floorY).toBeCloseTo(component.plotBottom, 1);
+    // No point anywhere sits on the floor except the two crossings.
+    const onFloor = segments.join(' ').split(' ').filter(p => Math.abs(Number(p.split(',')[1]) - component.plotBottom) < 0.05);
+    expect(onFloor).toHaveLength(2);
+  });
+
+  it('draws nothing for a Moon that stays below the plot all night', () => {
+    const curve = makeCurve();
+    render(makeCurve({ moon: curve.target.map(s => ({ ...s, altitudeDeg: -50 })) }));
+    expect(component.geometry!.moonSegments).toEqual([]);
+  });
+
+  it('tolerates repeated hour labels on a 24-hour plot', () => {
+    const start = new Date(Date.UTC(2026, 5, 21, 12, 0));
+    const end = new Date(start.getTime() + 24 * 3_600_000);
+    const target = [
+      { time: start, altitudeDeg: 30, azimuthDeg: 0 },
+      { time: end, altitudeDeg: 30, azimuthDeg: 0 }
+    ];
+    const element = render(
+      makeCurve({ target, sun: target, moon: target, moonSeparationDeg: [90, 90], nightStart: start, nightEnd: end, twilight: [], observableWindows: [] })
+    );
+    const labels = component.geometry!.xTicks.map(t => t.label);
+    expect(labels[0]).toBe(labels[labels.length - 1]);
+    expect(element.querySelectorAll('text.x-axis-label')).toHaveLength(labels.length);
+  });
+
   it('maps higher altitudes to smaller y values', () => {
     render(makeCurve());
-    const ys = component.geometry!.targetPoints.split(' ').map(p => Number(p.split(',')[1]));
+    const ys = component.geometry!.targetSegments[0].split(' ').map(p => Number(p.split(',')[1]));
     // Sample 2 is the highest altitude, so it must have the smallest y.
     expect(Math.min(...ys)).toBe(ys[2]);
   });

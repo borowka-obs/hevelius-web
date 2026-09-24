@@ -3,7 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { of, throwError } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subject, of, throwError } from 'rxjs';
 
 import { TaskDetailComponent } from './task-detail.component';
 import { TaskService } from '../../services/task.service';
@@ -270,6 +271,37 @@ describe('TaskDetailComponent', () => {
     taskService.getTask.mockClear();
     component.editTask();
     expect(taskService.getTask).toHaveBeenCalledWith(42);
+  });
+
+  it('keeps the page and chart up while reloading after an edit', async () => {
+    await setup('42');
+    const reload = new Subject<unknown>();
+    dialog.open.mockReturnValue({ afterClosed: () => of(true) });
+    taskService.getTask.mockReturnValue(reload);
+    telescopeService.getTelescope.mockClear();
+
+    component.editTask();
+    fixture.detectChanges();
+    expect(component.loading).toBe(false);
+    expect(fixture.nativeElement.querySelector('app-observability-card')).not.toBeNull();
+
+    reload.next({ status: true, task: { ...TASK, min_alt: 40 } });
+    expect(component.constraints.minAltDeg).toBe(40);
+    // Same telescope as before, so it isn't fetched again.
+    expect(telescopeService.getTelescope).not.toHaveBeenCalled();
+  });
+
+  it('keeps the loaded task when a reload fails', async () => {
+    await setup('42');
+    const snackBar = TestBed.inject(MatSnackBar);
+    const open = vi.spyOn(snackBar, 'open');
+    dialog.open.mockReturnValue({ afterClosed: () => of(true) });
+    taskService.getTask.mockReturnValue(throwError(() => new Error('boom')));
+
+    component.editTask();
+    expect(component.notFound).toBe(false);
+    expect(component.task).not.toBeNull();
+    expect(open).toHaveBeenCalledWith('Could not reload the task', 'Close', expect.anything());
   });
 
   it('records the night chosen in the observability card', async () => {

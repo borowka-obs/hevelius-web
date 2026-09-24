@@ -34,7 +34,7 @@
         }
 
         <!-- Hour marks -->
-        @for (tick of g.xTicks; track tick.label) {
+        @for (tick of g.xTicks; track $index) {
           <line
             class="gridline gridline-vertical"
             [attr.x1]="tick.position"
@@ -66,10 +66,14 @@
           </text>
         }
 
-        <polyline class="moon-line" [attr.points]="g.moonPoints"></polyline>
+        @for (segment of g.moonSegments; track $index) {
+          <polyline class="moon-line" [attr.points]="segment"></polyline>
+        }
 
         <!-- Full track muted, then the constraint-satisfying stretches on top. -->
-        <polyline class="target-line" [attr.points]="g.targetPoints"></polyline>
+        @for (segment of g.targetSegments; track $index) {
+          <polyline class="target-line" [attr.points]="segment"></polyline>
+        }
         @for (segment of g.observableSegments; track $index) {
           <polyline class="target-line-observable" [attr.points]="segment"></polyline>
         }

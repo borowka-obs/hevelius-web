@@ -9,7 +9,7 @@
  *
  * Semantics mirror the backend scheduler (`hevelius/observability.py` and
  * `hevelius/night_plan.py` in hevelius-backend); see `evaluateConstraints` in
- * `src/app/utils/observability.ts` for the one documented divergence.
+ * `src/app/utils/observability.ts`.
  */
 
 /** A point on Earth an observation is made from. */
@@ -94,7 +94,7 @@ export interface ObservabilityCurve {
   moon: AltAzSample[];
   /** Target-to-Moon angular separation, one entry per target sample, degrees. */
   moonSeparationDeg: number[];
-  /** Moon illuminated fraction at mid-night, 0–100. */
+  /** Moon illuminated fraction at the target's best moment of the night, 0–100. */
   moonIlluminationPct: number;
   twilight: TwilightBand[];
   transit: TransitPoint | null;

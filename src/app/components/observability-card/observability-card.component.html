@@ -54,6 +54,10 @@
     @if (selectedTelescope) {
       {{ selectedTelescope.name }} has no latitude and longitude on file, so elevation can't be computed.
       Add them on the telescope's page to see this chart.
+    } @else if (scopeUnavailable) {
+      This telescope's details couldn't be loaded, so elevation can't be computed. Try reloading the page.
+    } @else if (telescopes.length === 0) {
+      No telescopes are available to compute this target's elevation from.
     } @else {
       Pick a telescope to compute this target's elevation.
     }

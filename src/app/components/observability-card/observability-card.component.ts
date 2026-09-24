@@ -143,10 +143,16 @@ export class ObservabilityCardComponent implements OnChanges {
    * Show the picker when there is a choice to make, or when nothing is selected
    * yet — a page with one telescope and no selection still needs a way in.
    * Parents that already know the scope (a project, a task) pass one telescope
-   * and a `scopeId`, and get no picker.
+   * and a `scopeId`, and get no picker. With no telescopes at all there is
+   * nothing to pick, so the hint below explains instead.
    */
   get showScopePicker(): boolean {
-    return this.telescopes.length > 1 || this.scopeId == null;
+    return this.telescopes.length > 1 || (this.scopeId == null && this.telescopes.length > 0);
+  }
+
+  /** A telescope is named but its record isn't here — typically a failed fetch. */
+  get scopeUnavailable(): boolean {
+    return this.scopeId != null && !this.selectedTelescope;
   }
 
   get loading(): boolean {
@@ -282,7 +288,9 @@ export class ObservabilityCardComponent implements OnChanges {
       const observability = await import('../../utils/observability');
       const site = observability.siteFromTelescope(this.selectedTelescope);
       if (!site) {
-        this.curve = null;
+        if (token === this.computeToken) {
+          this.curve = null;
+        }
         return;
       }
 

@@ -100,6 +100,20 @@ describe('ObservabilityCardComponent', () => {
     expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
   });
 
+  it("explains, rather than offering an empty picker, when the telescope couldn't be loaded", async () => {
+    await setInputs({ ...fixedTarget, telescopes: [], scopeId: 1 });
+    expect(component.showScopePicker).toBe(false);
+    expect(component.curve).toBeNull();
+    expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain("details couldn't be loaded");
+  });
+
+  it('says so when there are no telescopes at all', async () => {
+    await setInputs({ ...fixedTarget, telescopes: [], scopeId: null });
+    expect(component.showScopePicker).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('No telescopes are available');
+  });
+
   it('shows the telescope picker when there is a choice', async () => {
     await setInputs({
       ...fixedTarget,

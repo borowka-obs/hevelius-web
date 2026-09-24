@@ -32,11 +32,11 @@ interface ChartGeometry {
   twilight: TwilightRect[];
   horizonY: number;
   minAltY: number | null;
-  /** The whole target track, drawn muted underneath. */
-  targetPoints: string;
+  /** The whole target track, drawn muted underneath; split where it leaves the plot. */
+  targetSegments: string[];
   /** Stretches meeting every constraint, overdrawn in the highlight colour. */
   observableSegments: string[];
-  moonPoints: string;
+  moonSegments: string[];
   /** Observable stretches as a strip under the plot, easier to read than shading. */
   windowBars: { x: number; width: number }[];
   transit: TransitMarker | null;
@@ -124,10 +124,43 @@ export class ElevationChartComponent implements OnChanges {
     return this.plotLeft + clamped * (this.plotRight - this.plotLeft);
   }
 
-  private polyline(samples: AltAzSample[], start: Date, end: Date): string {
-    return samples
-      .map(s => `${this.timeToX(s.time, start, end).toFixed(1)},${this.altToY(s.altitudeDeg).toFixed(1)}`)
-      .join(' ');
+  private point(time: Date, altitudeDeg: number, start: Date, end: Date): string {
+    return `${this.timeToX(time, start, end).toFixed(1)},${this.altToY(altitudeDeg).toFixed(1)}`;
+  }
+
+  /**
+   * Polylines for a track, cut where it drops below the plot floor.
+   *
+   * Clamping instead would draw a body far below the horizon as a flat line
+   * along the bottom edge, which reads as data. Each piece ends exactly on the
+   * floor, at the interpolated crossing time, so the line meets the edge cleanly.
+   */
+  private polylines(samples: AltAzSample[], start: Date, end: Date): string[] {
+    const lines: string[] = [];
+    let current: string[] = [];
+    const crossing = (a: AltAzSample, b: AltAzSample): Date => {
+      const fraction = (this.altMin - a.altitudeDeg) / (b.altitudeDeg - a.altitudeDeg);
+      return new Date(a.time.getTime() + fraction * (b.time.getTime() - a.time.getTime()));
+    };
+
+    samples.forEach((sample, i) => {
+      const previous = i > 0 ? samples[i - 1] : null;
+      const visible = sample.altitudeDeg >= this.altMin;
+      if (visible) {
+        if (current.length === 0 && previous && previous.altitudeDeg < this.altMin) {
+          current.push(this.point(crossing(previous, sample), this.altMin, start, end));
+        }
+        current.push(this.point(sample.time, sample.altitudeDeg, start, end));
+      } else if (current.length > 0 && previous) {
+        current.push(this.point(crossing(previous, sample), this.altMin, start, end));
+        lines.push(current.join(' '));
+        current = [];
+      }
+    });
+    if (current.length > 0) {
+      lines.push(current.join(' '));
+    }
+    return lines.filter(line => line.includes(' '));
   }
 
   private buildGeometry(curve: ObservabilityCurve): ChartGeometry {
@@ -145,7 +178,7 @@ export class ElevationChartComponent implements OnChanges {
         )
       )
       .filter(segment => segment.length > 1)
-      .map(segment => this.polyline(segment, start, end));
+      .flatMap(segment => this.polylines(segment, start, end));
 
     const windowBars = curve.observableWindows.map(window => {
       const x = this.timeToX(window.start, start, end);
@@ -165,9 +198,9 @@ export class ElevationChartComponent implements OnChanges {
       twilight,
       horizonY: this.altToY(0),
       minAltY: curve.constraints.minAltDeg != null ? this.altToY(curve.constraints.minAltDeg) : null,
-      targetPoints: this.polyline(curve.target, start, end),
+      targetSegments: this.polylines(curve.target, start, end),
       observableSegments,
-      moonPoints: this.polyline(curve.moon, start, end),
+      moonSegments: this.polylines(curve.moon, start, end),
       windowBars,
       transit,
       xTicks: this.buildXTicks(start, end),

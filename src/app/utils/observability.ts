@@ -325,16 +325,12 @@ export function effectiveConstraints(constraints: ObservabilityConstraints): Obs
 }
 
 /**
- * Per-sample constraint check.
+ * Per-sample constraint check, matching the backend scheduler.
  *
  * Besides the explicit limits, the Sun must always be below the horizon: the
  * scheduler only ever plans between sunset and sunrise, and the plot's daylight
- * padding is there for context, not as observing time.
- *
- * One deliberate divergence from the backend scheduler: Moon separation is only
- * enforced while the Moon is above the horizon, since a set Moon cannot brighten
- * the sky. A target may therefore show a slightly longer window here than the
- * scheduler allows.
+ * padding is there for context, not as observing time. Moon separation is
+ * enforced whether or not the Moon is up, as the scheduler does.
  */
 export function evaluateConstraints(
   target: AltAzSample[],
@@ -355,8 +351,6 @@ export function evaluateConstraints(
     }
     if (
       constraints.minMoonSeparationDeg != null &&
-      moon[i] &&
-      moon[i].altitudeDeg > 0 &&
       moonSeparationDeg[i] != null &&
       moonSeparationDeg[i] < constraints.minMoonSeparationDeg
     ) {
@@ -415,11 +409,13 @@ function buildCurve(options: BuildCurveOptions): ObservabilityCurve {
   const moon = sampleBody(observer, Body.Moon, times);
   const moonSeparationDeg = target.map((sample, i) => angularSeparationDeg(sample, moon[i]));
 
-  const midNight = new Date((nightStart.getTime() + nightEnd.getTime()) / 2);
-  const illumination = moonIlluminationPct(midNight);
-
   const transit = findTransit(target, sun);
   const maxAltitudeDeg = transit ? transit.altitudeDeg : null;
+
+  // Like the scheduler, judge the Moon's phase at the target's best moment of
+  // the night; fall back to mid-plot when there is no track to pick one from.
+  const midNight = new Date((nightStart.getTime() + nightEnd.getTime()) / 2);
+  const illumination = moonIlluminationPct(transit ? transit.time : midNight);
 
   let mask = evaluateConstraints(target, sun, moon, moonSeparationDeg, constraints);
   const moonTooBright = constraints.maxMoonPhasePct != null && illumination > constraints.maxMoonPhasePct;
