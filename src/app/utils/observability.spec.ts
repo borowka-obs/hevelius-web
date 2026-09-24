@@ -5,6 +5,8 @@ import {
   computeNightWindow,
   curveForFixedTarget,
   curveFromSamples,
+  DEFAULT_MIN_ALT_DEG,
+  effectiveConstraints,
   evaluateConstraints,
   findTransit,
   makeObserver,
@@ -182,6 +184,32 @@ describe('findTransit', () => {
   it('returns null with no samples', () => {
     expect(findTransit([])).toBeNull();
   });
+
+  it('ignores samples taken while the Sun is up', () => {
+    // The target peaks in the daylight padding; the best *night* moment is later.
+    const target = [sample(0, 60), sample(10, 40), sample(20, 30)];
+    const sun = [sample(0, 5), sample(10, -10), sample(20, -20)];
+    const transit = findTransit(target, sun);
+    expect(transit!.altitudeDeg).toBe(40);
+  });
+
+  it('falls back to every sample when the Sun never sets', () => {
+    const target = [sample(0, 10), sample(10, 42)];
+    const sun = [sample(0, 5), sample(10, 6)];
+    expect(findTransit(target, sun)!.altitudeDeg).toBe(42);
+  });
+});
+
+describe('effectiveConstraints', () => {
+  it('applies the scheduler default when no minimum altitude is set', () => {
+    expect(effectiveConstraints({}).minAltDeg).toBe(DEFAULT_MIN_ALT_DEG);
+    expect(effectiveConstraints({ minAltDeg: null }).minAltDeg).toBe(DEFAULT_MIN_ALT_DEG);
+  });
+
+  it('keeps an explicit minimum altitude, including zero', () => {
+    expect(effectiveConstraints({ minAltDeg: 0 }).minAltDeg).toBe(0);
+    expect(effectiveConstraints({ minAltDeg: 35 }).minAltDeg).toBe(35);
+  });
 });
 
 describe('evaluateConstraints', () => {
@@ -218,8 +246,14 @@ describe('evaluateConstraints', () => {
     expect(mask).toEqual([true, true, true]);
   });
 
-  it('passes everything when no constraints are set', () => {
+  it('passes everything at night when no constraints are set', () => {
     expect(evaluateConstraints(target, sun, moonDown, [5, 5, 5], {})).toEqual([true, true, true]);
+  });
+
+  it('always rejects samples taken while the Sun is above the horizon', () => {
+    // The scheduler only plans between sunset and sunrise, limit or no limit.
+    const daySun = [sample(0, 10), sample(10, -0.5), sample(20, -1)];
+    expect(evaluateConstraints(target, daySun, moonDown, [180, 180, 180], {})).toEqual([false, false, true]);
   });
 });
 
@@ -337,6 +371,27 @@ describe('curveForFixedTarget', () => {
         expect(s.altitudeDeg).toBeGreaterThanOrEqual(40);
       });
     });
+  });
+
+  it('never calls a target observable in daylight or below the default altitude floor', () => {
+    const curve = curveForFixedTarget(baseOptions);
+    expect(curve.constraints.minAltDeg).toBe(DEFAULT_MIN_ALT_DEG);
+    expect(curve.observableWindows.length).toBeGreaterThan(0);
+    curve.observableWindows.forEach(window => {
+      curve.target.forEach((s, i) => {
+        if (s.time.getTime() >= window.start.getTime() && s.time.getTime() <= window.end.getTime()) {
+          expect(s.altitudeDeg).toBeGreaterThanOrEqual(DEFAULT_MIN_ALT_DEG);
+          expect(curve.sun[i].altitudeDeg).toBeLessThanOrEqual(-0.833);
+        }
+      });
+    });
+  });
+
+  it('warns that a target never rising past the default floor is not observable', () => {
+    // Dec −30° peaks below 8° from Warsaw: above the horizon, but never 20°.
+    const curve = curveForFixedTarget({ ...baseOptions, decDeg: -30 });
+    expect(curve.observableWindows).toHaveLength(0);
+    expect(curve.warnings.join(' ')).toContain('never satisfies');
   });
 
   it('closes the night entirely when the Moon is brighter than the target allows', () => {

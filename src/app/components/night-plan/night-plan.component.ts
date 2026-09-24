@@ -20,6 +20,7 @@ import { NightPlanService } from '../../services/night-plan.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
 import { TaskStatesService } from '../../services/task-states.service';
 import { TelescopeService, Telescope } from '../../services/telescope.service';
+import { currentNightDate } from '../../utils/night-date';
 import { UserService, UserPreferences } from '../../services/user.service';
 import { TopBarService } from '../../services/top-bar.service';
 import {
@@ -73,7 +74,8 @@ export class NightPlanComponent implements OnInit, OnDestroy {
     private topBarService = inject(TopBarService);
 
     scopeControl = new FormControl<number | null>(null);
-    dateControl = new FormControl<Date>(new Date());
+    // Until the backend answers with its own night_date, show the night in progress.
+    dateControl = new FormControl<Date>(currentNightDate());
     explainControl = new FormControl<boolean>(false, { nonNullable: true });
 
     telescopes: Telescope[] = [];
@@ -219,7 +221,7 @@ export class NightPlanComponent implements OnInit, OnDestroy {
     }
 
     onDateChange(newDate: Date | null): void {
-        const date = newDate ?? new Date();
+        const date = newDate ?? currentNightDate();
         this.dateControl.setValue(date);
         this.explicitNightDate = this.formatDateForApi(date);
         this.loadNightPlan();

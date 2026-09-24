@@ -8,6 +8,8 @@ import {
   AsteroidVisibilityResponse
 } from '../../services/asteroids.service';
 import { TelescopeService, Telescope } from '../../services/telescope.service';
+import { UserService, UserPreferences } from '../../services/user.service';
+import { currentNightDate } from '../../utils/night-date';
 import { AltAzSample, ExtraSeries } from '../../models/observability';
 import { ObservabilityCardComponent } from '../observability-card/observability-card.component';
 import { MatCardModule } from '@angular/material/card';
@@ -23,8 +25,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-asteroid-detail',
@@ -53,6 +55,7 @@ export class AsteroidDetailComponent implements OnInit {
   private router = inject(Router);
   private asteroidsService = inject(AsteroidsService);
   private telescopeService = inject(TelescopeService);
+  private userService = inject(UserService);
   private snackBar = inject(MatSnackBar);
 
   asteroid: Asteroid | null = null;
@@ -66,7 +69,7 @@ export class AsteroidDetailComponent implements OnInit {
   // Visibility widget
   telescopes: Telescope[] = [];
   scopeControl = new FormControl<number | null>(null);
-  dateControl = new FormControl<Date>(new Date());
+  dateControl = new FormControl<Date>(currentNightDate());
   visibility: AsteroidVisibilityResponse | null = null;
   visibilityLoading = false;
   visibilityError: string | null = null;
@@ -80,7 +83,7 @@ export class AsteroidDetailComponent implements OnInit {
    */
   visibilitySamples: AltAzSample[] | null = null;
   visibilityExtraSeries: ExtraSeries | null = null;
-  selectedDate: Date = new Date();
+  selectedDate: Date = currentNightDate();
   activeTelescopes: Telescope[] = [];
 
   constructor() {
@@ -104,14 +107,25 @@ export class AsteroidDetailComponent implements OnInit {
       error: () => { this.availableTags = []; }
     });
 
-    this.telescopeService.getTelescopes().subscribe({
-      next: telescopes => {
-        this.telescopes = telescopes;
-        this.activeTelescopes = telescopes.filter(t => t.active);
-      },
-      error: () => {
-        this.telescopes = [];
-        this.activeTelescopes = [];
+    // The user's default_scope preselects the telescope; a failed preferences
+    // call just leaves the picker empty, as before.
+    forkJoin({
+      telescopes: this.telescopeService.getTelescopes().pipe(catchError(() => of([] as Telescope[]))),
+      preferences: this.userService.getPreferences().pipe(
+        catchError(() => of(null as UserPreferences | null))
+      )
+    }).subscribe(({ telescopes, preferences }) => {
+      this.telescopes = telescopes;
+      this.activeTelescopes = telescopes.filter(t => t.active);
+
+      const defaultScope = preferences?.default_scope ?? null;
+      if (
+        this.scopeControl.value == null &&
+        defaultScope != null &&
+        this.activeTelescopes.some(t => t.scope_id === defaultScope)
+      ) {
+        this.scopeControl.setValue(defaultScope);
+        this.loadVisibility();
       }
     });
 
@@ -127,6 +141,10 @@ export class AsteroidDetailComponent implements OnInit {
     this.asteroidsService.getAsteroid(asteroidId).subscribe({
       next: response => {
         this.asteroid = response.asteroid;
+        // The default telescope may have been picked before the asteroid arrived.
+        if (this.scopeControl.value != null) {
+          this.loadVisibility();
+        }
       },
       error: () => {
         this.notFound = true;
@@ -220,8 +238,8 @@ export class AsteroidDetailComponent implements OnInit {
   }
 
   onDateChange(newDate: Date | null): void {
-    this.dateControl.setValue(newDate ?? new Date());
-    this.selectedDate = this.dateControl.value ?? new Date();
+    this.dateControl.setValue(newDate ?? currentNightDate());
+    this.selectedDate = this.dateControl.value ?? currentNightDate();
     this.loadVisibility();
   }
 
@@ -236,7 +254,7 @@ export class AsteroidDetailComponent implements OnInit {
     this.visibilityError = null;
     this.asteroidsService.getVisibility(this.asteroid.asteroid_id, {
       scopeId,
-      date: this.formatDateForApi(this.dateControl.value ?? new Date())
+      date: this.formatDateForApi(this.dateControl.value ?? currentNightDate())
     }).subscribe({
       next: response => {
         this.visibilityLoading = false;

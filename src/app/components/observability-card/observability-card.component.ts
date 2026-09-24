@@ -29,6 +29,7 @@ import {
 } from '../../models/observability';
 import { Telescope } from '../../services/telescope.service';
 import { ElevationChartComponent, formatUtcTime } from '../elevation-chart/elevation-chart.component';
+import { currentNightDate } from '../../utils/night-date';
 
 /**
  * Where the target track comes from.
@@ -85,7 +86,7 @@ export class ObservabilityCardComponent implements OnChanges {
   /** Telescopes offered in the picker. A single entry hides the picker. */
   @Input() telescopes: Telescope[] = [];
   @Input() scopeId: number | null = null;
-  @Input() date: Date = new Date();
+  @Input() date: Date = currentNightDate();
   @Input() constraints: ObservabilityConstraints | null = null;
   /** Extra caveats from the parent (e.g. a target outside the mount's Dec range). */
   @Input() warnings: string[] = [];

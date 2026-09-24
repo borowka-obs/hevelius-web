@@ -151,6 +151,22 @@ describe('NightPlanComponent', () => {
     expect(component.dateControl.value).toEqual(new Date(2026, 7, 6));
   });
 
+  it('should fall back to the night in progress when the date is cleared', async () => {
+    await setup();
+    // 01:30 local: the night in progress started yesterday evening.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 8, 25, 1, 30));
+    try {
+      component.onDateChange(null);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(component.dateControl.value).toEqual(new Date(2026, 8, 24));
+    const params = nightPlanService.getNightPlan.mock.calls.at(-1)![0];
+    expect(params.date).toBe('2026-09-24');
+  });
+
   it('should only offer active telescopes', async () => {
     await setup();
     expect(component.activeTelescopes.map(t => t.scope_id)).toEqual([3, 7]);

@@ -45,6 +45,11 @@ export interface Project {
   pixel_x?: number | null;
   /** Pixel pitch Y (µm) stored at project creation; copied from sensor. */
   pixel_y?: number | null;
+  /** Observing limits, same meaning as the `Task` fields; null = no limit (see api/openapi.yaml). */
+  min_alt?: number | null;
+  moon_distance?: number | null;
+  max_moon_phase?: number | null;
+  max_sun_alt?: number | null;
   subframes?: ProjectSubframe[];
   user_ids?: number[];
 }

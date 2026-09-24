@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 import { AsteroidDetailComponent } from './asteroid-detail.component';
 import { AsteroidsService, Asteroid, AsteroidTag, AsteroidVisibilityResponse } from '../../services/asteroids.service';
 import { TelescopeService, Telescope } from '../../services/telescope.service';
+import { UserService, UserPreferences } from '../../services/user.service';
 
 describe('AsteroidDetailComponent', () => {
   let component: AsteroidDetailComponent;
@@ -19,6 +20,7 @@ describe('AsteroidDetailComponent', () => {
     getVisibility: ReturnType<typeof vi.fn>;
   };
   let telescopeService: { getTelescopes: ReturnType<typeof vi.fn> };
+  let userService: { getPreferences: ReturnType<typeof vi.fn> };
   let router: { navigate: ReturnType<typeof vi.fn> };
   let snackBar: { open: ReturnType<typeof vi.fn> };
 
@@ -83,10 +85,14 @@ describe('AsteroidDetailComponent', () => {
   async function setup(
     id: string | null,
     overrides: Partial<typeof asteroidsService> = {},
-    telescopes: Telescope[] = [activeScope, inactiveScope]
+    telescopes: Telescope[] = [activeScope, inactiveScope],
+    defaultScope: number | null = null
   ): Promise<void> {
     asteroidsService = makeAsteroidsService(overrides);
     telescopeService = { getTelescopes: vi.fn().mockReturnValue(of(telescopes)) };
+    userService = {
+      getPreferences: vi.fn().mockReturnValue(of({ default_scope: defaultScope } as UserPreferences))
+    };
     router = { navigate: vi.fn() };
     snackBar = { open: vi.fn() };
 
@@ -95,6 +101,7 @@ describe('AsteroidDetailComponent', () => {
       providers: [
         { provide: AsteroidsService, useValue: asteroidsService },
         { provide: TelescopeService, useValue: telescopeService },
+        { provide: UserService, useValue: userService },
         { provide: Router, useValue: router },
         { provide: MatSnackBar, useValue: snackBar },
         {
@@ -126,6 +133,40 @@ describe('AsteroidDetailComponent', () => {
   it('should flag not found when the request fails', async () => {
     await setup('999', { getAsteroid: vi.fn().mockReturnValue(throwError(() => new Error('404'))) });
     expect(component.notFound).toBe(true);
+  });
+
+  it('should preselect the user\'s default telescope and load its visibility', async () => {
+    await setup('1', {}, [activeScope, inactiveScope], 1);
+    expect(component.scopeControl.value).toBe(1);
+    expect(asteroidsService.getVisibility).toHaveBeenCalledTimes(1);
+    expect(asteroidsService.getVisibility).toHaveBeenCalledWith(1, expect.objectContaining({ scopeId: 1 }));
+  });
+
+  it('should ignore a default telescope that is not active', async () => {
+    await setup('1', {}, [activeScope, inactiveScope], 2);
+    expect(component.scopeControl.value).toBeNull();
+    expect(asteroidsService.getVisibility).not.toHaveBeenCalled();
+  });
+
+  it('should still offer telescopes when preferences fail to load', async () => {
+    asteroidsService = makeAsteroidsService();
+    await TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, AsteroidDetailComponent],
+      providers: [
+        { provide: AsteroidsService, useValue: asteroidsService },
+        { provide: TelescopeService, useValue: { getTelescopes: vi.fn().mockReturnValue(of([activeScope])) } },
+        { provide: UserService, useValue: { getPreferences: vi.fn().mockReturnValue(throwError(() => new Error('401'))) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: MatSnackBar, useValue: { open: vi.fn() } },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } }
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(AsteroidDetailComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.activeTelescopes).toEqual([activeScope]);
+    expect(component.scopeControl.value).toBeNull();
   });
 
   it('should navigate back to the list', async () => {
