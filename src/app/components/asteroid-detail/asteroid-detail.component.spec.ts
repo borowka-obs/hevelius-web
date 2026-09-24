@@ -267,6 +267,18 @@ describe('AsteroidDetailComponent', () => {
     expect(component.visibilityExtraSeries).toBeNull();
   });
 
+  it('should keep the telescope list stable across change detection', async () => {
+    await setup('1');
+    const telescopes = component.activeTelescopes;
+
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    // Bound as a chart input: a fresh array each pass restarts the curve
+    // computation forever, leaving the spinner running.
+    expect(component.activeTelescopes).toBe(telescopes);
+  });
+
   it('should keep the adapted track stable across change detection', async () => {
     await setup('1');
     component.onScopeChange(1);

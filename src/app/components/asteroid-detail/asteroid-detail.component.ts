@@ -81,10 +81,7 @@ export class AsteroidDetailComponent implements OnInit {
   visibilitySamples: AltAzSample[] | null = null;
   visibilityExtraSeries: ExtraSeries | null = null;
   selectedDate: Date = new Date();
-
-  get activeTelescopes(): Telescope[] {
-    return this.telescopes.filter(t => t.active);
-  }
+  activeTelescopes: Telescope[] = [];
 
   constructor() {
     this.filteredTagOptions$ = this.newTagControl.valueChanges.pipe(
@@ -108,8 +105,14 @@ export class AsteroidDetailComponent implements OnInit {
     });
 
     this.telescopeService.getTelescopes().subscribe({
-      next: telescopes => { this.telescopes = telescopes; },
-      error: () => { this.telescopes = []; }
+      next: telescopes => {
+        this.telescopes = telescopes;
+        this.activeTelescopes = telescopes.filter(t => t.active);
+      },
+      error: () => {
+        this.telescopes = [];
+        this.activeTelescopes = [];
+      }
     });
 
     const id = this.route.snapshot.paramMap.get('id');

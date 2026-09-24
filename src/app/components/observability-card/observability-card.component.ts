@@ -108,6 +108,16 @@ export class ObservabilityCardComponent implements OnChanges {
    */
   private inFlight: Promise<void> = Promise.resolve();
 
+  /**
+   * Value-based fingerprint of the last computed inputs.
+   *
+   * Angular compares input bindings by reference, so a parent binding a getter
+   * hands over a new array or object on every change-detection pass. Without
+   * this guard that restarts the computation each pass, `computing` never
+   * settles, and the spinner runs forever.
+   */
+  private lastSignature: string | null = null;
+
   /** Resolves once the in-flight curve computation has settled. */
   whenSettled(): Promise<void> {
     return this.inFlight;
@@ -157,14 +167,59 @@ export class ObservabilityCardComponent implements OnChanges {
       'targetName'
     ];
     if (watched.some(key => key in changes)) {
-      this.inFlight = this.recompute();
+      this.requestRecompute();
     }
+  }
+
+  /** Recompute, but only when the inputs actually differ in value. */
+  private requestRecompute(): void {
+    const signature = this.inputSignature();
+    if (signature === this.lastSignature) {
+      return;
+    }
+    this.lastSignature = signature;
+    this.inFlight = this.recompute();
+  }
+
+  /**
+   * A cheap value fingerprint of everything the curve depends on.
+   *
+   * Only the selected telescope matters, not the whole list, and a supplied
+   * track is summarised by its length, its end points and the sum of its
+   * altitudes — enough to notice any real change without hashing hundreds of
+   * samples on every pass.
+   */
+  private inputSignature(): string {
+    const scope = this.selectedTelescope;
+    const samples = this.samples;
+    return JSON.stringify({
+      source: this.source,
+      targetName: this.targetName,
+      raHours: this.raHours,
+      decDeg: this.decDeg,
+      date: this.date instanceof Date ? this.date.getTime() : null,
+      scope: scope ? [scope.scope_id, scope.lat, scope.lon, scope.alt, scope.name] : null,
+      constraints: this.constraints ?? {},
+      warnings: this.warnings ?? [],
+      samples:
+        samples && samples.length > 0
+          ? [
+              samples.length,
+              samples[0].time.getTime(),
+              samples[samples.length - 1].time.getTime(),
+              samples.reduce((total, s) => total + s.altitudeDeg, 0).toFixed(3)
+            ]
+          : null,
+      extraSeries: this.extraSeries
+        ? [this.extraSeries.label, this.extraSeries.unit ?? null, this.extraSeries.values.length]
+        : null
+    });
   }
 
   onScopeChange(scopeId: number | null): void {
     this.scopeId = scopeId;
     this.scopeIdChange.emit(scopeId);
-    this.inFlight = this.recompute();
+    this.requestRecompute();
   }
 
   onDateChange(date: Date | null): void {
@@ -173,7 +228,7 @@ export class ObservabilityCardComponent implements OnChanges {
     }
     this.date = date;
     this.dateChange.emit(date);
-    this.inFlight = this.recompute();
+    this.requestRecompute();
   }
 
   /** Step the plotted night back or forward by a day. */

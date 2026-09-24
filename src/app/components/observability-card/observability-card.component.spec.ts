@@ -212,6 +212,45 @@ describe('ObservabilityCardComponent', () => {
     expect(component.curve!.warnings.join(' ')).toContain('outside this mount');
   });
 
+  it('does not restart the computation when an input changes identity but not value', async () => {
+    await setInputs(fixedTarget);
+    const curve = component.curve;
+
+    // A parent binding a getter (`[telescopes]="activeTelescopes"`) hands over a
+    // fresh array on every change-detection pass. That must not restart the
+    // computation, or the spinner never clears.
+    fixture.componentRef.setInput('telescopes', [makeTelescope()]);
+    fixture.detectChanges();
+
+    expect(component.computing).toBe(false);
+    expect(component.curve).toBe(curve);
+  });
+
+  it('still recomputes when an input genuinely changes', async () => {
+    await setInputs(fixedTarget);
+    const curve = component.curve;
+
+    await setInputs({ ...fixedTarget, date: new Date(2026, 11, 20) });
+    expect(component.curve).not.toBe(curve);
+  });
+
+  it('recomputes when a supplied track changes but keeps its endpoints', async () => {
+    const base = [sample(0, 10), sample(60, 30), sample(120, 20)];
+    const common = {
+      source: 'samples' as const,
+      targetName: '(433) Eros',
+      telescopes: [makeTelescope()],
+      scopeId: 1
+    };
+    await setInputs({ ...common, samples: base });
+    const curve = component.curve;
+
+    // Same length and same first/last sample, different in the middle.
+    await setInputs({ ...common, samples: [sample(0, 10), sample(60, 55), sample(120, 20)] });
+    expect(component.curve).not.toBe(curve);
+    expect(component.curve!.target[1].altitudeDeg).toBe(55);
+  });
+
   it('narrows the observable window when constraints are applied', async () => {
     await setInputs(fixedTarget);
     const unconstrained = component.curve!.observableWindows.length;
