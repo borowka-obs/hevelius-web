@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { VERSION } from '@angular/core';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,6 +17,7 @@ export interface AboutStatusEntry {
   standalone: true,
   imports: [MatDialogModule, MatButtonModule],
   templateUrl: './about-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./about-dialog.component.css']
 })
 export class AboutDialogComponent implements OnInit {

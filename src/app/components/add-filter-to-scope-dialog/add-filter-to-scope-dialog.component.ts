@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,6 +17,7 @@ export interface AddFilterToScopeDialogData {
   templateUrl: './add-filter-to-scope-dialog.component.html',
   styleUrls: ['./add-filter-to-scope-dialog.component.css'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatDialogModule, MatFormFieldModule, MatSelectModule, MatButtonModule]
 })
 export class AddFilterToScopeDialogComponent {

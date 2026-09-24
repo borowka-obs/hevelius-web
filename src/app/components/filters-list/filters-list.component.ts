@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FiltersService } from '../../services/filters.service';
 import { TelescopeService } from '../../services/telescope.service';
@@ -34,6 +34,7 @@ type ActiveFilter = 'active' | 'inactive' | 'all';
     ])
   ],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     RouterModule,
     ReactiveFormsModule,

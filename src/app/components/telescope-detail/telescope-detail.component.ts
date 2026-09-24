@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TelescopeService } from '../../services/telescope.service';
 import { Telescope } from '../../services/telescope.service';
@@ -21,6 +21,7 @@ import * as L from 'leaflet';
   templateUrl: './telescope-detail.component.html',
   styleUrls: ['./telescope-detail.component.css'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     RouterModule,
     MatCardModule,

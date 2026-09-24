@@ -6,7 +6,7 @@ import { environment } from './environments/environment';
 import { provideRouter } from '@angular/router';
 import { routes } from './app/app-routing.module';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './app/interceptors/auth.interceptor';
 import { TasksService } from './app/services/tasks.service';
@@ -22,7 +22,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideZoneChangeDetection(),provideRouter(routes),
     provideAnimations(),
-    provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(withXhr(), withInterceptorsFromDi()),
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,

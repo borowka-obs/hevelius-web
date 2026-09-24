@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -34,6 +34,7 @@ import { computeFovDeg } from '../../utils/fov';
     </mat-dialog-actions>
   `,
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatDialogModule, MatButtonModule]
 })
 export class DeleteProjectConfirmDialogComponent {}
@@ -101,6 +102,7 @@ function formatCoordInput(v: number): string {
   templateUrl: './project-edit-dialog.component.html',
   styleUrls: ['./project-edit-dialog.component.css'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,

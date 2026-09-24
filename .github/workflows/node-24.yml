@@ -1,11 +1,11 @@
-name: node-20
+name: node-24
 on: push
 
 jobs:
   ubuntu-latest-build:
     uses: ./.github/workflows/nodejs-main.yml
     with:
-      node-version: 20.x
+      node-version: 24.x
 
 permissions:
   contents: read

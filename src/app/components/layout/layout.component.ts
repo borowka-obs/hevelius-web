@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskViewComponent } from '../task-view/task-view.component';
 import { Router, RouterModule } from '@angular/router';
@@ -21,6 +21,7 @@ import { GravatarService } from '../../services/gravatar.service';
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.css'],
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
     RouterModule,
     MatMenuModule,

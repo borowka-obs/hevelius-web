@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AsteroidsService, Asteroid, AsteroidTag } from '../../services/asteroids.service';
 import { MatSortModule, Sort } from '@angular/material/sort';
@@ -49,6 +49,7 @@ interface LoadAsteroidsParams {
       ])
     ])
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     MatTableModule,
     MatSortModule,

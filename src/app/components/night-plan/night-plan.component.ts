@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { EMPTY, Subject, forkJoin, of } from 'rxjs';
@@ -49,6 +49,7 @@ const EXCLUSION_REASON_LABELS: Record<string, string> = {
     templateUrl: './night-plan.component.html',
     styleUrls: ['./night-plan.component.css'],
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
     ReactiveFormsModule,
     RouterModule,

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -32,6 +32,7 @@ import { catchError, map, startWith } from 'rxjs/operators';
   selector: 'app-asteroid-detail',
   templateUrl: './asteroid-detail.component.html',
   styleUrls: ['./asteroid-detail.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     MatCardModule,
     MatButtonModule,

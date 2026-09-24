@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { TelescopeService, Telescope, TelescopesListParams } from '../../services/telescope.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -35,6 +35,7 @@ import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope
     ])
   ],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     RouterModule,
     ReactiveFormsModule,

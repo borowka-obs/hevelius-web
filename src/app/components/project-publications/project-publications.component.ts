@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, input } from '@angular/core';
+import { Component, HostListener, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   PublicationLink,
@@ -29,6 +29,7 @@ import {
       <span class="publication-empty">—</span>
     }
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .publication-icons {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { CatalogsService, InstalledCatalog } from '../../services/catalogs.service';
@@ -10,6 +10,7 @@ import { TopBarService } from '../../services/top-bar.service';
   selector: 'app-catalogs-list',
   templateUrl: './catalogs-list.component.html',
   styleUrls: ['./catalogs-list.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     DecimalPipe,
     RouterModule,
