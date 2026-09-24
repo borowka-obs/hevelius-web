@@ -12,12 +12,21 @@ unreleased
     so opening a chart puts no load on the backend at all. Task charts also draw
     the task's own limits (`min_alt`, `max_sun_alt`, `moon_distance`,
     `max_moon_phase`) and shade the window that satisfies them.
+  - **Projects** use their own limits too (`min_alt`, `max_sun_alt`,
+    `moon_distance`, `max_moon_phase`).
+  - "Observable" matches the scheduler: only between sunset and sunrise, and
+    never below 20° when no minimum altitude is set (the backend's default).
+    The highest point reported is the highest point *during the night*.
   - **Asteroids** keep using the backend ephemeris for their position — their
     orbit has to be propagated — but the chart around it (twilight, Moon, Moon
     separation, hover readout) is now computed locally, so the asteroid page
-    gained all of those without a backend change.
+    gained all of those without a backend change. The asteroid page now
+    preselects your default telescope from your preferences.
+  - Charts open on the night in progress: before local noon that is last
+    night, not the coming one. The Night Plan date picker follows the same
+    rule until the backend reports its night.
 - **New task detail page** at `/tasks/:id`, reached by clicking a task's object
-  name in the tasks list, or the chart icon in its Actions column. It shows the
+  name or ID in the tasks list, or the chart icon in its Actions column. It shows the
   task's coordinates, telescope, exposure, filter, constraints and projects,
   alongside its observability chart and a sky view.
   Editing still opens the same dialog as before, from the Edit button.

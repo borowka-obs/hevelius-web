@@ -19,6 +19,7 @@ import { ObservabilityCardComponent } from '../observability-card/observability-
 import { SkyViewComponent } from '../sky-view/sky-view.component';
 import { TaskViewComponent } from '../task-view/task-view.component';
 import { computeFovDeg } from '../../utils/fov';
+import { currentNightDate } from '../../utils/night-date';
 
 /**
  * Detailed view of a single task, at `/tasks/:id`.
@@ -59,8 +60,8 @@ export class TaskDetailComponent implements OnInit {
   loading = true;
   notFound = false;
 
-  /** The night the chart is showing; defaults to tonight. */
-  observabilityDate = new Date();
+  /** The night the chart is showing; defaults to the night in progress. */
+  observabilityDate = currentNightDate();
 
   /**
    * Chart inputs, held as stable references.

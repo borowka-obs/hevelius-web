@@ -31,6 +31,8 @@ import {
 import { SkyViewComponent } from '../sky-view/sky-view.component';
 import { ObservabilityCardComponent } from '../observability-card/observability-card.component';
 import { computeFovDeg } from '../../utils/fov';
+import { currentNightDate } from '../../utils/night-date';
+import { ObservabilityConstraints } from '../../models/observability';
 
 @Component({
   selector: 'app-project-detail',
@@ -67,8 +69,8 @@ export class ProjectDetailComponent implements OnInit {
   currentProjectIndex = -1;
   telescope: Telescope | null = null;
 
-  /** The night the observability chart is showing; defaults to tonight. */
-  observabilityDate = new Date();
+  /** The night the observability chart is showing; defaults to the night in progress. */
+  observabilityDate = currentNightDate();
 
   /**
    * Chart inputs, held as stable references.
@@ -78,6 +80,7 @@ export class ProjectDetailComponent implements OnInit {
    * each time would make the chart recompute on every change-detection pass.
    */
   telescopes: Telescope[] = [];
+  constraints: ObservabilityConstraints = {};
   observabilityWarnings: string[] = [];
 
   private readonly MOBILE_BREAKPOINT = 640;
@@ -359,6 +362,12 @@ export class ProjectDetailComponent implements OnInit {
   /** Rebuild every chart input at once, after the project or telescope changes. */
   private refreshObservabilityInputs(): void {
     this.telescopes = this.telescope ? [this.telescope] : [];
+    this.constraints = {
+      minAltDeg: this.project?.min_alt ?? null,
+      maxSunAltDeg: this.project?.max_sun_alt ?? null,
+      minMoonSeparationDeg: this.project?.moon_distance ?? null,
+      maxMoonPhasePct: this.project?.max_moon_phase ?? null
+    };
     this.observabilityWarnings = this.buildObservabilityWarnings();
   }
 
@@ -368,8 +377,8 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   /**
-   * A project carries no per-task observing limits, but the mount still has a
-   * declination range, and a target outside it can never be pointed at.
+   * Caveats the chart itself cannot know about — currently a target outside
+   * the mount's declination range, which it can never be pointed at.
    */
   private buildObservabilityWarnings(): string[] {
     const warnings: string[] = [];

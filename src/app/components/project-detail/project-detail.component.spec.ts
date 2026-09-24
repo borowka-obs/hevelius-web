@@ -104,6 +104,26 @@ describe('ProjectDetailComponent observability', () => {
     expect(component.hasObservabilityTarget).toBe(false);
   });
 
+  it("passes the project's own observing limits to the chart", async () => {
+    await setup({ project: { min_alt: 35, max_sun_alt: -12, moon_distance: 40, max_moon_phase: 60 } });
+    expect(component.constraints).toEqual({
+      minAltDeg: 35,
+      maxSunAltDeg: -12,
+      minMoonSeparationDeg: 40,
+      maxMoonPhasePct: 60
+    });
+  });
+
+  it('leaves unset project limits as null so the chart applies its defaults', async () => {
+    await setup();
+    expect(component.constraints).toEqual({
+      minAltDeg: null,
+      maxSunAltDeg: null,
+      minMoonSeparationDeg: null,
+      maxMoonPhasePct: null
+    });
+  });
+
   it('warns when the declination is outside the mount range', async () => {
     await setup({ project: { decl: -60 } });
     expect(component.observabilityWarnings.join(' ')).toContain('cannot point there');

@@ -50,6 +50,14 @@ const CIVIL_ALT_DEG = -6;
 const NAUTICAL_ALT_DEG = -12;
 const ASTRONOMICAL_ALT_DEG = -18;
 
+/**
+ * Altitude floor used when a target sets none — the backend scheduler's
+ * `DEFAULT_MIN_ALT_DEG` in `hevelius/observability.py`. "No floor at all" is
+ * never physically meaningful, so the chart applies the same default rather
+ * than calling a target observable while it is below the horizon.
+ */
+export const DEFAULT_MIN_ALT_DEG = 20;
+
 /** Daylight shown either side of sunset/sunrise, so the twilight ramp is visible. */
 const NIGHT_PADDING_MINUTES = 60;
 
@@ -284,13 +292,22 @@ export function twilightBands(sunSamples: AltAzSample[]): TwilightBand[] {
   return bands;
 }
 
-/** Highest altitude reached, and when. */
-export function findTransit(samples: AltAzSample[]): TransitPoint | null {
-  if (samples.length === 0) {
+/**
+ * Highest altitude reached, and when.
+ *
+ * With `sun` given, only samples taken after sunset and before sunrise count,
+ * so the daylight padding either side of the plot can't produce a "best"
+ * moment nobody could observe at. Falls back to every sample when the Sun
+ * never sets (polar day).
+ */
+export function findTransit(samples: AltAzSample[], sun?: AltAzSample[]): TransitPoint | null {
+  const dark = sun ? samples.filter((_, i) => sun[i] && sun[i].altitudeDeg <= HORIZON_ALT_DEG) : samples;
+  const candidates = dark.length > 0 ? dark : samples;
+  if (candidates.length === 0) {
     return null;
   }
-  let best = samples[0];
-  for (const sample of samples) {
+  let best = candidates[0];
+  for (const sample of candidates) {
     if (sample.altitudeDeg > best.altitudeDeg) {
       best = sample;
     }
@@ -299,7 +316,20 @@ export function findTransit(samples: AltAzSample[]): TransitPoint | null {
 }
 
 /**
+ * Fill in the defaults the backend scheduler applies, so the chart and the
+ * scheduler agree on what "observable" means: an unset `minAltDeg` becomes
+ * `DEFAULT_MIN_ALT_DEG`. The other limits stay optional.
+ */
+export function effectiveConstraints(constraints: ObservabilityConstraints): ObservabilityConstraints {
+  return { ...constraints, minAltDeg: constraints.minAltDeg ?? DEFAULT_MIN_ALT_DEG };
+}
+
+/**
  * Per-sample constraint check.
+ *
+ * Besides the explicit limits, the Sun must always be below the horizon: the
+ * scheduler only ever plans between sunset and sunrise, and the plot's daylight
+ * padding is there for context, not as observing time.
  *
  * One deliberate divergence from the backend scheduler: Moon separation is only
  * enforced while the Moon is above the horizon, since a set Moon cannot brighten
@@ -314,6 +344,9 @@ export function evaluateConstraints(
   constraints: ObservabilityConstraints
 ): boolean[] {
   return target.map((sample, i) => {
+    if (sun[i] && sun[i].altitudeDeg > HORIZON_ALT_DEG) {
+      return false;
+    }
     if (constraints.minAltDeg != null && sample.altitudeDeg < constraints.minAltDeg) {
       return false;
     }
@@ -373,7 +406,7 @@ interface BuildCurveOptions {
  */
 function buildCurve(options: BuildCurveOptions): ObservabilityCurve {
   const { site, targetName, target, nightStart, nightEnd } = options;
-  const constraints = options.constraints ?? {};
+  const constraints = effectiveConstraints(options.constraints ?? {});
   const warnings = [...(options.warnings ?? [])];
   const observer = makeObserver(site);
 
@@ -385,11 +418,12 @@ function buildCurve(options: BuildCurveOptions): ObservabilityCurve {
   const midNight = new Date((nightStart.getTime() + nightEnd.getTime()) / 2);
   const illumination = moonIlluminationPct(midNight);
 
-  const transit = findTransit(target);
+  const transit = findTransit(target, sun);
   const maxAltitudeDeg = transit ? transit.altitudeDeg : null;
 
   let mask = evaluateConstraints(target, sun, moon, moonSeparationDeg, constraints);
-  if (constraints.maxMoonPhasePct != null && illumination > constraints.maxMoonPhasePct) {
+  const moonTooBright = constraints.maxMoonPhasePct != null && illumination > constraints.maxMoonPhasePct;
+  if (moonTooBright) {
     // A whole-night gate rather than a per-sample one: the phase barely moves
     // across a single night, so either the night qualifies or none of it does.
     warnings.push(
@@ -399,7 +433,7 @@ function buildCurve(options: BuildCurveOptions): ObservabilityCurve {
   }
 
   const observableWindows = windowsFromMask(target, mask);
-  if (observableWindows.length === 0 && !warnings.length) {
+  if (observableWindows.length === 0 && !moonTooBright) {
     warnings.push('This target never satisfies all of its constraints during this night.');
   }
 
