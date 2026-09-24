@@ -238,12 +238,11 @@ describe('evaluateConstraints', () => {
     expect(mask).toEqual([false, true, true]);
   });
 
-  it('ignores Moon separation while the Moon is below the horizon', () => {
-    // A set Moon cannot brighten the sky, so a close separation is harmless.
-    const mask = evaluateConstraints(target, sun, moonDown, [10, 10, 10], {
+  it('enforces Moon separation while the Moon is down too, as the scheduler does', () => {
+    const mask = evaluateConstraints(target, sun, moonDown, [10, 90, 10], {
       minMoonSeparationDeg: 30
     });
-    expect(mask).toEqual([true, true, true]);
+    expect(mask).toEqual([false, true, false]);
   });
 
   it('passes everything at night when no constraints are set', () => {

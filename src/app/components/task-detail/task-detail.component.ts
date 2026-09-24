@@ -86,23 +86,41 @@ export class TaskDetailComponent implements OnInit {
     this.loadTask(taskId);
   }
 
+  /**
+   * Fetch the task. A reload (after an edit) keeps the current page up rather
+   * than swapping it for "Loading…", so the chart isn't torn down and rebuilt,
+   * and a failed reload keeps what is already shown.
+   */
   private loadTask(taskId: number): void {
-    this.loading = true;
+    const reloading = this.task !== null;
+    this.loading = !reloading;
     this.taskService.getTask(taskId).subscribe({
       next: response => {
         // /api/task-get answers with a single `task`, not the list envelope.
         this.loading = false;
         if (!response?.task) {
-          this.notFound = true;
+          if (reloading) {
+            this.snackBar.open('Could not reload the task', 'Close', { duration: 3000 });
+          } else {
+            this.notFound = true;
+          }
           return;
         }
+        const scopeChanged = response.task.scope_id !== this.task?.scope_id || !reloading;
         this.task = response.task;
-        this.refreshObservabilityInputs();
-        this.loadTelescope(response.task.scope_id);
+        if (scopeChanged) {
+          this.loadTelescope(response.task.scope_id);
+        } else {
+          this.refreshObservabilityInputs();
+        }
       },
       error: () => {
         this.loading = false;
-        this.notFound = true;
+        if (reloading) {
+          this.snackBar.open('Could not reload the task', 'Close', { duration: 3000 });
+        } else {
+          this.notFound = true;
+        }
       }
     });
   }
