@@ -159,11 +159,16 @@ export class UserComponent implements OnInit {
     });
 
     ngOnInit(): void {
-        this.topBarService.updateState({
-            title: 'User',
-            showFilter: false,
-            filterVisible: false,
-            showAdd: false
+        // Deferred like the other pages: the layout has already rendered its
+        // title in this change-detection pass, so updating it synchronously
+        // raises ExpressionChangedAfterItHasBeenCheckedError (NG0100).
+        setTimeout(() => {
+            this.topBarService.updateState({
+                title: 'User',
+                showFilter: false,
+                filterVisible: false,
+                showAdd: false
+            });
         });
 
         this.user = this.loginService.getUser();
