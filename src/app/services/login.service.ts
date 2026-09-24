@@ -121,8 +121,25 @@ export class LoginService {
         return localStorage.getItem(this.tokenKey);
     }
 
+    /**
+     * True when a token is stored and has not expired.
+     *
+     * The backend issues 24 h tokens and the app only refreshes them on
+     * activity, so a tab left idle overnight still holds an expired token.
+     * Checking `exp` here lets the route guard send the user to the login page
+     * up front, instead of letting the page load and fire requests that all
+     * come back 401. An expired token is cleared on the spot.
+     */
     isLoggedIn(): boolean {
-        return !!this.getToken();
+        const token = this.getToken();
+        if (!token) {
+            return false;
+        }
+        if (isTokenExpired(token)) {
+            this.logout();
+            return false;
+        }
+        return true;
     }
 
     // Request a password reset email for a login or email address. Does not
@@ -199,5 +216,26 @@ export class LoginService {
                 })
             )
             .subscribe();
+    }
+}
+
+/**
+ * Whether a JWT's `exp` claim is in the past (with a little slack for clock
+ * skew). Only the payload is decoded, never verified — that is the backend's
+ * job. A token whose expiry can't be read is not treated as expired, so an
+ * opaque or unusual token still gets to the backend, which decides.
+ */
+export function isTokenExpired(token: string, now: number = Date.now()): boolean {
+    const payload = token.split('.')[1];
+    if (!payload) {
+        return false;
+    }
+    try {
+        const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+        const exp = JSON.parse(atob(padded))?.exp;
+        return typeof exp === 'number' && exp * 1000 <= now + 30_000;
+    } catch {
+        return false;
     }
 }

@@ -34,7 +34,8 @@ export class CatalogsListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.topBarService.updateState({ title: 'Catalogs' });
+    // Deferred to avoid NG0100: the layout's title was already checked this pass.
+    setTimeout(() => this.topBarService.updateState({ title: 'Catalogs' }));
     this.loadCatalogs();
   }
 
