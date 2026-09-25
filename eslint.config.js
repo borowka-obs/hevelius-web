@@ -32,10 +32,7 @@ module.exports = tseslint.config(
           style: 'kebab-case',
         },
       ],
-      // Most components still opt out via `ChangeDetectionStrategy.Eager` (added by the
-      // v22 migration to preserve current behavior). Converting them to OnPush is tracked
-      // as follow-up work, so this stays a warning rather than blocking `ng lint`.
-      '@angular-eslint/prefer-on-push-component-change-detection': 'warn',
+      '@angular-eslint/prefer-on-push-component-change-detection': 'error',
     },
   },
   {
