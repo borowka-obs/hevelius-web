@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -34,7 +34,7 @@ import { computeFovDeg } from '../../utils/fov';
     </mat-dialog-actions>
   `,
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatDialogModule, MatButtonModule]
 })
 export class DeleteProjectConfirmDialogComponent {}
@@ -102,7 +102,7 @@ function formatCoordInput(v: number): string {
   templateUrl: './project-edit-dialog.component.html',
   styleUrls: ['./project-edit-dialog.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,
@@ -124,8 +124,8 @@ export class ProjectEditDialogComponent {
   private dialog = inject(MatDialog);
 
   form: FormGroup;
-  activeTelescopes: Telescope[] = [];
-  saving = false;
+  readonly activeTelescopes = signal<Telescope[]>([]);
+  readonly saving = signal(false);
 
   constructor() {
     const raStr =
@@ -169,10 +169,10 @@ export class ProjectEditDialogComponent {
 
     this.telescopeService.getTelescopes().subscribe({
       next: telescopes => {
-        this.activeTelescopes = telescopes.filter(t => t.active);
+        this.activeTelescopes.set(telescopes.filter(t => t.active));
       },
       error: () => {
-        this.activeTelescopes = [];
+        this.activeTelescopes.set([]);
       }
     });
   }
@@ -233,12 +233,12 @@ export class ProjectEditDialogComponent {
       this.form.markAllAsTouched();
       return;
     }
-    this.saving = true;
+    this.saving.set(true);
     const v = this.form.getRawValue();
     const ra = parseRAHours(String(v.ra).trim());
     const decl = parseDecDegrees(String(v.decl).trim());
     if (ra === null || decl === null) {
-      this.saving = false;
+      this.saving.set(false);
       this.snackBar.open('Invalid RA or Dec', 'Close', { duration: 4000 });
       return;
     }
@@ -275,11 +275,11 @@ export class ProjectEditDialogComponent {
 
     this.projectsService.updateProject(this.dialogData.projectId, body).subscribe({
       next: () => {
-        this.saving = false;
+        this.saving.set(false);
         this.dialogRef.close(true);
       },
       error: err => {
-        this.saving = false;
+        this.saving.set(false);
         this.snackBar.open(err?.error?.msg || err?.message || 'Failed to update project', 'Close', { duration: 5000 });
       }
     });

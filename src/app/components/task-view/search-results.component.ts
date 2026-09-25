@@ -6,7 +6,7 @@ import { CatalogObject } from '../../services/catalogs.service';
     selector: 'app-search-results',
     templateUrl: './search-results.component.html',
     styleUrls: ['./search-results.component.css'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: []
 })
 export class SearchResultsComponent {

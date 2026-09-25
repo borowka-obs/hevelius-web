@@ -53,7 +53,7 @@ describe('ForgotPasswordComponent', () => {
     await fixture.whenStable();
 
     expect(loginService.forgotPassword).toHaveBeenCalledWith('user1');
-    expect(component.submitted).toBe(true);
+    expect(component.submitted()).toBe(true);
     expect(snackBar.open).toHaveBeenCalled();
   });
 
@@ -64,7 +64,7 @@ describe('ForgotPasswordComponent', () => {
     component.onSubmit();
     await fixture.whenStable();
 
-    expect(component.submitted).toBe(false);
+    expect(component.submitted()).toBe(false);
     expect(snackBar.open).toHaveBeenCalledWith(
       'Backend is unresponsive. Please check the server.',
       'Close',

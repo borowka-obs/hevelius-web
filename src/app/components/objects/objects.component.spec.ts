@@ -73,14 +73,14 @@ describe('ObjectsComponent', () => {
   it('should reject coordinate filter when only RA is set', () => {
     component.filterForm.patchValue({ ra: 12, decl: null });
     component.applyFilters();
-    expect(component.filterError).toContain('Right ascension and declination');
+    expect(component.filterError()).toContain('Right ascension and declination');
     expect(catalogsService.listObjects).toHaveBeenCalledTimes(1);
   });
 
   it('should apply coordinate filters when RA and decl are set', () => {
     component.filterForm.patchValue({ ra: 12.5, decl: 45, proximity: 2 });
     component.applyFilters();
-    expect(component.filterError).toBeNull();
+    expect(component.filterError()).toBeNull();
     expect(catalogsService.listObjects).toHaveBeenCalledWith(
       expect.objectContaining({ ra: 12.5, decl: 45, proximity: 2 })
     );
@@ -96,6 +96,6 @@ describe('ObjectsComponent', () => {
   it('should set filter error when list request fails', () => {
     catalogsService.listObjects.mockReturnValueOnce(throwError(() => new Error('fail')));
     component.loadObjects();
-    expect(component.filterError).toContain('Could not load objects');
+    expect(component.filterError()).toContain('Could not load objects');
   });
 });

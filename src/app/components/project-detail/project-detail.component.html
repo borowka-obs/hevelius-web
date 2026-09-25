@@ -1,6 +1,4 @@
-@if (!project) {
-  <p>Loading…</p>
-} @else {
+@if (project(); as project) {
   <div class="container">
     <div class="project-actions-top">
       <button mat-raised-button color="primary" (click)="backToList()">
@@ -78,11 +76,11 @@
             [targetName]="project.name"
             [raHours]="project.ra!"
             [decDeg]="project.decl!"
-            [telescopes]="telescopes"
+            [telescopes]="telescopes()"
             [scopeId]="project.scope_id"
             [date]="observabilityDate"
-            [constraints]="constraints"
-            [warnings]="observabilityWarnings"
+            [constraints]="constraints()"
+            [warnings]="observabilityWarnings()"
             (dateChange)="onObservabilityDateChange($event)"></app-observability-card>
         </mat-card-content>
       </mat-card>
@@ -181,4 +179,6 @@
       <app-tasks [embedded]="true" [projectId]="project.project_id" />
     </div>
   </div>
+} @else {
+  <p>Loading…</p>
 }

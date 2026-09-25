@@ -146,7 +146,7 @@ describe('NightPlanComponent', () => {
     expect(params.explain).toBe(false);
     // Omit date so the backend picks the telescope's current observing night.
     expect(params.date).toBeUndefined();
-    expect(component.items.length).toBe(2);
+    expect(component.items().length).toBe(2);
     // Date picker reflects the night the backend returned.
     expect(component.dateControl.value).toEqual(new Date(2026, 7, 6));
   });
@@ -193,7 +193,7 @@ describe('NightPlanComponent', () => {
     await setup();
 
     expect(component.scopeControl.value).toBeNull();
-    expect(component.error).toBe('No active telescope available to plan for.');
+    expect(component.error()).toBe('No active telescope available to plan for.');
     expect(nightPlanService.getNightPlan).not.toHaveBeenCalled();
   });
 
@@ -204,7 +204,7 @@ describe('NightPlanComponent', () => {
     expect(component.scopeControl.value).toBe(7);
     expect(nightPlanService.getNightPlan).toHaveBeenCalledTimes(1);
     expect(nightPlanService.getNightPlan.mock.calls[0][0].scope_id).toBe(7);
-    expect(component.error).toBeNull();
+    expect(component.error()).toBeNull();
     expect(component.activeTelescopes.map(t => t.scope_id)).toEqual([7]);
     // Placeholder name replaced from the plan response.
     expect(component.activeTelescopes[0].name).toBe('Scope 7');
@@ -216,7 +216,7 @@ describe('NightPlanComponent', () => {
     await setup();
 
     expect(component.scopeControl.value).toBeNull();
-    expect(component.error).toBe('Could not load telescopes.');
+    expect(component.error()).toBe('Could not load telescopes.');
     expect(nightPlanService.getNightPlan).not.toHaveBeenCalled();
   });
 
@@ -259,21 +259,21 @@ describe('NightPlanComponent', () => {
       .mockReturnValueOnce(of(fastPlan));
 
     await setup();
-    expect(component.items.length).toBe(2);
+    expect(component.items().length).toBe(2);
 
     component.onScopeChange(7); // starts slow request
     component.onScopeChange(3); // cancels it; fast response wins
 
     expect(component.scopeControl.value).toBe(3);
-    expect(component.items).toEqual([]);
-    expect(component.plan?.scope_id).toBe(3);
+    expect(component.items()).toEqual([]);
+    expect(component.plan()?.scope_id).toBe(3);
 
     // Late response from the cancelled request must not overwrite state.
     slowPlan$.next(PLAN);
     slowPlan$.complete();
 
-    expect(component.plan?.scope_id).toBe(3);
-    expect(component.items).toEqual([]);
+    expect(component.plan()?.scope_id).toBe(3);
+    expect(component.items()).toEqual([]);
   });
 
   it('should request the excluded items when explain is turned on', async () => {
@@ -281,8 +281,8 @@ describe('NightPlanComponent', () => {
     component.onExplainChange(true);
 
     expect(nightPlanService.getNightPlan.mock.calls[1][0].explain).toBe(true);
-    expect(component.excluded.length).toBe(1);
-    expect(component.formatExclusionReason(component.excluded[0].reason)).toContain('altitude');
+    expect(component.excluded().length).toBe(1);
+    expect(component.formatExclusionReason(component.excluded()[0].reason)).toContain('altitude');
   });
 
   it('should show an error message when the plan cannot be loaded', async () => {
@@ -292,9 +292,9 @@ describe('NightPlanComponent', () => {
     );
     component.loadNightPlan();
 
-    expect(component.error).toBe('scope_id is required');
-    expect(component.items).toEqual([]);
-    expect(component.excluded).toEqual([]);
+    expect(component.error()).toBe('scope_id is required');
+    expect(component.items()).toEqual([]);
+    expect(component.excluded()).toEqual([]);
   });
 
   it('should format visibility metadata for display', async () => {

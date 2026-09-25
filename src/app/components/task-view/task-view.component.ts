@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -37,7 +37,7 @@ interface DialogData {
     selector: 'app-task-view',
     templateUrl: './task-view.component.html',
     styleUrls: ['./task-view.component.css'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
     FormsModule,
     ReactiveFormsModule,
@@ -68,14 +68,14 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
   taskForm: FormGroup;
   mode: 'add' | 'edit' = 'add';
-  originalTask?: Task;
+  readonly originalTask = signal<Task | undefined>(undefined);
   /** When opening from a project task list, pre-fill “Add to project”. */
   contextProjectId?: number;
-  telescopes: Telescope[] = [];
-  scopeFilters: Filter[] = [];
-  projectsForScope: Project[] = [];
+  readonly telescopes = signal<Telescope[]>([]);
+  readonly scopeFilters = signal<Filter[]>([]);
+  readonly projectsForScope = signal<Project[]>([]);
   /** Project selected in “Add to project” (edit mode). */
-  assignProjectId: number | null = null;
+  readonly assignProjectId = signal<number | null>(null);
   searchResults: CatalogObject[] = [];
   private searchSubject = new Subject<string>();
   private overlayRef: OverlayRef | null = null;
@@ -85,7 +85,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
     if (data) {
       this.mode = data.mode;
-      this.originalTask = data.task;
+      this.originalTask.set(data.task);
       this.contextProjectId = data.contextProjectId;
     }
   }
@@ -99,18 +99,19 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
     this.loadTelescopes();
 
-    if (this.mode === 'edit' && this.originalTask) {
-      this.taskService.getTask(this.originalTask.task_id).subscribe({
+    const originalTask = this.originalTask();
+    if (this.mode === 'edit' && originalTask) {
+      this.taskService.getTask(originalTask.task_id).subscribe({
         next: res => {
           if (res.task) {
-            this.originalTask = res.task;
+            this.originalTask.set(res.task);
             const taskData = {
-              ...this.originalTask,
-              skip_before: this.originalTask.skip_before ? new Date(this.originalTask.skip_before) : null,
-              skip_after: this.originalTask.skip_after ? new Date(this.originalTask.skip_after) : null
+              ...res.task,
+              skip_before: res.task.skip_before ? new Date(res.task.skip_before) : null,
+              skip_after: res.task.skip_after ? new Date(res.task.skip_after) : null
             };
             this.taskForm.patchValue(taskData);
-            this.onScopeIdChanged(this.originalTask.scope_id ?? null);
+            this.onScopeIdChanged(res.task.scope_id ?? null);
           }
         },
         error: () => this.showMessage('Failed to load task details')
@@ -128,12 +129,13 @@ export class TaskViewComponent implements OnInit, OnDestroy {
     this.telescopeService.getTelescopes().subscribe({
       next: (telescopes) => {
         // Only active telescopes for new tasks; edit still lists active for switching scope
-        this.telescopes = telescopes.filter(t => t.active);
+        const active = telescopes.filter(t => t.active);
+        this.telescopes.set(active);
 
-        if (this.mode === 'add' && this.telescopes.length > 0 && this.taskForm) {
+        if (this.mode === 'add' && active.length > 0 && this.taskForm) {
           const cur = this.taskForm.get('scope_id')?.value;
           if (cur == null || cur === '') {
-            this.taskForm.patchValue({ scope_id: this.telescopes[0].scope_id });
+            this.taskForm.patchValue({ scope_id: active[0].scope_id });
           }
         }
       },
@@ -259,7 +261,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
   /** Filters shown in the Filter dropdown: active filters on scope, plus current value in edit if missing. */
   filterSelectOptions(): Filter[] {
-    const opts = [...this.scopeFilters];
+    const opts = [...this.scopeFilters()];
     const v = this.taskForm?.get('filter')?.value as string | null | undefined;
     if (v && !opts.some(o => o.short_name === v)) {
       opts.unshift({
@@ -281,65 +283,68 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
   private loadScopeFilters(scopeId: number | null): void {
     if (scopeId == null) {
-      this.scopeFilters = [];
+      this.scopeFilters.set([]);
       return;
     }
     const sid = Number(scopeId);
     if (Number.isNaN(sid)) {
-      this.scopeFilters = [];
+      this.scopeFilters.set([]);
       return;
     }
     this.telescopeService.getTelescope(sid).subscribe({
       next: t => {
-        this.scopeFilters = (t.filters ?? []).filter(f => f.active);
+        const active = (t.filters ?? []).filter(f => f.active);
+        this.scopeFilters.set(active);
         const cur = this.taskForm.get('filter')?.value as string | undefined;
         if (
           cur &&
-          this.scopeFilters.length > 0 &&
-          !this.scopeFilters.some(f => f.short_name === cur)
+          active.length > 0 &&
+          !active.some(f => f.short_name === cur)
         ) {
           this.taskForm.patchValue({ filter: '' }, { emitEvent: false });
         }
       },
       error: () => {
-        this.scopeFilters = [];
+        this.scopeFilters.set([]);
       }
     });
   }
 
   private loadProjectsForScope(): void {
-    if (this.mode !== 'edit' || !this.originalTask) {
+    const originalTask = this.originalTask();
+    if (this.mode !== 'edit' || !originalTask) {
       return;
     }
-    const sid = this.taskForm.get('scope_id')?.value ?? this.originalTask.scope_id;
+    const sid = this.taskForm.get('scope_id')?.value ?? originalTask.scope_id;
     if (sid == null) {
-      this.projectsForScope = [];
+      this.projectsForScope.set([]);
       return;
     }
     this.projectsService.getProjects({ scope_id: Number(sid), per_page: 500 }).subscribe({
       next: res => {
-        this.projectsForScope = (res.projects ?? []).filter(p => p.active);
+        const active = (res.projects ?? []).filter(p => p.active);
+        this.projectsForScope.set(active);
         if (
-          this.assignProjectId == null &&
+          this.assignProjectId() == null &&
           this.contextProjectId != null &&
           this.assignableProjects.some(p => p.project_id === this.contextProjectId)
         ) {
-          this.assignProjectId = this.contextProjectId;
+          this.assignProjectId.set(this.contextProjectId);
         }
       },
       error: () => {
-        this.projectsForScope = [];
+        this.projectsForScope.set([]);
       }
     });
   }
 
   get assignedProjectIds(): number[] {
-    return this.originalTask?.project_ids ?? [];
+    return this.originalTask()?.project_ids ?? [];
   }
 
   get assignableProjects(): Project[] {
     const ids = new Set(this.assignedProjectIds);
-    return this.projectsForScope.filter(p => !ids.has(p.project_id));
+    return this.projectsForScope().filter(p => !ids.has(p.project_id));
   }
 
   projectLabel(pick: Project): string {
@@ -347,20 +352,22 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   }
 
   projectNameById(projectId: number): string {
-    const p = this.projectsForScope.find(x => x.project_id === projectId);
+    const p = this.projectsForScope().find(x => x.project_id === projectId);
     return p ? this.projectLabel(p) : `Project #${projectId}`;
   }
 
   assignTaskToProject(): void {
-    if (this.assignProjectId == null || !this.originalTask) {
+    const assignProjectId = this.assignProjectId();
+    const originalTask = this.originalTask();
+    if (assignProjectId == null || !originalTask) {
       this.showMessage('Select a project');
       return;
     }
-    this.projectsService.addTaskToProject(this.assignProjectId, this.originalTask.task_id).subscribe({
+    this.projectsService.addTaskToProject(assignProjectId, originalTask.task_id).subscribe({
       next: res => {
         if (res.status) {
           this.showMessage('Task assigned to project');
-          this.assignProjectId = null;
+          this.assignProjectId.set(null);
           this.refreshTaskFromServer();
         } else {
           this.showMessage(res.msg || 'Could not assign task to project');
@@ -371,9 +378,10 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   }
 
   removeTaskFromProject(projectId: number): void {
-    if (!this.originalTask) return;
+    const originalTask = this.originalTask();
+    if (!originalTask) return;
     if (!confirm('Remove this task from the project?')) return;
-    this.projectsService.removeTaskFromProject(projectId, this.originalTask.task_id).subscribe({
+    this.projectsService.removeTaskFromProject(projectId, originalTask.task_id).subscribe({
       next: res => {
         if (res.status) {
           this.showMessage('Task removed from project');
@@ -387,11 +395,12 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   }
 
   private refreshTaskFromServer(): void {
-    if (!this.originalTask) return;
-    this.taskService.getTask(this.originalTask.task_id).subscribe({
+    const originalTask = this.originalTask();
+    if (!originalTask) return;
+    this.taskService.getTask(originalTask.task_id).subscribe({
       next: res => {
         if (res.task) {
-          this.originalTask = res.task;
+          this.originalTask.set(res.task);
           this.loadProjectsForScope();
         }
       },
@@ -420,21 +429,22 @@ export class TaskViewComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if (this.mode === 'edit' && this.originalTask) {
+      const originalTask = this.originalTask();
+      if (this.mode === 'edit' && originalTask) {
         // Verify user can edit this task
-        if (user.user_id !== this.originalTask.user_id) {
+        if (user.user_id !== originalTask.user_id) {
           this.showMessage('You cannot edit tasks that belong to other users');
           return;
         }
 
-        if (![0, 1, 2].includes(this.originalTask.state)) {
+        if (![0, 1, 2].includes(originalTask.state)) {
           this.showMessage('This task cannot be modified in its current state');
           return;
         }
 
         const updateData = {
-          task_id: this.originalTask.task_id,
-          user_id: this.originalTask.user_id,
+          task_id: originalTask.task_id,
+          user_id: originalTask.user_id,
           ...formValue
         };
 

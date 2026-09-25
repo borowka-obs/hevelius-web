@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -32,7 +32,7 @@ import { catchError, map, startWith } from 'rxjs/operators';
   selector: 'app-asteroid-detail',
   templateUrl: './asteroid-detail.component.html',
   styleUrls: ['./asteroid-detail.component.css'],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatCardModule,
     MatButtonModule,
@@ -59,10 +59,10 @@ export class AsteroidDetailComponent implements OnInit {
   private userService = inject(UserService);
   private snackBar = inject(MatSnackBar);
 
-  asteroid: Asteroid | null = null;
-  notFound = false;
+  readonly asteroid = signal<Asteroid | null>(null);
+  readonly notFound = signal(false);
   availableTags: AsteroidTag[] = [];
-  tagBusy = false;
+  readonly tagBusy = signal(false);
 
   newTagControl = new FormControl('');
   filteredTagOptions$: Observable<AsteroidTag[]>;
@@ -71,9 +71,9 @@ export class AsteroidDetailComponent implements OnInit {
   telescopes: Telescope[] = [];
   scopeControl = new FormControl<number | null>(null);
   dateControl = new FormControl<Date>(currentNightDate());
-  visibility: AsteroidVisibilityResponse | null = null;
-  visibilityLoading = false;
-  visibilityError: string | null = null;
+  readonly visibility = signal<AsteroidVisibilityResponse | null>(null);
+  readonly visibilityLoading = signal(false);
+  readonly visibilityError = signal<string | null>(null);
 
   /**
    * Chart inputs, held as stable references.
@@ -82,10 +82,10 @@ export class AsteroidDetailComponent implements OnInit {
    * the data behind them actually changes — a getter building a new array each
    * time would make the chart recompute on every change-detection pass.
    */
-  visibilitySamples: AltAzSample[] | null = null;
-  visibilityExtraSeries: ExtraSeries | null = null;
+  readonly visibilitySamples = signal<AltAzSample[] | null>(null);
+  readonly visibilityExtraSeries = signal<ExtraSeries | null>(null);
   selectedDate: Date = currentNightDate();
-  activeTelescopes: Telescope[] = [];
+  readonly activeTelescopes = signal<Telescope[]>([]);
 
   constructor() {
     this.filteredTagOptions$ = this.newTagControl.valueChanges.pipe(
@@ -95,7 +95,7 @@ export class AsteroidDetailComponent implements OnInit {
   }
 
   private filterTagOptions(value: string): AsteroidTag[] {
-    const attachedIds = new Set((this.asteroid?.tags ?? []).map(t => t.tag_id));
+    const attachedIds = new Set((this.asteroid()?.tags ?? []).map(t => t.tag_id));
     const query = value.trim().toLowerCase();
     return this.availableTags
       .filter(tag => !attachedIds.has(tag.tag_id))
@@ -117,13 +117,14 @@ export class AsteroidDetailComponent implements OnInit {
       )
     }).subscribe(({ telescopes, preferences }) => {
       this.telescopes = telescopes;
-      this.activeTelescopes = telescopes.filter(t => t.active);
+      const active = telescopes.filter(t => t.active);
+      this.activeTelescopes.set(active);
 
       const defaultScope = preferences?.default_scope ?? null;
       if (
         this.scopeControl.value == null &&
         defaultScope != null &&
-        this.activeTelescopes.some(t => t.scope_id === defaultScope)
+        active.some(t => t.scope_id === defaultScope)
       ) {
         this.scopeControl.setValue(defaultScope);
         this.loadVisibility();
@@ -134,21 +135,21 @@ export class AsteroidDetailComponent implements OnInit {
     if (id) {
       this.loadAsteroid(Number(id));
     } else {
-      this.notFound = true;
+      this.notFound.set(true);
     }
   }
 
   loadAsteroid(asteroidId: number): void {
     this.asteroidsService.getAsteroid(asteroidId).subscribe({
       next: response => {
-        this.asteroid = response.asteroid;
+        this.asteroid.set(response.asteroid);
         // The default telescope may have been picked before the asteroid arrived.
         if (this.scopeControl.value != null) {
           this.loadVisibility();
         }
       },
       error: () => {
-        this.notFound = true;
+        this.notFound.set(true);
         this.snackBar.open('Asteroid not found', 'Close', { duration: 3000 });
       }
     });
@@ -160,7 +161,7 @@ export class AsteroidDetailComponent implements OnInit {
 
   /** MPC designations that don't have an assigned number are provisional. */
   isProvisional(): boolean {
-    return this.asteroid?.number == null;
+    return this.asteroid()?.number == null;
   }
 
   onTagOptionSelected(event: MatAutocompleteSelectedEvent): void {
@@ -173,7 +174,7 @@ export class AsteroidDetailComponent implements OnInit {
   /** Add the typed tag: attaches it if it already exists, otherwise creates it first. */
   submitNewTag(): void {
     const name = (this.newTagControl.value ?? '').trim();
-    if (!name || !this.asteroid || this.tagBusy) return;
+    if (!name || !this.asteroid() || this.tagBusy()) return;
 
     const existing = this.availableTags.find(t => t.name.toLowerCase() === name.toLowerCase());
     if (existing) {
@@ -181,53 +182,57 @@ export class AsteroidDetailComponent implements OnInit {
       return;
     }
 
-    this.tagBusy = true;
+    this.tagBusy.set(true);
     this.asteroidsService.createTag({ name }).subscribe({
       next: response => {
         this.availableTags = [...this.availableTags, response.tag];
         this.addExistingTag(response.tag);
       },
       error: err => {
-        this.tagBusy = false;
+        this.tagBusy.set(false);
         this.snackBar.open(err?.error?.message || err?.error?.msg || 'Failed to create tag', 'Close', { duration: 4000 });
       }
     });
   }
 
   private addExistingTag(tag: AsteroidTag): void {
-    if (!this.asteroid) return;
-    this.tagBusy = true;
-    this.asteroidsService.attachTag(this.asteroid.asteroid_id, tag.tag_id).subscribe({
+    const asteroid = this.asteroid();
+    if (!asteroid) return;
+    this.tagBusy.set(true);
+    this.asteroidsService.attachTag(asteroid.asteroid_id, tag.tag_id).subscribe({
       next: response => {
-        this.tagBusy = false;
+        this.tagBusy.set(false);
         if (!response.status) {
           this.snackBar.open(response.msg || 'Failed to add tag', 'Close', { duration: 4000 });
           return;
         }
-        if (this.asteroid && !this.asteroid.tags.some(t => t.tag_id === tag.tag_id)) {
-          this.asteroid.tags = [...this.asteroid.tags, tag];
+        const current = this.asteroid();
+        if (current && !current.tags.some(t => t.tag_id === tag.tag_id)) {
+          this.asteroid.set({ ...current, tags: [...current.tags, tag] });
         }
         this.newTagControl.setValue('');
       },
       error: () => {
-        this.tagBusy = false;
+        this.tagBusy.set(false);
         this.snackBar.open('Failed to add tag', 'Close', { duration: 4000 });
       }
     });
   }
 
   removeTag(tag: AsteroidTag): void {
-    if (!this.asteroid || this.tagBusy) return;
-    this.tagBusy = true;
-    this.asteroidsService.detachTag(this.asteroid.asteroid_id, tag.tag_id).subscribe({
+    const asteroid = this.asteroid();
+    if (!asteroid || this.tagBusy()) return;
+    this.tagBusy.set(true);
+    this.asteroidsService.detachTag(asteroid.asteroid_id, tag.tag_id).subscribe({
       next: () => {
-        this.tagBusy = false;
-        if (this.asteroid) {
-          this.asteroid.tags = this.asteroid.tags.filter(t => t.tag_id !== tag.tag_id);
+        this.tagBusy.set(false);
+        const current = this.asteroid();
+        if (current) {
+          this.asteroid.set({ ...current, tags: current.tags.filter(t => t.tag_id !== tag.tag_id) });
         }
       },
       error: () => {
-        this.tagBusy = false;
+        this.tagBusy.set(false);
         this.snackBar.open('Failed to remove tag', 'Close', { duration: 4000 });
       }
     });
@@ -246,27 +251,28 @@ export class AsteroidDetailComponent implements OnInit {
 
   loadVisibility(): void {
     const scopeId = this.scopeControl.value;
-    if (!this.asteroid || scopeId == null) {
-      this.visibility = null;
+    const asteroid = this.asteroid();
+    if (!asteroid || scopeId == null) {
+      this.visibility.set(null);
       this.adaptVisibilityForChart();
       return;
     }
-    this.visibilityLoading = true;
-    this.visibilityError = null;
-    this.asteroidsService.getVisibility(this.asteroid.asteroid_id, {
+    this.visibilityLoading.set(true);
+    this.visibilityError.set(null);
+    this.asteroidsService.getVisibility(asteroid.asteroid_id, {
       scopeId,
       date: this.formatDateForApi(this.dateControl.value ?? currentNightDate())
     }).subscribe({
       next: response => {
-        this.visibilityLoading = false;
-        this.visibility = response;
+        this.visibilityLoading.set(false);
+        this.visibility.set(response);
         this.adaptVisibilityForChart();
       },
       error: err => {
-        this.visibilityLoading = false;
-        this.visibility = null;
+        this.visibilityLoading.set(false);
+        this.visibility.set(null);
         this.adaptVisibilityForChart();
-        this.visibilityError = err?.error?.message || err?.error?.msg || 'Could not compute visibility.';
+        this.visibilityError.set(err?.error?.message || err?.error?.msg || 'Could not compute visibility.');
       }
     });
   }
@@ -293,27 +299,27 @@ export class AsteroidDetailComponent implements OnInit {
    * same features as the locally computed ones on tasks and projects.
    */
   private adaptVisibilityForChart(): void {
-    const response = this.visibility;
+    const response = this.visibility();
     if (!response || response.samples.length === 0) {
-      this.visibilitySamples = null;
-      this.visibilityExtraSeries = null;
+      this.visibilitySamples.set(null);
+      this.visibilityExtraSeries.set(null);
       return;
     }
 
-    this.visibilitySamples = response.samples.map(s => ({
+    this.visibilitySamples.set(response.samples.map(s => ({
       time: parseBackendUtc(s.time),
       altitudeDeg: s.altitude_deg,
       azimuthDeg: s.azimuth_deg
-    }));
+    })));
 
     // Apparent magnitude, surfaced in the chart's hover readout.
-    this.visibilityExtraSeries = response.has_magnitude_estimate
+    this.visibilityExtraSeries.set(response.has_magnitude_estimate
       ? {
           label: 'Magnitude',
           values: response.samples.map(s => s.apparent_magnitude),
           unit: 'mag'
         }
-      : null;
+      : null);
   }
 
 }

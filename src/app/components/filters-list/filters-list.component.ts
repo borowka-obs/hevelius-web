@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FiltersService } from '../../services/filters.service';
 import { TelescopeService } from '../../services/telescope.service';
@@ -34,7 +34,7 @@ type ActiveFilter = 'active' | 'inactive' | 'all';
     ])
   ],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterModule,
     ReactiveFormsModule,
@@ -57,12 +57,12 @@ export class FiltersListComponent implements OnInit, OnDestroy {
 
   dataSource = new MatTableDataSource<Filter>();
   allFilters: Filter[] = [];
-  telescopes: Telescope[] = [];
+  readonly telescopes = signal<Telescope[]>([]);
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
   get displayedColumns(): string[] {
-    if (this.isMobile) {
+    if (this.isMobile()) {
       return ['short_name', 'full_name', 'active', 'used_by', 'actions'];
     }
     return ['short_name', 'full_name', 'url', 'active', 'used_by', 'actions'];
@@ -70,7 +70,7 @@ export class FiltersListComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
   currentSort: { sort_by: FiltersListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
@@ -78,7 +78,7 @@ export class FiltersListComponent implements OnInit, OnDestroy {
     sort_order: 'asc'
   };
   filterForm: FormGroup;
-  isFilterVisible = false;
+  readonly isFilterVisible = signal(false);
   readonly activeFilterOptions: { value: ActiveFilter; label: string }[] = [
     { value: 'active', label: 'Active only' },
     { value: 'inactive', label: 'Inactive only' },
@@ -107,7 +107,7 @@ export class FiltersListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadFilters();
     this.telescopeService.getTelescopes().subscribe({
-      next: list => { this.telescopes = list; this.applyTelescopeFilter(); },
+      next: list => { this.telescopes.set(list); this.applyTelescopeFilter(); },
       error: err => console.error('Error loading telescopes:', err)
     });
   }
@@ -134,7 +134,7 @@ export class FiltersListComponent implements OnInit, OnDestroy {
     const scopeId = this.filterForm?.get('scope_id')?.value ?? null;
     let list = this.allFilters;
     if (scopeId != null && scopeId !== '') {
-      const scope = this.telescopes.find(t => t.scope_id === Number(scopeId));
+      const scope = this.telescopes().find(t => t.scope_id === Number(scopeId));
       const filterIds = new Set((scope?.filters ?? []).map(f => f.filter_id));
       list = list.filter(f => filterIds.has(f.filter_id));
     }
@@ -163,8 +163,9 @@ export class FiltersListComponent implements OnInit, OnDestroy {
   }
 
   toggleFilters(): void {
-    this.isFilterVisible = !this.isFilterVisible;
-    setTimeout(() => this.topBarService.updateState({ filterVisible: this.isFilterVisible }));
+    const next = !this.isFilterVisible();
+    this.isFilterVisible.set(next);
+    setTimeout(() => this.topBarService.updateState({ filterVisible: next }));
   }
 
   openAddFilter(): void {
@@ -182,7 +183,7 @@ export class FiltersListComponent implements OnInit, OnDestroy {
 
   /** Telescopes that have this filter assigned */
   getTelescopesForFilter(filter: Filter): Telescope[] {
-    return this.telescopes.filter(t => t.filters?.some(f => f.filter_id === filter.filter_id)) ?? [];
+    return this.telescopes().filter(t => t.filters?.some(f => f.filter_id === filter.filter_id)) ?? [];
   }
 
   /** Short summary for table cell: first few telescope names + "and N more" if needed */

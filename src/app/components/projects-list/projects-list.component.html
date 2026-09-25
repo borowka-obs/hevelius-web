@@ -17,14 +17,14 @@
       </form>
     </div>
   } @else {
-    <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+    <div class="filters" [@filterExpand]="isFilterVisible() ? 'expanded' : 'collapsed'">
       <form [formGroup]="filterForm" class="filter-form">
         <mat-checkbox formControlName="activeOnly" class="filter-field">Show only active</mat-checkbox>
         <mat-form-field class="filter-field" subscriptSizing="dynamic">
           <mat-label>Telescope</mat-label>
           <mat-select formControlName="scope_id">
             <mat-option [value]="null">All</mat-option>
-            @for (s of scopes; track s.scope_id) {
+            @for (s of scopes(); track s.scope_id) {
               <mat-option [value]="s.scope_id">{{ s.name }}</mat-option>
             }
           </mat-select>
@@ -37,9 +37,9 @@
     </div>
   }
 
-  @if (isMobile) {
+  @if (isMobile()) {
     <div class="mobile-cards">
-      @for (p of dataSource.data; track p.project_id) {
+      @for (p of filteredProjects(); track p.project_id) {
         <div class="project-card" (click)="openProject(p)" (keyup.enter)="openProject(p)" tabindex="0" role="button">
           <div class="card-line1">
             <span class="card-name">{{ p.name }}</span>

@@ -93,7 +93,7 @@ describe('UserComponent', () => {
   it('loads the profile and shows it read-only, with no field in edit mode', () => {
     fixture.detectChanges();
     expect(userService.getProfile).toHaveBeenCalled();
-    expect(component.editingField).toBeNull();
+    expect(component.editingField()).toBeNull();
     expect(component.fieldValue('firstname')).toBe('Ada');
     expect(component.fieldValue('phone')).toBe('555-0100');
     expect(component.fieldValue('aavso_id')).toBe('AA001');
@@ -102,7 +102,7 @@ describe('UserComponent', () => {
   it('startEdit switches a single field into edit mode', () => {
     fixture.detectChanges();
     component.startEdit('phone');
-    expect(component.editingField).toBe('phone');
+    expect(component.editingField()).toBe('phone');
     expect(component.profileForm.get('phone')?.value).toBe('555-0100');
   });
 
@@ -112,7 +112,7 @@ describe('UserComponent', () => {
     component.profileForm.get('phone')?.setValue('555-9999');
     component.cancelEdit('phone');
 
-    expect(component.editingField).toBeNull();
+    expect(component.editingField()).toBeNull();
     expect(component.profileForm.get('phone')?.value).toBe('555-0100');
     expect(userService.updateProfile).not.toHaveBeenCalled();
   });
@@ -126,7 +126,7 @@ describe('UserComponent', () => {
 
     expect(userService.updateProfile).toHaveBeenCalledWith({ phone: '555-9999' });
     expect(loginService.loggedIn).toHaveBeenCalled();
-    expect(component.editingField).toBeNull();
+    expect(component.editingField()).toBeNull();
     expect(snackBar.open).toHaveBeenCalledWith('Phone updated.', 'Close', expect.anything());
   });
 
@@ -140,8 +140,8 @@ describe('UserComponent', () => {
     await fixture.whenStable();
 
     expect(snackBar.open).toHaveBeenCalledWith('Bad request', 'Close', expect.anything());
-    expect(component.savingField).toBe(false);
-    expect(component.editingField).toBe('phone');
+    expect(component.savingField()).toBe(false);
+    expect(component.editingField()).toBe('phone');
   });
 
   it('saveField rejects an invalid value without calling the API', () => {
@@ -151,21 +151,21 @@ describe('UserComponent', () => {
     component.saveField('aavso_id');
 
     expect(userService.updateProfile).not.toHaveBeenCalled();
-    expect(component.editingField).toBe('aavso_id');
+    expect(component.editingField()).toBe('aavso_id');
   });
 
   it('loads preferences and shows them read-only, with no field in edit mode', () => {
     fixture.detectChanges();
     expect(userService.getPreferences).toHaveBeenCalled();
-    expect(component.editingPreference).toBeNull();
-    expect(component.displayExposure(component.preferences?.default_exposure ?? null)).toBe('75 s');
-    expect(component.displayScope(component.preferences?.default_scope ?? null)).toBe('—');
+    expect(component.editingPreference()).toBeNull();
+    expect(component.displayExposure(component.preferences()?.default_exposure ?? null)).toBe('75 s');
+    expect(component.displayScope(component.preferences()?.default_scope ?? null)).toBe('—');
   });
 
   it('startEditPreference switches a preference field into edit mode', () => {
     fixture.detectChanges();
     component.startEditPreference('default_exposure');
-    expect(component.editingPreference).toBe('default_exposure');
+    expect(component.editingPreference()).toBe('default_exposure');
     expect(component.preferencesForm.get('default_exposure')?.value).toBe(75);
   });
 
@@ -175,7 +175,7 @@ describe('UserComponent', () => {
     component.preferencesForm.get('default_exposure')?.setValue(300);
     component.cancelEditPreference('default_exposure');
 
-    expect(component.editingPreference).toBeNull();
+    expect(component.editingPreference()).toBeNull();
     expect(component.preferencesForm.get('default_exposure')?.value).toBe(75);
     expect(userService.updatePreferences).not.toHaveBeenCalled();
   });
@@ -188,7 +188,7 @@ describe('UserComponent', () => {
     await fixture.whenStable();
 
     expect(userService.updatePreferences).toHaveBeenCalledWith({ default_exposure: 300 });
-    expect(component.editingPreference).toBeNull();
+    expect(component.editingPreference()).toBeNull();
     expect(snackBar.open).toHaveBeenCalledWith('Default exposure updated.', 'Close', expect.anything());
   });
 
@@ -199,7 +199,7 @@ describe('UserComponent', () => {
     component.savePreference('default_exposure');
 
     expect(userService.updatePreferences).not.toHaveBeenCalled();
-    expect(component.editingPreference).toBe('default_exposure');
+    expect(component.editingPreference()).toBe('default_exposure');
   });
 
   it('savePreference rejects a fractional exposure without calling the API', () => {
@@ -210,7 +210,7 @@ describe('UserComponent', () => {
 
     expect(component.preferencesForm.get('default_exposure')?.hasError('integer')).toBe(true);
     expect(userService.updatePreferences).not.toHaveBeenCalled();
-    expect(component.editingPreference).toBe('default_exposure');
+    expect(component.editingPreference()).toBe('default_exposure');
   });
 
   it('shows a snackbar when preferences fail to load', () => {
@@ -220,7 +220,7 @@ describe('UserComponent', () => {
     fixture.detectChanges();
 
     expect(snackBar.open).toHaveBeenCalledWith('Failed to load preferences.', 'Close', expect.anything());
-    expect(component.preferences).toBeNull();
+    expect(component.preferences()).toBeNull();
   });
 
   it('savePreference surfaces backend error messages and stays in edit mode', async () => {
@@ -235,20 +235,20 @@ describe('UserComponent', () => {
     expect(snackBar.open).toHaveBeenCalledWith(
       'default_scope does not reference an existing telescope', 'Close', expect.anything()
     );
-    expect(component.savingPreference).toBe(false);
-    expect(component.editingPreference).toBe('default_scope');
+    expect(component.savingPreference()).toBe(false);
+    expect(component.editingPreference()).toBe('default_scope');
   });
 
   it('the password form is collapsed by default and toggles open/closed', () => {
     fixture.detectChanges();
-    expect(component.showPasswordForm).toBe(false);
+    expect(component.showPasswordForm()).toBe(false);
 
     component.togglePasswordForm();
-    expect(component.showPasswordForm).toBe(true);
+    expect(component.showPasswordForm()).toBe(true);
 
     component.passwordForm.patchValue({ current_password: 'old-pw' });
     component.togglePasswordForm();
-    expect(component.showPasswordForm).toBe(false);
+    expect(component.showPasswordForm()).toBe(false);
     expect(component.passwordForm.value.current_password).toBeFalsy();
   });
 
@@ -284,6 +284,6 @@ describe('UserComponent', () => {
     });
     expect(snackBar.open).toHaveBeenCalledWith('Password changed.', 'Close', expect.anything());
     expect(component.passwordForm.value.current_password).toBeFalsy();
-    expect(component.showPasswordForm).toBe(false);
+    expect(component.showPasswordForm()).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { CatalogsService, InstalledCatalog } from '../../services/catalogs.service';
@@ -10,7 +10,7 @@ import { TopBarService } from '../../services/top-bar.service';
   selector: 'app-catalogs-list',
   templateUrl: './catalogs-list.component.html',
   styleUrls: ['./catalogs-list.component.css'],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DecimalPipe,
     RouterModule,
@@ -24,14 +24,14 @@ export class CatalogsListComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
-  catalogs: InstalledCatalog[] = [];
+  readonly catalogs = signal<InstalledCatalog[]>([]);
   displayedColumns = ['shortname', 'name', 'object_count'];
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
   ngOnInit() {
@@ -42,7 +42,7 @@ export class CatalogsListComponent implements OnInit, OnDestroy {
 
   loadCatalogs() {
     this.catalogsService.listInstalledCatalogs('entries').subscribe(catalogs => {
-      this.catalogs = catalogs;
+      this.catalogs.set(catalogs);
       const totalObjects = catalogs.reduce((sum, c) => sum + c.object_count, 0);
       this.topBarService.updateState({
         title: `Catalogs: ${catalogs.length} (${totalObjects.toLocaleString()} objects)`
@@ -52,7 +52,7 @@ export class CatalogsListComponent implements OnInit, OnDestroy {
 
   onSortChange(sort: Sort) {
     if (!sort.active || !sort.direction) return;
-    const sorted = [...this.catalogs].sort((a, b) => {
+    const sorted = [...this.catalogs()].sort((a, b) => {
       const dir = sort.direction === 'asc' ? 1 : -1;
       if (sort.active === 'object_count') {
         return (a.object_count - b.object_count) * dir;
@@ -62,7 +62,7 @@ export class CatalogsListComponent implements OnInit, OnDestroy {
       }
       return a.name.localeCompare(b.name) * dir;
     });
-    this.catalogs = sorted;
+    this.catalogs.set(sorted);
   }
 
   openCatalog(catalog: InstalledCatalog) {
@@ -70,7 +70,7 @@ export class CatalogsListComponent implements OnInit, OnDestroy {
   }
 
   totalObjectCount(): number {
-    return this.catalogs.reduce((sum, c) => sum + c.object_count, 0);
+    return this.catalogs().reduce((sum, c) => sum + c.object_count, 0);
   }
 
   ngOnDestroy() {

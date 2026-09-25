@@ -1,16 +1,16 @@
 <mat-card class="user-card">
   <div class="user-header">
-    <img [src]="avatarUrl" alt="User avatar" class="avatar-large">
+    <img [src]="avatarUrl()" alt="User avatar" class="avatar-large">
     <div>
-      <h2>{{ profile?.firstname || user?.firstname }} {{ profile?.lastname || user?.lastname }}</h2>
-      <p>{{ profile?.login || user?.login }}</p>
+      <h2>{{ profile()?.firstname || user?.firstname }} {{ profile()?.lastname || user?.lastname }}</h2>
+      <p>{{ profile()?.login || user?.login }}</p>
     </div>
   </div>
 
   <div class="user-details">
-    <p><strong>User ID:</strong> {{ profile?.user_id || user?.user_id }}</p>
-    <p><strong>Permissions:</strong> {{ profile?.permissions ?? user?.permissions ?? '-' }}</p>
-    <p><strong>Login enabled:</strong> {{ profile?.login_enabled ? 'Yes' : 'No' }}</p>
+    <p><strong>User ID:</strong> {{ profile()?.user_id || user?.user_id }}</p>
+    <p><strong>Permissions:</strong> {{ profile()?.permissions ?? user?.permissions ?? '-' }}</p>
+    <p><strong>Login enabled:</strong> {{ profile()?.login_enabled ? 'Yes' : 'No' }}</p>
   </div>
 </mat-card>
 
@@ -20,11 +20,11 @@
 
     <div class="detail-row">
       <div class="detail-label">First name</div>
-      @if (editingField === 'firstname') {
+      @if (editingField() === 'firstname') {
         <mat-form-field appearance="outline" class="detail-input">
           <input matInput formControlName="firstname" maxlength="32" (keyup.enter)="saveField('firstname')">
         </mat-form-field>
-        <button mat-icon-button color="primary" (click)="saveField('firstname')" [disabled]="savingField" aria-label="Save first name">
+        <button mat-icon-button color="primary" (click)="saveField('firstname')" [disabled]="savingField()" aria-label="Save first name">
           <mat-icon>check</mat-icon>
         </button>
         <button mat-icon-button (click)="cancelEdit('firstname')" aria-label="Cancel">
@@ -40,11 +40,11 @@
 
     <div class="detail-row">
       <div class="detail-label">Last name</div>
-      @if (editingField === 'lastname') {
+      @if (editingField() === 'lastname') {
         <mat-form-field appearance="outline" class="detail-input">
           <input matInput formControlName="lastname" maxlength="32" (keyup.enter)="saveField('lastname')">
         </mat-form-field>
-        <button mat-icon-button color="primary" (click)="saveField('lastname')" [disabled]="savingField" aria-label="Save last name">
+        <button mat-icon-button color="primary" (click)="saveField('lastname')" [disabled]="savingField()" aria-label="Save last name">
           <mat-icon>check</mat-icon>
         </button>
         <button mat-icon-button (click)="cancelEdit('lastname')" aria-label="Cancel">
@@ -60,11 +60,11 @@
 
     <div class="detail-row">
       <div class="detail-label">Phone</div>
-      @if (editingField === 'phone') {
+      @if (editingField() === 'phone') {
         <mat-form-field appearance="outline" class="detail-input">
           <input matInput formControlName="phone" maxlength="32" type="tel" (keyup.enter)="saveField('phone')">
         </mat-form-field>
-        <button mat-icon-button color="primary" (click)="saveField('phone')" [disabled]="savingField" aria-label="Save phone">
+        <button mat-icon-button color="primary" (click)="saveField('phone')" [disabled]="savingField()" aria-label="Save phone">
           <mat-icon>check</mat-icon>
         </button>
         <button mat-icon-button (click)="cancelEdit('phone')" aria-label="Cancel">
@@ -80,11 +80,11 @@
 
     <div class="detail-row">
       <div class="detail-label">Email</div>
-      @if (editingField === 'email') {
+      @if (editingField() === 'email') {
         <mat-form-field appearance="outline" class="detail-input">
           <input matInput formControlName="email" maxlength="64" type="email" (keyup.enter)="saveField('email')">
         </mat-form-field>
-        <button mat-icon-button color="primary" (click)="saveField('email')" [disabled]="savingField" aria-label="Save email">
+        <button mat-icon-button color="primary" (click)="saveField('email')" [disabled]="savingField()" aria-label="Save email">
           <mat-icon>check</mat-icon>
         </button>
         <button mat-icon-button (click)="cancelEdit('email')" aria-label="Cancel">
@@ -100,14 +100,14 @@
 
     <div class="detail-row">
       <div class="detail-label">AAVSO observer ID</div>
-      @if (editingField === 'aavso_id') {
+      @if (editingField() === 'aavso_id') {
         <mat-form-field appearance="outline" class="detail-input">
           <input matInput formControlName="aavso_id" maxlength="5" (keyup.enter)="saveField('aavso_id')">
           @if (profileForm.get('aavso_id')?.hasError('maxlength')) {
             <mat-error>At most 5 characters.</mat-error>
           }
         </mat-form-field>
-        <button mat-icon-button color="primary" (click)="saveField('aavso_id')" [disabled]="savingField" aria-label="Save AAVSO observer ID">
+        <button mat-icon-button color="primary" (click)="saveField('aavso_id')" [disabled]="savingField()" aria-label="Save AAVSO observer ID">
           <mat-icon>check</mat-icon>
         </button>
         <button mat-icon-button (click)="cancelEdit('aavso_id')" aria-label="Cancel">
@@ -129,7 +129,7 @@
   <div class="detail-list">
     <div class="detail-row">
       <div class="detail-label">Password</div>
-      @if (!showPasswordForm) {
+      @if (!showPasswordForm()) {
         <div class="detail-value">••••••••</div>
         <button mat-icon-button class="edit-btn" (click)="togglePasswordForm()" aria-label="Change password">
           <mat-icon>edit</mat-icon>
@@ -137,7 +137,7 @@
       }
     </div>
 
-    @if (showPasswordForm) {
+    @if (showPasswordForm()) {
       <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-grid password-form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Current password</mat-label>
@@ -173,8 +173,8 @@
 
         <div class="form-actions">
           <button mat-button type="button" (click)="togglePasswordForm()">Cancel</button>
-          <button mat-raised-button color="primary" type="submit" [disabled]="changingPassword">
-            {{ changingPassword ? 'Changing…' : 'Change password' }}
+          <button mat-raised-button color="primary" type="submit" [disabled]="changingPassword()">
+            {{ changingPassword() ? 'Changing…' : 'Change password' }}
           </button>
         </div>
       </form>
@@ -207,13 +207,13 @@
       @for (pref of preferenceFields; track pref.field) {
         <div class="detail-row">
           <div class="detail-label">{{ preferenceFieldLabels[pref.field] }}</div>
-          @if (editingPreference === pref.field) {
+          @if (editingPreference() === pref.field) {
             <mat-form-field appearance="outline" class="detail-input">
               @switch (pref.kind) {
                 @case ('scope') {
                   <mat-select formControlName="default_scope">
                     <mat-option [value]="null">—</mat-option>
-                    @for (t of telescopes; track t.scope_id) {
+                    @for (t of telescopes(); track t.scope_id) {
                       <mat-option [value]="t.scope_id">{{ t.name }}</mat-option>
                     }
                   </mat-select>
@@ -221,7 +221,7 @@
                 @case ('filter') {
                   <mat-select formControlName="default_filter">
                     <mat-option [value]="null">—</mat-option>
-                    @for (f of filters; track f.filter_id) {
+                    @for (f of filters(); track f.filter_id) {
                       <mat-option [value]="f.filter_id">{{ f.short_name }}</mat-option>
                     }
                   </mat-select>
@@ -239,7 +239,7 @@
               }
             </mat-form-field>
             <button mat-icon-button color="primary" (click)="savePreference(pref.field)"
-                    [disabled]="savingPreference"
+                    [disabled]="savingPreference()"
                     [attr.aria-label]="'Save ' + preferenceFieldLabels[pref.field]">
               <mat-icon>check</mat-icon>
             </button>

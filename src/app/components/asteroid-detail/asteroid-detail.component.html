@@ -1,14 +1,4 @@
-@if (notFound) {
-  <div class="container">
-    <p>Asteroid not found.</p>
-    <button mat-raised-button color="primary" (click)="backToList()">
-      <mat-icon>arrow_back</mat-icon>
-      Back to asteroids
-    </button>
-  </div>
-} @else if (!asteroid) {
-  <p>Loading…</p>
-} @else {
+@if (asteroid(); as asteroid) {
   <div class="container">
     <div class="asteroid-actions">
       <button mat-raised-button color="primary" (click)="backToList()">
@@ -67,10 +57,10 @@
       <mat-card-content>
         <mat-chip-set class="tags-chip-set">
           @for (tag of asteroid.tags; track tag.tag_id) {
-            <mat-chip [style.background-color]="tag.color ?? undefined" [disabled]="tagBusy"
+            <mat-chip [style.background-color]="tag.color ?? undefined" [disabled]="tagBusy()"
                       (removed)="removeTag(tag)">
               {{ tag.name }}
-              <button matChipRemove [attr.aria-label]="'Remove tag ' + tag.name" [disabled]="tagBusy">
+              <button matChipRemove [attr.aria-label]="'Remove tag ' + tag.name" [disabled]="tagBusy()">
                 <mat-icon>cancel</mat-icon>
               </button>
             </mat-chip>
@@ -91,7 +81,7 @@
               }
             </mat-autocomplete>
           </mat-form-field>
-          <button type="button" mat-raised-button color="primary" [disabled]="tagBusy || !newTagControl.value"
+          <button type="button" mat-raised-button color="primary" [disabled]="tagBusy() || !newTagControl.value"
                   (click)="submitNewTag()">
             Add
           </button>
@@ -107,35 +97,47 @@
         <app-observability-card
           source="samples"
           [targetName]="asteroid.name || asteroid.designation"
-          [samples]="visibilitySamples"
-          [extraSeries]="visibilityExtraSeries"
-          [telescopes]="activeTelescopes"
+          [samples]="visibilitySamples()"
+          [extraSeries]="visibilityExtraSeries()"
+          [telescopes]="activeTelescopes()"
           [scopeId]="scopeControl.value"
           [date]="selectedDate"
-          [externalLoading]="visibilityLoading"
-          [externalError]="visibilityError"
+          [externalLoading]="visibilityLoading()"
+          [externalError]="visibilityError()"
           (scopeIdChange)="onScopeChange($event)"
           (dateChange)="onDateChange($event)"></app-observability-card>
 
-        @if (visibility && !visibilityLoading && !visibilityError) {
-          @if (!visibility.visible) {
-            <p class="not-visible">
-              Not visible from {{ visibility.scope_name }} on the night of
-              {{ dateControl.value | date: 'yyyy-MM-dd' }} — it stays below the horizon all night
-              (best altitude {{ visibility.max_altitude_deg }}°).
-            </p>
-          } @else if (visibility.has_magnitude_estimate) {
-            <p class="visibility-summary">
-              Estimated magnitude <strong>{{ visibility.apparent_magnitude_at_max }}</strong> at its
-              highest, {{ formatTimeLabel(visibility.max_altitude_time) }} UTC.
-            </p>
-          } @else {
-            <p class="visibility-summary muted">
-              No absolute magnitude on file — apparent magnitude can't be estimated.
-            </p>
+        @if (visibility(); as visibility) {
+          @if (!visibilityLoading() && !visibilityError()) {
+            @if (!visibility.visible) {
+              <p class="not-visible">
+                Not visible from {{ visibility.scope_name }} on the night of
+                {{ dateControl.value | date: 'yyyy-MM-dd' }} — it stays below the horizon all night
+                (best altitude {{ visibility.max_altitude_deg }}°).
+              </p>
+            } @else if (visibility.has_magnitude_estimate) {
+              <p class="visibility-summary">
+                Estimated magnitude <strong>{{ visibility.apparent_magnitude_at_max }}</strong> at its
+                highest, {{ formatTimeLabel(visibility.max_altitude_time) }} UTC.
+              </p>
+            } @else {
+              <p class="visibility-summary muted">
+                No absolute magnitude on file — apparent magnitude can't be estimated.
+              </p>
+            }
           }
         }
       </mat-card-content>
     </mat-card>
   </div>
+} @else if (notFound()) {
+  <div class="container">
+    <p>Asteroid not found.</p>
+    <button mat-raised-button color="primary" (click)="backToList()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to asteroids
+    </button>
+  </div>
+} @else {
+  <p>Loading…</p>
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AsteroidsService, Asteroid, AsteroidTag } from '../../services/asteroids.service';
 import { MatSortModule, Sort } from '@angular/material/sort';
@@ -49,7 +49,7 @@ interface LoadAsteroidsParams {
       ])
     ])
   ],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatTableModule,
     MatSortModule,
@@ -69,15 +69,15 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
   get displayedColumns(): string[] {
-    if (this.isMobile) {
+    if (this.isMobile()) {
       return ['number', 'designation', 'name', 'absolute_magnitude'];
     }
     return ['number', 'designation', 'name', 'absolute_magnitude', 'semimajor_axis', 'eccentricity', 'inclination', 'tags'];
@@ -91,15 +91,15 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
     sort_order: 'asc'
   };
 
-  asteroids: Asteroid[] = [];
-  availableTags: AsteroidTag[] = [];
-  totalAsteroids = 0;
+  readonly asteroids = signal<Asteroid[]>([]);
+  readonly availableTags = signal<AsteroidTag[]>([]);
+  readonly totalAsteroids = signal(0);
   currentPage = 1;
   pageSize = 100;
-  filterError: string | null = null;
+  readonly filterError = signal<string | null>(null);
   private subscriptions: Subscription[] = [];
   filterForm: FormGroup;
-  isFilterVisible = false;
+  readonly isFilterVisible = signal(false);
   /** Quick search across designation, name, and MPC number. */
   searchControl = new FormControl('');
 
@@ -118,7 +118,7 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.topBarService.updateState({
         showFilter: true,
-        filterVisible: this.isFilterVisible,
+        filterVisible: this.isFilterVisible(),
         onFilterToggle: () => this.toggleFilters()
       });
     });
@@ -144,8 +144,8 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.subscriptions.push(
       this.asteroidsService.listTags().subscribe({
-        next: tags => { this.availableTags = tags; },
-        error: () => { this.availableTags = []; }
+        next: tags => { this.availableTags.set(tags); },
+        error: () => { this.availableTags.set([]); }
       })
     );
 
@@ -158,7 +158,7 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
 
   private updateTitle() {
     this.topBarService.updateState({
-      title: `Asteroids: ${this.totalAsteroids.toLocaleString()}`
+      title: `Asteroids: ${this.totalAsteroids().toLocaleString()}`
     });
   }
 
@@ -195,8 +195,9 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   }
 
   applyFilters() {
-    this.filterError = this.validateFilters();
-    if (this.filterError) return;
+    const error = this.validateFilters();
+    this.filterError.set(error);
+    if (error) return;
 
     this.currentPage = 1;
     this.loadAsteroids({
@@ -207,7 +208,7 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   }
 
   clearFilters() {
-    this.filterError = null;
+    this.filterError.set(null);
     this.searchControl.setValue('', { emitEvent: false });
     this.filterForm.reset({
       designation: null,
@@ -232,13 +233,13 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
       ...params
     }).subscribe({
       next: response => {
-        this.filterError = null;
-        this.asteroids = response.asteroids;
-        this.totalAsteroids = response.total;
+        this.filterError.set(null);
+        this.asteroids.set(response.asteroids);
+        this.totalAsteroids.set(response.total);
         this.updateTitle();
       },
       error: () => {
-        this.filterError = 'Could not load asteroids. Check your filters and try again.';
+        this.filterError.set('Could not load asteroids. Check your filters and try again.');
       }
     });
   }
@@ -267,9 +268,10 @@ export class AsteroidsListComponent implements OnInit, OnDestroy {
   }
 
   toggleFilters() {
-    this.isFilterVisible = !this.isFilterVisible;
+    const next = !this.isFilterVisible();
+    this.isFilterVisible.set(next);
     this.topBarService.updateState({
-      filterVisible: this.isFilterVisible
+      filterVisible: next
     });
   }
 

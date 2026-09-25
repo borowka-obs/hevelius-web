@@ -81,20 +81,20 @@ describe('AsteroidsListComponent', () => {
       expect.objectContaining({ page: 1, per_page: 100, sort_by: 'number', sort_order: 'asc' })
     );
     expect(asteroidsService.listTags).toHaveBeenCalled();
-    expect(component.availableTags).toEqual(mockTags);
+    expect(component.availableTags()).toEqual(mockTags);
   });
 
   it('should reject an inverted magnitude range', () => {
     component.filterForm.patchValue({ mag_min: 10, mag_max: 5 });
     component.applyFilters();
-    expect(component.filterError).toContain('Minimum magnitude');
+    expect(component.filterError()).toContain('Minimum magnitude');
     expect(asteroidsService.listAsteroids).toHaveBeenCalledTimes(1);
   });
 
   it('should apply filters when valid', () => {
     component.filterForm.patchValue({ designation: '00001', numbered: true, mag_min: 1, mag_max: 10 });
     component.applyFilters();
-    expect(component.filterError).toBeNull();
+    expect(component.filterError()).toBeNull();
     expect(asteroidsService.listAsteroids).toHaveBeenCalledWith(
       expect.objectContaining({ designation: '00001', numbered: true, mag_min: 1, mag_max: 10 })
     );
@@ -137,7 +137,7 @@ describe('AsteroidsListComponent', () => {
   it('should set filter error when list request fails', () => {
     asteroidsService.listAsteroids.mockReturnValueOnce(throwError(() => new Error('fail')));
     component.loadAsteroids();
-    expect(component.filterError).toContain('Could not load asteroids');
+    expect(component.filterError()).toContain('Could not load asteroids');
   });
 
   it('should navigate to asteroid detail on row click', () => {

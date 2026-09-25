@@ -47,8 +47,8 @@ describe('SkyMapComponent', () => {
 
   it('loads projects on init', () => {
     expect(projectsService.getProjects).toHaveBeenCalledWith({ per_page: 1000, page: 1 });
-    expect(component.projects.length).toBe(2);
-    expect(component.loading).toBe(false);
+    expect(component.projects().length).toBe(2);
+    expect(component.loading()).toBe(false);
   });
 
   it('derives unique sorted scope IDs', () => {
@@ -80,8 +80,8 @@ describe('SkyMapComponent', () => {
     }).compileComponents();
     const errFixture = TestBed.createComponent(SkyMapComponent);
     errFixture.detectChanges();
-    expect(errFixture.componentInstance.errorMsg).toBe('Failed to load projects');
-    expect(errFixture.componentInstance.loading).toBe(false);
+    expect(errFixture.componentInstance.errorMsg()).toBe('Failed to load projects');
+    expect(errFixture.componentInstance.loading()).toBe(false);
   });
 
   it('loads additional pages when total exceeds per_page', async () => {
@@ -108,6 +108,6 @@ describe('SkyMapComponent', () => {
     expect(multiPageService.getProjects).toHaveBeenCalledTimes(2);
     expect(multiPageService.getProjects).toHaveBeenNthCalledWith(1, { per_page: 1000, page: 1 });
     expect(multiPageService.getProjects).toHaveBeenNthCalledWith(2, { per_page: 1000, page: 2 });
-    expect(multiFixture.componentInstance.projects.length).toBe(2);
+    expect(multiFixture.componentInstance.projects().length).toBe(2);
   });
 });

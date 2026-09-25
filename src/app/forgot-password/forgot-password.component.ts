@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { UntypedFormGroup, Validators, UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
@@ -17,7 +17,7 @@ import { MatCardModule } from '@angular/material/card';
     templateUrl: './forgot-password.component.html',
     styleUrls: ['./forgot-password.component.css'],
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         ReactiveFormsModule,
         MatFormFieldModule,
@@ -34,7 +34,7 @@ export class ForgotPasswordComponent implements OnInit {
     private formBuilder = inject(UntypedFormBuilder);
 
     title: string;
-    submitted = false;
+    readonly submitted = signal(false);
     form: UntypedFormGroup;
 
     constructor() {
@@ -60,7 +60,7 @@ export class ForgotPasswordComponent implements OnInit {
                 next: (data: StatusMsgResponse) => {
                     // The backend always returns a generic message, whether or not the
                     // account exists, so this can't be used to enumerate accounts.
-                    this.submitted = true;
+                    this.submitted.set(true);
                     this.showMessage(data.msg || 'If that account exists, a password reset email has been sent.');
                 },
                 error: (error: HttpErrorResponse) => {

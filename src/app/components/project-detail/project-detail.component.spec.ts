@@ -84,7 +84,7 @@ describe('ProjectDetailComponent observability', () => {
 
   it('offers the project telescope to the observability card', async () => {
     await setup();
-    expect(component.telescopes).toEqual([TELESCOPE]);
+    expect(component.telescopes()).toEqual([TELESCOPE]);
   });
 
   it('plots a project that has both coordinates', async () => {
@@ -106,7 +106,7 @@ describe('ProjectDetailComponent observability', () => {
 
   it("passes the project's own observing limits to the chart", async () => {
     await setup({ project: { min_alt: 35, max_sun_alt: -12, moon_distance: 40, max_moon_phase: 60 } });
-    expect(component.constraints).toEqual({
+    expect(component.constraints()).toEqual({
       minAltDeg: 35,
       maxSunAltDeg: -12,
       minMoonSeparationDeg: 40,
@@ -116,7 +116,7 @@ describe('ProjectDetailComponent observability', () => {
 
   it('leaves unset project limits as null so the chart applies its defaults', async () => {
     await setup();
-    expect(component.constraints).toEqual({
+    expect(component.constraints()).toEqual({
       minAltDeg: null,
       maxSunAltDeg: null,
       minMoonSeparationDeg: null,
@@ -126,32 +126,32 @@ describe('ProjectDetailComponent observability', () => {
 
   it('warns when the declination is outside the mount range', async () => {
     await setup({ project: { decl: -60 } });
-    expect(component.observabilityWarnings.join(' ')).toContain('cannot point there');
+    expect(component.observabilityWarnings().join(' ')).toContain('cannot point there');
   });
 
   it('stays quiet when the declination is reachable', async () => {
     await setup();
-    expect(component.observabilityWarnings).toEqual([]);
+    expect(component.observabilityWarnings()).toEqual([]);
   });
 
   it('raises no warning when the telescope could not be loaded', async () => {
     await setup({ telescope: throwError(() => new Error('boom')) });
-    expect(component.telescope).toBeNull();
-    expect(component.observabilityWarnings).toEqual([]);
+    expect(component.telescope()).toBeNull();
+    expect(component.observabilityWarnings()).toEqual([]);
   });
 
   it('keeps chart inputs stable across change detection', async () => {
     await setup();
-    const telescopes = component.telescopes;
-    const warnings = component.observabilityWarnings;
+    const telescopes = component.telescopes();
+    const warnings = component.observabilityWarnings();
 
     fixture.detectChanges();
     fixture.detectChanges();
 
     // Identity must survive a render pass: these are bound as inputs, and a new
     // array each time would retrigger the curve computation forever.
-    expect(component.telescopes).toBe(telescopes);
-    expect(component.observabilityWarnings).toBe(warnings);
+    expect(component.telescopes()).toBe(telescopes);
+    expect(component.observabilityWarnings()).toBe(warnings);
   });
 
   it('records the night chosen in the observability card', async () => {

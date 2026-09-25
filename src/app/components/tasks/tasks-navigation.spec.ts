@@ -68,7 +68,7 @@ describe('TasksComponent navigation to task detail', () => {
   });
 
   it('keeps the detail link reachable on the mobile column layout', () => {
-    component.isMobile = true;
+    component.isMobile.set(true);
     fixture.detectChanges();
     // The mobile layout drops several columns; the link must survive that.
     expect(component.displayedColumns).toContain('object');

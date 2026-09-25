@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -42,7 +42,7 @@ import { currentNightDate } from '../../utils/night-date';
     ObservabilityCardComponent
   ],
   templateUrl: './task-detail.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./task-detail.component.css']
 })
 export class TaskDetailComponent implements OnInit {
@@ -56,10 +56,10 @@ export class TaskDetailComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
-  task: Task | null = null;
-  telescope: Telescope | null = null;
-  loading = true;
-  notFound = false;
+  readonly task = signal<Task | null>(null);
+  readonly telescope = signal<Telescope | null>(null);
+  readonly loading = signal(true);
+  readonly notFound = signal(false);
 
   /** The night the chart is showing; defaults to the night in progress. */
   observabilityDate = currentNightDate();
@@ -72,16 +72,16 @@ export class TaskDetailComponent implements OnInit {
    * object each time would make the chart recompute on every change-detection
    * pass.
    */
-  telescopes: Telescope[] = [];
-  constraints: ObservabilityConstraints = {};
-  observabilityWarnings: string[] = [];
+  readonly telescopes = signal<Telescope[]>([]);
+  readonly constraints = signal<ObservabilityConstraints>({});
+  readonly observabilityWarnings = signal<string[]>([]);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     const taskId = Number(id);
     if (!id || Number.isNaN(taskId)) {
-      this.loading = false;
-      this.notFound = true;
+      this.loading.set(false);
+      this.notFound.set(true);
       return;
     }
     this.loadTask(taskId);
@@ -93,22 +93,22 @@ export class TaskDetailComponent implements OnInit {
    * and a failed reload keeps what is already shown.
    */
   private loadTask(taskId: number): void {
-    const reloading = this.task !== null;
-    this.loading = !reloading;
+    const reloading = this.task() !== null;
+    this.loading.set(!reloading);
     this.taskService.getTask(taskId).subscribe({
       next: response => {
         // /api/task-get answers with a single `task`, not the list envelope.
-        this.loading = false;
+        this.loading.set(false);
         if (!response?.task) {
           if (reloading) {
             this.snackBar.open('Could not reload the task', 'Close', { duration: 3000 });
           } else {
-            this.notFound = true;
+            this.notFound.set(true);
           }
           return;
         }
-        const scopeChanged = response.task.scope_id !== this.task?.scope_id || !reloading;
-        this.task = response.task;
+        const scopeChanged = response.task.scope_id !== this.task()?.scope_id || !reloading;
+        this.task.set(response.task);
         if (scopeChanged) {
           this.loadTelescope(response.task.scope_id);
         } else {
@@ -116,11 +116,11 @@ export class TaskDetailComponent implements OnInit {
         }
       },
       error: () => {
-        this.loading = false;
+        this.loading.set(false);
         if (reloading) {
           this.snackBar.open('Could not reload the task', 'Close', { duration: 3000 });
         } else {
-          this.notFound = true;
+          this.notFound.set(true);
         }
       }
     });
@@ -128,17 +128,17 @@ export class TaskDetailComponent implements OnInit {
 
   private loadTelescope(scopeId: number | undefined): void {
     if (scopeId == null) {
-      this.telescope = null;
+      this.telescope.set(null);
       this.refreshObservabilityInputs();
       return;
     }
     this.telescopeService.getTelescope(scopeId).subscribe({
       next: telescope => {
-        this.telescope = telescope;
+        this.telescope.set(telescope);
         this.refreshObservabilityInputs();
       },
       error: () => {
-        this.telescope = null;
+        this.telescope.set(null);
         this.refreshObservabilityInputs();
       }
     });
@@ -150,14 +150,16 @@ export class TaskDetailComponent implements OnInit {
 
   /** Rebuild every chart input at once, after the task or telescope changes. */
   private refreshObservabilityInputs(): void {
-    this.telescopes = this.telescope ? [this.telescope] : [];
-    this.constraints = {
-      minAltDeg: this.task?.min_alt ?? null,
-      maxSunAltDeg: this.task?.max_sun_alt ?? null,
-      minMoonSeparationDeg: this.task?.moon_distance ?? null,
-      maxMoonPhasePct: this.task?.max_moon_phase ?? null
-    };
-    this.observabilityWarnings = this.buildObservabilityWarnings();
+    const telescope = this.telescope();
+    const task = this.task();
+    this.telescopes.set(telescope ? [telescope] : []);
+    this.constraints.set({
+      minAltDeg: task?.min_alt ?? null,
+      maxSunAltDeg: task?.max_sun_alt ?? null,
+      minMoonSeparationDeg: task?.moon_distance ?? null,
+      maxMoonPhasePct: task?.max_moon_phase ?? null
+    });
+    this.observabilityWarnings.set(this.buildObservabilityWarnings());
   }
 
   /**
@@ -166,8 +168,8 @@ export class TaskDetailComponent implements OnInit {
    */
   private buildObservabilityWarnings(): string[] {
     const warnings: string[] = [];
-    const scope = this.telescope;
-    const decl = this.task?.decl;
+    const scope = this.telescope();
+    const decl = this.task()?.decl;
     if (scope && decl != null && (decl < scope.min_dec || decl > scope.max_dec)) {
       warnings.push(
         `Declination ${decl.toFixed(1)}° is outside ${scope.name}'s range ` +
@@ -178,12 +180,12 @@ export class TaskDetailComponent implements OnInit {
   }
 
   get hasScope(): boolean {
-    return this.task?.scope_id != null;
+    return this.task()?.scope_id != null;
   }
 
   /** The task's limits as display strings, empty when none are set. */
   get constraintLabels(): string[] {
-    const task = this.task;
+    const task = this.task();
     if (!task) {
       return [];
     }
@@ -221,24 +223,28 @@ export class TaskDetailComponent implements OnInit {
 
   /** Sky view needs a field of view, which needs both a sensor and a focal length. */
   get hasFov(): boolean {
-    const sensor = this.telescope?.sensor;
+    const task = this.task();
+    const telescope = this.telescope();
+    const sensor = telescope?.sensor;
     return (
-      this.task?.ra != null &&
-      this.task?.decl != null &&
+      task?.ra != null &&
+      task?.decl != null &&
       !!sensor &&
-      this.telescope?.focal != null &&
-      this.telescope.focal > 0
+      telescope?.focal != null &&
+      telescope.focal > 0
     );
   }
 
   get fovWidthDeg(): number {
-    const sensor = this.telescope!.sensor!;
-    return computeFovDeg(sensor.resx, sensor.pixel_x, this.telescope!.focal!);
+    const telescope = this.telescope()!;
+    const sensor = telescope.sensor!;
+    return computeFovDeg(sensor.resx, sensor.pixel_x, telescope.focal!);
   }
 
   get fovHeightDeg(): number {
-    const sensor = this.telescope!.sensor!;
-    return computeFovDeg(sensor.resy, sensor.pixel_y, this.telescope!.focal!);
+    const telescope = this.telescope()!;
+    const sensor = telescope.sensor!;
+    return computeFovDeg(sensor.resy, sensor.pixel_y, telescope.focal!);
   }
 
   /**
@@ -247,16 +253,17 @@ export class TaskDetailComponent implements OnInit {
    */
   getTaskEditReason(): string | null {
     const user = this.loginService.getUser();
-    if (!this.task) {
+    const task = this.task();
+    if (!task) {
       return 'Task not loaded';
     }
     if (!user) {
       return 'Login required';
     }
-    if (user.user_id !== this.task.user_id) {
+    if (user.user_id !== task.user_id) {
       return 'You can only edit your own tasks';
     }
-    if (![0, 1, 2].includes(this.task.state)) {
+    if (![0, 1, 2].includes(task.state)) {
       return 'This task cannot be modified in its current state';
     }
     return null;
@@ -264,7 +271,8 @@ export class TaskDetailComponent implements OnInit {
 
   editTask(): void {
     const reason = this.getTaskEditReason();
-    if (reason || !this.task) {
+    const task = this.task();
+    if (reason || !task) {
       this.snackBar.open(reason ?? 'Task not loaded', 'Close', { duration: 3000 });
       return;
     }
@@ -272,13 +280,14 @@ export class TaskDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(TaskViewComponent, {
       width: '800px',
       disableClose: true,
-      data: { mode: 'edit', task: this.task }
+      data: { mode: 'edit', task }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result && this.task) {
+      const currentTask = this.task();
+      if (result && currentTask) {
         // Re-read rather than patching locally: the backend may normalise fields.
-        this.loadTask(this.task.task_id);
+        this.loadTask(currentTask.task_id);
       }
     });
   }

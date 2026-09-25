@@ -1,5 +1,5 @@
 <div class="container">
-  <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+  <div class="filters" [@filterExpand]="isFilterVisible() ? 'expanded' : 'collapsed'">
     <form [formGroup]="filterForm" class="filter-form" (ngSubmit)="onFilterSubmit($event)">
       <mat-form-field class="filter-field" subscriptSizing="dynamic">
         <mat-label>Name</mat-label>
@@ -10,7 +10,7 @@
         <mat-label>Catalog</mat-label>
         <mat-select formControlName="catalog">
           <mat-option [value]="null">All catalogs</mat-option>
-          @for (c of installedCatalogs; track c.shortname) {
+          @for (c of installedCatalogs(); track c.shortname) {
             <mat-option [value]="c.shortname">{{ c.shortname }} — {{ c.name }}</mat-option>
           }
         </mat-select>
@@ -44,7 +44,7 @@
         </mat-form-field>
       </div>
 
-      @if (filterError) {
+      @if (filterError(); as filterError) {
         <p class="filter-error" role="alert">{{ filterError }}</p>
       }
 
@@ -55,9 +55,9 @@
     </form>
   </div>
 
-  @if (isMobile) {
+  @if (isMobile()) {
     <div class="mobile-cards">
-      @for (object of objects; track object.object_id) {
+      @for (object of objects(); track object.object_id) {
         <div class="object-card">
           <div class="card-line1">
             <span class="card-name">{{ object.name }}</span>
@@ -78,7 +78,7 @@
     </div>
   } @else {
     <div class="table-container">
-      <table mat-table [dataSource]="objects" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z8">
+      <table mat-table [dataSource]="objects()" matSort (matSortChange)="onSortChange($event)" class="mat-elevation-z8">
         <ng-container matColumnDef="name">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
           <td mat-cell *matCellDef="let object">{{ object.name }}</td>
@@ -122,8 +122,8 @@
 
   <mat-paginator
     class="paginator"
-    [length]="totalObjects"
-    [pageIndex]="currentPage - 1"
+    [length]="totalObjects()"
+    [pageIndex]="currentPage() - 1"
     [pageSize]="pageSize"
     [pageSizeOptions]="[50, 100, 200, 500]"
     (page)="onPageChange($event)">

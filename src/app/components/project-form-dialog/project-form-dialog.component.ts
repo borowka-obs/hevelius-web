@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -87,7 +87,7 @@ export interface ProjectFormDialogData {
   templateUrl: './project-form-dialog.component.html',
   styleUrls: ['./project-form-dialog.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,
@@ -110,9 +110,9 @@ export class ProjectFormDialogComponent implements OnDestroy {
   private destroy$ = new Subject<void>();
 
   form: FormGroup;
-  catalogLookupPending = false;
-  similarProjects: SimilarProject[] = [];
-  fovLoadPending = false;
+  readonly catalogLookupPending = signal(false);
+  readonly similarProjects = signal<SimilarProject[]>([]);
+  readonly fovLoadPending = signal(false);
 
   constructor() {
     this.form = this.fb.group({
@@ -139,10 +139,10 @@ export class ProjectFormDialogComponent implements OnDestroy {
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(name => {
-      this.similarProjects = findSimilarProjects(
+      this.similarProjects.set(findSimilarProjects(
         String(name ?? ''),
         this.data?.existingProjects ?? []
-      );
+      ));
     });
 
     this.form.get('scope_id')!.valueChanges.pipe(
@@ -150,10 +150,10 @@ export class ProjectFormDialogComponent implements OnDestroy {
         if (!scopeId) {
           return of(null as Telescope | null);
         }
-        this.fovLoadPending = true;
+        this.fovLoadPending.set(true);
         return this.telescopeService.getTelescope(scopeId).pipe(
           catchError(() => of(null as Telescope | null)),
-          finalize(() => { this.fovLoadPending = false; })
+          finalize(() => { this.fovLoadPending.set(false); })
         );
       }),
       takeUntil(this.destroy$)
@@ -209,10 +209,10 @@ export class ProjectFormDialogComponent implements OnDestroy {
       this.form.get('name')?.markAsTouched();
       return;
     }
-    this.catalogLookupPending = true;
+    this.catalogLookupPending.set(true);
     this.catalogsService.searchObjects(name, 15).pipe(
       finalize(() => {
-        this.catalogLookupPending = false;
+        this.catalogLookupPending.set(false);
       })
     ).subscribe({
       next: objects => {

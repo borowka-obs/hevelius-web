@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { TelescopeService, Telescope, TelescopesListParams } from '../../services/telescope.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -35,7 +35,7 @@ import { TelescopeFormDialogComponent } from '../telescope-form-dialog/telescope
     ])
   ],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterModule,
     ReactiveFormsModule,
@@ -56,12 +56,14 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
 
   dataSource = new MatTableDataSource<Telescope>();
   allTelescopes: Telescope[] = [];
+  /** Mirrors `dataSource.data` for the mobile card list, which reads it directly rather than through `<mat-table>`. */
+  readonly filteredTelescopes = signal<Telescope[]>([]);
 
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
   get displayedColumns(): string[] {
-    if (this.isMobile) {
+    if (this.isMobile()) {
       return ['name', 'optics', 'sensor', 'active'];
     }
     return ['name', 'descr', 'optics', 'min_dec', 'max_dec', 'sensor', 'active', 'actions'];
@@ -69,7 +71,7 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
   currentSort: { sort_by: TelescopesListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
@@ -77,7 +79,7 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
     sort_order: 'asc'
   };
   filterForm: FormGroup;
-  isFilterVisible = false;
+  readonly isFilterVisible = signal(false);
 
   constructor() {
     this.filterForm = this.fb.group({
@@ -140,6 +142,7 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
       ? this.allTelescopes.filter(t => t.active)
       : this.allTelescopes;
     this.dataSource.data = filtered;
+    this.filteredTelescopes.set(filtered);
     this.topBarService.updateState({
       title: `Telescopes: ${filtered.length} item${filtered.length !== 1 ? 's' : ''}`
     });
@@ -177,9 +180,10 @@ export class TelescopeListComponent implements OnInit, OnDestroy {
   }
 
   toggleFilters(): void {
-    this.isFilterVisible = !this.isFilterVisible;
+    const next = !this.isFilterVisible();
+    this.isFilterVisible.set(next);
     setTimeout(() => {
-      this.topBarService.updateState({ filterVisible: this.isFilterVisible });
+      this.topBarService.updateState({ filterVisible: next });
     });
   }
 }

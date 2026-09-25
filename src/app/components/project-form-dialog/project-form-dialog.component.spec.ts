@@ -169,7 +169,7 @@ describe('ProjectFormDialogComponent', () => {
   });
 
   it('starts with no similar projects warning', () => {
-    expect(component.similarProjects).toEqual([]);
+    expect(component.similarProjects()).toEqual([]);
   });
 
   it('populates similarProjects after debounce when name matches existing', async () => {
@@ -177,8 +177,8 @@ describe('ProjectFormDialogComponent', () => {
     component.form.get('name')!.setValue('M31');
     vi.advanceTimersByTime(300);
     vi.useRealTimers();
-    expect(component.similarProjects.length).toBeGreaterThan(0);
-    expect(component.similarProjects.map(p => p.name)).toContain('M31');
+    expect(component.similarProjects().length).toBeGreaterThan(0);
+    expect(component.similarProjects().map(p => p.name)).toContain('M31');
   });
 
   it('clears similarProjects when name becomes unrelated', async () => {
@@ -188,7 +188,7 @@ describe('ProjectFormDialogComponent', () => {
     component.form.get('name')!.setValue('Stephan Quintet');
     vi.advanceTimersByTime(300);
     vi.useRealTimers();
-    expect(component.similarProjects).toEqual([]);
+    expect(component.similarProjects()).toEqual([]);
   });
 
   it('allows save even when similar projects exist', async () => {
@@ -196,7 +196,7 @@ describe('ProjectFormDialogComponent', () => {
     component.form.patchValue({ name: 'M31', scope_id: 2, ra: '0.7', decl: '41.2', active: true, regexps: '' });
     vi.advanceTimersByTime(300);
     vi.useRealTimers();
-    expect(component.similarProjects.length).toBeGreaterThan(0);
+    expect(component.similarProjects().length).toBeGreaterThan(0);
     component.save();
     expect(projectsService.createProject).toHaveBeenCalled();
   });

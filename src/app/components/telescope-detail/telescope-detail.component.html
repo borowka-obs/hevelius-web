@@ -1,6 +1,4 @@
-@if (!telescope) {
-  <p>Loading…</p>
-} @else {
+@if (telescope(); as telescope) {
   <div class="container">
     <div class="scope-actions">
       <button mat-raised-button color="primary" (click)="backToList()">
@@ -138,4 +136,6 @@
     </div>
 
   </div>
+} @else {
+  <p>Loading…</p>
 }
