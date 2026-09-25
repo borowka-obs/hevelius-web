@@ -120,19 +120,19 @@ describe('AsteroidDetailComponent', () => {
     await setup('1');
     expect(component).toBeTruthy();
     expect(asteroidsService.getAsteroid).toHaveBeenCalledWith(1);
-    expect(component.asteroid?.designation).toBe('00001');
+    expect(component.asteroid()?.designation).toBe('00001');
     expect(component.availableTags).toEqual([neoTag, phaTag]);
   });
 
   it('should flag not found when no id is present in the route', async () => {
     await setup(null);
-    expect(component.notFound).toBe(true);
+    expect(component.notFound()).toBe(true);
     expect(asteroidsService.getAsteroid).not.toHaveBeenCalled();
   });
 
   it('should flag not found when the request fails', async () => {
     await setup('999', { getAsteroid: vi.fn().mockReturnValue(throwError(() => new Error('404'))) });
-    expect(component.notFound).toBe(true);
+    expect(component.notFound()).toBe(true);
   });
 
   it('should preselect the user\'s default telescope and load its visibility', async () => {
@@ -165,7 +165,7 @@ describe('AsteroidDetailComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    expect(component.activeTelescopes).toEqual([activeScope]);
+    expect(component.activeTelescopes()).toEqual([activeScope]);
     expect(component.scopeControl.value).toBeNull();
   });
 
@@ -188,7 +188,7 @@ describe('AsteroidDetailComponent', () => {
     component.submitNewTag();
     expect(asteroidsService.createTag).not.toHaveBeenCalled();
     expect(asteroidsService.attachTag).toHaveBeenCalledWith(1, phaTag.tag_id);
-    expect(component.asteroid?.tags).toContainEqual(phaTag);
+    expect(component.asteroid()?.tags).toContainEqual(phaTag);
     expect(component.newTagControl.value).toBe('');
   });
 
@@ -202,7 +202,7 @@ describe('AsteroidDetailComponent', () => {
     component.submitNewTag();
     expect(asteroidsService.createTag).toHaveBeenCalledWith({ name: 'fast rotator' });
     expect(asteroidsService.attachTag).toHaveBeenCalledWith(1, 3);
-    expect(component.asteroid?.tags).toContainEqual(fastRotator);
+    expect(component.asteroid()?.tags).toContainEqual(fastRotator);
     expect(component.availableTags).toContainEqual(fastRotator);
   });
 
@@ -211,15 +211,15 @@ describe('AsteroidDetailComponent', () => {
     component.newTagControl.setValue('pha');
     component.submitNewTag();
     expect(snackBar.open).toHaveBeenCalledWith('Asteroid or tag not found', 'Close', expect.anything());
-    expect(component.asteroid?.tags).not.toContainEqual(phaTag);
+    expect(component.asteroid()?.tags).not.toContainEqual(phaTag);
   });
 
   it('should remove a tag', async () => {
     await setup('1', { detachTag: vi.fn().mockReturnValue(of({ status: true, msg: 'Tag removed' })) });
-    expect(component.asteroid?.tags).toContainEqual(neoTag);
+    expect(component.asteroid()?.tags).toContainEqual(neoTag);
     component.removeTag(neoTag);
     expect(asteroidsService.detachTag).toHaveBeenCalledWith(1, neoTag.tag_id);
-    expect(component.asteroid?.tags).not.toContainEqual(neoTag);
+    expect(component.asteroid()?.tags).not.toContainEqual(neoTag);
   });
 
   it('should not submit an empty tag name', async () => {
@@ -232,13 +232,13 @@ describe('AsteroidDetailComponent', () => {
 
   it('should only offer active telescopes', async () => {
     await setup('1');
-    expect(component.activeTelescopes).toEqual([activeScope]);
+    expect(component.activeTelescopes()).toEqual([activeScope]);
   });
 
   it('should not compute visibility until a telescope is selected', async () => {
     await setup('1');
     expect(asteroidsService.getVisibility).not.toHaveBeenCalled();
-    expect(component.visibility).toBeNull();
+    expect(component.visibility()).toBeNull();
   });
 
   it('should compute visibility when a telescope is selected', async () => {
@@ -247,8 +247,8 @@ describe('AsteroidDetailComponent', () => {
     expect(asteroidsService.getVisibility).toHaveBeenCalledWith(
       1, expect.objectContaining({ scopeId: 1 })
     );
-    expect(component.visibility).toEqual(visibleResponse);
-    expect(component.visibilityLoading).toBe(false);
+    expect(component.visibility()).toEqual(visibleResponse);
+    expect(component.visibilityLoading()).toBe(false);
   });
 
   it('should recompute visibility when the date changes', async () => {
@@ -266,15 +266,15 @@ describe('AsteroidDetailComponent', () => {
       getVisibility: vi.fn().mockReturnValue(throwError(() => ({ error: { message: 'Telescope not found.' } })))
     });
     component.onScopeChange(1);
-    expect(component.visibility).toBeNull();
-    expect(component.visibilityError).toBe('Telescope not found.');
+    expect(component.visibility()).toBeNull();
+    expect(component.visibilityError()).toBe('Telescope not found.');
   });
 
   it('should adapt the backend track for the shared elevation chart', async () => {
     await setup('1');
     component.onScopeChange(1);
 
-    const samples = component.visibilitySamples!;
+    const samples = component.visibilitySamples()!;
     expect(samples).toHaveLength(3);
     expect(samples[1].altitudeDeg).toBe(45);
     expect(samples[1].azimuthDeg).toBe(180);
@@ -285,13 +285,13 @@ describe('AsteroidDetailComponent', () => {
     component.onScopeChange(1);
     // "2026-07-19 20:00:00.000" carries no zone designator; treating it as
     // local time would shift the whole night by the browser's offset.
-    expect(component.visibilitySamples![0].time.toISOString()).toBe('2026-07-19T20:00:00.000Z');
+    expect(component.visibilitySamples()![0].time.toISOString()).toBe('2026-07-19T20:00:00.000Z');
   });
 
   it('should expose apparent magnitude as an extra series', async () => {
     await setup('1');
     component.onScopeChange(1);
-    expect(component.visibilityExtraSeries).toEqual({
+    expect(component.visibilityExtraSeries()).toEqual({
       label: 'Magnitude',
       values: [9.1, 8.8, 9.3],
       unit: 'mag'
@@ -305,39 +305,39 @@ describe('AsteroidDetailComponent', () => {
         .mockReturnValue(of({ ...visibleResponse, has_magnitude_estimate: false }))
     });
     component.onScopeChange(1);
-    expect(component.visibilityExtraSeries).toBeNull();
+    expect(component.visibilityExtraSeries()).toBeNull();
   });
 
   it('should keep the telescope list stable across change detection', async () => {
     await setup('1');
-    const telescopes = component.activeTelescopes;
+    const telescopes = component.activeTelescopes();
 
     fixture.detectChanges();
     fixture.detectChanges();
 
     // Bound as a chart input: a fresh array each pass restarts the curve
     // computation forever, leaving the spinner running.
-    expect(component.activeTelescopes).toBe(telescopes);
+    expect(component.activeTelescopes()).toBe(telescopes);
   });
 
   it('should keep the adapted track stable across change detection', async () => {
     await setup('1');
     component.onScopeChange(1);
-    const samples = component.visibilitySamples;
-    const extra = component.visibilityExtraSeries;
+    const samples = component.visibilitySamples();
+    const extra = component.visibilityExtraSeries();
 
     fixture.detectChanges();
     fixture.detectChanges();
 
     // Identity must survive a render pass: these are bound as chart inputs, and
     // a new array each time would retrigger the curve computation forever.
-    expect(component.visibilitySamples).toBe(samples);
-    expect(component.visibilityExtraSeries).toBe(extra);
+    expect(component.visibilitySamples()).toBe(samples);
+    expect(component.visibilityExtraSeries()).toBe(extra);
   });
 
   it('should have no track to plot before a telescope is chosen', async () => {
     await setup('1');
-    expect(component.visibilitySamples).toBeNull();
+    expect(component.visibilitySamples()).toBeNull();
   });
 
   it('should surface the not-visible case distinctly', async () => {
@@ -348,6 +348,6 @@ describe('AsteroidDetailComponent', () => {
     };
     await setup('1', { getVisibility: vi.fn().mockReturnValue(of(notVisible)) });
     component.onScopeChange(1);
-    expect(component.visibility?.visible).toBe(false);
+    expect(component.visibility()?.visible).toBe(false);
   });
 });

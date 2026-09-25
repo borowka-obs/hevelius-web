@@ -11,15 +11,15 @@
       <mat-hint>
         Press Enter to resolve RA/Dec from the catalog. Renaming the project does not change coordinates.
       </mat-hint>
-      @if (catalogLookupPending) {
+      @if (catalogLookupPending()) {
         <mat-hint align="end">Looking up…</mat-hint>
       }
     </mat-form-field>
-    @if (similarProjects.length) {
+    @if (similarProjects().length) {
       <div class="similar-warning">
         <span class="similar-warning-icon">⚠</span>
-        Similar project{{ similarProjects.length > 1 ? 's' : '' }} already exist{{ similarProjects.length > 1 ? '' : 's' }}:
-        @for (p of similarProjects; track p.project_id; let last = $last) {
+        Similar project{{ similarProjects().length > 1 ? 's' : '' }} already exist{{ similarProjects().length > 1 ? '' : 's' }}:
+        @for (p of similarProjects(); track p.project_id; let last = $last) {
           <em>{{ p.name }}</em>{{ last ? '' : ', ' }}
         }
         — you can still proceed.
@@ -95,7 +95,7 @@
 
     <div class="fov-section">
       <p class="fov-section-title">Optical parameters
-        @if (fovLoadPending) { <em>(loading…)</em> }
+        @if (fovLoadPending()) { <em>(loading…)</em> }
         @if (fovChip) { <span class="fov-chip">FOV {{ fovChip }}</span> }
       </p>
       <div class="fov-grid">

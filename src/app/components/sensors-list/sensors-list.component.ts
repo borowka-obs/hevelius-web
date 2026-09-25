@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SensorsService } from '../../services/sensors.service';
 import { Sensor, SensorsListParams } from '../../models/sensor';
@@ -40,7 +40,7 @@ export type ActiveFilter = 'active' | 'inactive' | 'all';
     ])
   ],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatTableModule,
@@ -60,10 +60,10 @@ export class SensorsListComponent implements OnInit, OnDestroy {
 
   dataSource = new MatTableDataSource<Sensor>();
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
   get displayedColumns(): string[] {
-    if (this.isMobile) {
+    if (this.isMobile()) {
       return ['name', 'resolution', 'pixel_size', 'actions'];
     }
     return ['name', 'vendor', 'resolution', 'pixel_size', 'sensor_size', 'bits', 'active', 'actions'];
@@ -71,7 +71,7 @@ export class SensorsListComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
   currentSort: { sort_by: SensorsListParams['sort_by']; sort_order: 'asc' | 'desc' } = {
@@ -79,7 +79,7 @@ export class SensorsListComponent implements OnInit, OnDestroy {
     sort_order: 'asc'
   };
   filterForm: FormGroup;
-  isFilterVisible = false;
+  readonly isFilterVisible = signal(false);
   readonly activeFilterOptions: { value: ActiveFilter; label: string }[] = [
     { value: 'active', label: 'Active only' },
     { value: 'inactive', label: 'Inactive only' },
@@ -171,9 +171,10 @@ export class SensorsListComponent implements OnInit, OnDestroy {
   }
 
   toggleFilters(): void {
-    this.isFilterVisible = !this.isFilterVisible;
+    const next = !this.isFilterVisible();
+    this.isFilterVisible.set(next);
     setTimeout(() => {
-      this.topBarService.updateState({ filterVisible: this.isFilterVisible });
+      this.topBarService.updateState({ filterVisible: next });
     });
   }
 }

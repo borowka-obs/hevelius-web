@@ -1,5 +1,5 @@
 <div class="container">
-  <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+  <div class="filters" [@filterExpand]="isFilterVisible() ? 'expanded' : 'collapsed'">
     <form [formGroup]="filterForm" class="filter-form">
       <mat-checkbox formControlName="activeOnly" class="filter-field">Show only active</mat-checkbox>
       <div class="filter-actions">
@@ -9,9 +9,9 @@
     </form>
   </div>
 
-  @if (isMobile) {
+  @if (isMobile()) {
     <div class="mobile-cards">
-      @for (telescope of dataSource.data; track telescope.scope_id) {
+      @for (telescope of filteredTelescopes(); track telescope.scope_id) {
         <div class="telescope-card" (click)="openTelescope(telescope)" (keyup.enter)="openTelescope(telescope)" tabindex="0" role="button">
           <div class="card-line1">
             <span class="card-name">{{ telescope.name }}</span>

@@ -89,7 +89,7 @@
       <mat-label>Sensor</mat-label>
       <mat-select formControlName="sensor_id">
         <mat-option [value]="null">None</mat-option>
-        @for (s of sensors; track s.sensor_id) {
+        @for (s of sensors(); track s.sensor_id) {
           <mat-option [value]="s.sensor_id">{{ s.name }}</mat-option>
         }
       </mat-select>

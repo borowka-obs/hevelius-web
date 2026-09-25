@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,7 +17,7 @@ export interface AddFilterToScopeDialogData {
   templateUrl: './add-filter-to-scope-dialog.component.html',
   styleUrls: ['./add-filter-to-scope-dialog.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatDialogModule, MatFormFieldModule, MatSelectModule, MatButtonModule]
 })
 export class AddFilterToScopeDialogComponent {
@@ -26,22 +26,23 @@ export class AddFilterToScopeDialogComponent {
   private dialogRef = inject(MatDialogRef<AddFilterToScopeDialogComponent>);
   data = inject<AddFilterToScopeDialogData>(MAT_DIALOG_DATA);
 
-  availableFilters: Filter[] = [];
-  selectedFilterId: number | null = null;
-  loading = true;
-  saving = false;
+  readonly availableFilters = signal<Filter[]>([]);
+  readonly selectedFilterId = signal<number | null>(null);
+  readonly loading = signal(true);
+  readonly saving = signal(false);
 
   constructor() {
     this.filtersService.getFilters({}).subscribe({
       next: list => {
         const exclude = new Set(this.data.currentFilterIds);
-        this.availableFilters = list.filter(f => !exclude.has(f.filter_id));
-        if (this.availableFilters.length > 0) {
-          this.selectedFilterId = this.availableFilters[0].filter_id;
+        const available = list.filter(f => !exclude.has(f.filter_id));
+        this.availableFilters.set(available);
+        if (available.length > 0) {
+          this.selectedFilterId.set(available[0].filter_id);
         }
-        this.loading = false;
+        this.loading.set(false);
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading.set(false); }
     });
   }
 
@@ -54,11 +55,12 @@ export class AddFilterToScopeDialogComponent {
   }
 
   add(): void {
-    if (this.selectedFilterId == null || this.saving) return;
-    this.saving = true;
-    this.telescopeService.addFilterToScope(this.scopeId, this.selectedFilterId).subscribe({
+    const filterId = this.selectedFilterId();
+    if (filterId == null || this.saving()) return;
+    this.saving.set(true);
+    this.telescopeService.addFilterToScope(this.scopeId, filterId).subscribe({
       next: () => this.dialogRef.close(true),
-      error: () => { this.saving = false; }
+      error: () => { this.saving.set(false); }
     });
   }
 }

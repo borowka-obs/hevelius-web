@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogsService, CatalogObject, InstalledCatalog } from '../../services/catalogs.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
@@ -60,7 +60,7 @@ interface LoadObjectsParams {
       ])
     ])
   ],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatTableModule,
     MatSortModule,
@@ -83,15 +83,15 @@ export class ObjectsComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
   get displayedColumns(): string[] {
-    if (this.isMobile) {
+    if (this.isMobile()) {
       return ['name', 'catalog', 'ra', 'decl'];
     }
     return ['name', 'catalog', 'ra', 'decl', 'type', 'const', 'magn'];
@@ -105,15 +105,15 @@ export class ObjectsComponent implements OnInit, OnDestroy {
     sort_order: 'asc'
   };
 
-  objects: CatalogObject[] = [];
-  installedCatalogs: InstalledCatalog[] = [];
-  totalObjects = 0;
-  currentPage = 1;
+  readonly objects = signal<CatalogObject[]>([]);
+  readonly installedCatalogs = signal<InstalledCatalog[]>([]);
+  readonly totalObjects = signal(0);
+  readonly currentPage = signal(1);
   pageSize = 100;
-  filterError: string | null = null;
+  readonly filterError = signal<string | null>(null);
   private subscriptions: Subscription[] = [];
   filterForm: FormGroup;
-  isFilterVisible = false;
+  readonly isFilterVisible = signal(false);
   filteredConstellations$: Observable<string[]>;
 
   constructor() {
@@ -126,7 +126,7 @@ export class ObjectsComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.topBarService.updateState({
         showFilter: true,
-        filterVisible: this.isFilterVisible,
+        filterVisible: this.isFilterVisible(),
         onFilterToggle: () => this.toggleFilters()
       });
     });
@@ -160,22 +160,22 @@ export class ObjectsComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.catalogsService.getTotalObjects().subscribe(total => {
         if (total > 0) {
-          this.totalObjects = total;
+          this.totalObjects.set(total);
           setTimeout(() => this.updateTitle(), 0);
         }
       }),
       this.catalogsService.getCurrentPage().subscribe(page => {
-        this.currentPage = page;
+        this.currentPage.set(page);
       }),
       this.catalogsService.listInstalledCatalogs().subscribe(catalogs => {
-        this.installedCatalogs = catalogs;
+        this.installedCatalogs.set(catalogs);
       })
     );
 
     const catalogFromUrl = this.route.snapshot.queryParamMap.get('catalog');
     if (catalogFromUrl) {
       this.filterForm.patchValue({ catalog: catalogFromUrl });
-      this.isFilterVisible = true;
+      this.isFilterVisible.set(true);
       this.topBarService.updateState({ filterVisible: true });
     }
 
@@ -188,7 +188,7 @@ export class ObjectsComponent implements OnInit, OnDestroy {
 
   private updateTitle() {
     this.topBarService.updateState({
-      title: `Objects: ${this.totalObjects.toLocaleString()}`
+      title: `Objects: ${this.totalObjects().toLocaleString()}`
     });
   }
 
@@ -238,8 +238,9 @@ export class ObjectsComponent implements OnInit, OnDestroy {
   }
 
   applyFilters() {
-    this.filterError = this.validateCoordinateFilters();
-    if (this.filterError) return;
+    const error = this.validateCoordinateFilters();
+    this.filterError.set(error);
+    if (error) return;
 
     const catalog = this.filterForm.value.catalog;
     this.router.navigate([], {
@@ -248,7 +249,7 @@ export class ObjectsComponent implements OnInit, OnDestroy {
       replaceUrl: true
     });
 
-    this.currentPage = 1;
+    this.currentPage.set(1);
     this.loadObjects({
       ...this.getFilterParams(),
       sort_by: this.currentSort.sort_by,
@@ -257,7 +258,7 @@ export class ObjectsComponent implements OnInit, OnDestroy {
   }
 
   clearFilters() {
-    this.filterError = null;
+    this.filterError.set(null);
     this.filterForm.reset({
       name: null,
       catalog: null,
@@ -267,7 +268,7 @@ export class ObjectsComponent implements OnInit, OnDestroy {
       proximity: 1
     });
     this.router.navigate([], { relativeTo: this.route, queryParams: {} });
-    this.currentPage = 1;
+    this.currentPage.set(1);
     this.loadObjects({
       sort_by: this.currentSort.sort_by,
       sort_order: this.currentSort.sort_order
@@ -276,18 +277,18 @@ export class ObjectsComponent implements OnInit, OnDestroy {
 
   loadObjects(params: LoadObjectsParams = {}) {
     this.catalogsService.listObjects({
-      page: this.currentPage,
+      page: this.currentPage(),
       per_page: this.pageSize,
       ...params
     }).subscribe({
       next: response => {
-        this.filterError = null;
-        this.objects = response.objects;
-        this.totalObjects = response.total;
+        this.filterError.set(null);
+        this.objects.set(response.objects);
+        this.totalObjects.set(response.total);
         this.updateTitle();
       },
       error: () => {
-        this.filterError = 'Could not load objects. Check your filters and try again.';
+        this.filterError.set('Could not load objects. Check your filters and try again.');
       }
     });
   }
@@ -301,7 +302,7 @@ export class ObjectsComponent implements OnInit, OnDestroy {
   }
 
   onPageChange(event: PageEvent) {
-    this.currentPage = event.pageIndex + 1;
+    this.currentPage.set(event.pageIndex + 1);
     this.pageSize = event.pageSize;
     this.loadObjects({
       ...this.getFilterParams(),
@@ -324,9 +325,10 @@ export class ObjectsComponent implements OnInit, OnDestroy {
   }
 
   toggleFilters() {
-    this.isFilterVisible = !this.isFilterVisible;
+    const next = !this.isFilterVisible();
+    this.isFilterVisible.set(next);
     this.topBarService.updateState({
-      filterVisible: this.isFilterVisible
+      filterVisible: next
     });
   }
 

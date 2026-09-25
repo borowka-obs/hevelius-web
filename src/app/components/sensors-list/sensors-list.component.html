@@ -1,5 +1,5 @@
 <div class="container">
-  <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+  <div class="filters" [@filterExpand]="isFilterVisible() ? 'expanded' : 'collapsed'">
     <form [formGroup]="filterForm" class="filter-form">
       <mat-button-toggle-group formControlName="activeFilter" class="filter-field">
         @for (opt of activeFilterOptions; track opt.value) {

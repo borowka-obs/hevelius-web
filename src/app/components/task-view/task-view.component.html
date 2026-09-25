@@ -6,10 +6,10 @@
       <mat-form-field>
         <mat-label>Telescope</mat-label>
         <mat-select formControlName="scope_id" required>
-          @if (telescopes.length === 0) {
+          @if (telescopes().length === 0) {
             <mat-option disabled [value]="null">No active telescopes</mat-option>
           }
-          @for (telescope of telescopes; track telescope.scope_id) {
+          @for (telescope of telescopes(); track telescope.scope_id) {
             <mat-option [value]="telescope.scope_id">
               {{ telescope.name }}
             </mat-option>
@@ -56,7 +56,7 @@
         <mat-label>Filter</mat-label>
         <mat-select formControlName="filter">
           <mat-option [value]="''">— None —</mat-option>
-          @if (scopeFilters.length === 0 && (taskForm.get('scope_id')?.value)) {
+          @if (scopeFilters().length === 0 && (taskForm.get('scope_id')?.value)) {
             <mat-option disabled [value]="''">No active filters on this telescope</mat-option>
           }
           @for (f of filterSelectOptions(); track f.short_name) {
@@ -118,7 +118,7 @@
         <textarea matInput formControlName="comment"></textarea>
       </mat-form-field>
 
-      @if (mode === 'edit' && originalTask) {
+      @if (mode === 'edit' && originalTask(); as originalTask) {
         <div class="project-membership">
           <h3 class="subsection-title">Projects</h3>
           @if (assignedProjectIds.length === 0) {
@@ -143,7 +143,7 @@
           <div class="assign-project-row">
             <mat-form-field class="assign-project-field" subscriptSizing="dynamic">
               <mat-label>Add to project</mat-label>
-              <mat-select [(ngModel)]="assignProjectId" [ngModelOptions]="{standalone: true}">
+              <mat-select [ngModel]="assignProjectId()" (ngModelChange)="assignProjectId.set($event)" [ngModelOptions]="{standalone: true}">
                 <mat-option [value]="null">— Select project —</mat-option>
                 @for (p of assignableProjects; track p.project_id) {
                   <mat-option [value]="p.project_id">{{ projectLabel(p) }}</mat-option>

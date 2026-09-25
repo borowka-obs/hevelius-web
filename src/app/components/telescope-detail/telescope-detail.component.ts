@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TelescopeService } from '../../services/telescope.service';
 import { Telescope } from '../../services/telescope.service';
@@ -21,7 +21,7 @@ import * as L from 'leaflet';
   templateUrl: './telescope-detail.component.html',
   styleUrls: ['./telescope-detail.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterModule,
     MatCardModule,
@@ -40,9 +40,9 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
   private dialog = inject(MatDialog);
   @ViewChild('scopeMap', { static: false }) scopeMapElement?: ElementRef<HTMLDivElement>;
 
-  telescope: Telescope | null = null;
-  telescopesNavigation: Telescope[] = [];
-  currentScopeIndex = -1;
+  readonly telescope = signal<Telescope | null>(null);
+  readonly telescopesNavigation = signal<Telescope[]>([]);
+  readonly currentScopeIndex = signal(-1);
   filterColumns = ['short_name', 'full_name', 'actions'];
 
   private map?: L.Map;
@@ -68,8 +68,8 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
   loadTelescope(scopeId: number): void {
     this.telescopeService.getTelescope(scopeId).subscribe({
       next: t => {
-        this.telescope = t;
-        this.currentScopeIndex = this.telescopesNavigation.findIndex(scope => scope.scope_id === t.scope_id);
+        this.telescope.set(t);
+        this.currentScopeIndex.set(this.telescopesNavigation().findIndex(scope => scope.scope_id === t.scope_id));
         setTimeout(() => this.refreshMap());
       },
       error: () => {
@@ -84,37 +84,39 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   openEditTelescope(): void {
-    if (!this.telescope) return;
+    const telescope = this.telescope();
+    if (!telescope) return;
     const ref = this.dialog.open(TelescopeFormDialogComponent, {
       width: '480px',
-      data: { telescope: this.telescope, mode: 'edit' }
+      data: { telescope, mode: 'edit' }
     });
     ref.afterClosed().subscribe((updated: boolean) => {
-      if (updated && this.telescope) {
+      const current = this.telescope();
+      if (updated && current) {
         this.loadTelescopeNavigation();
-        this.loadTelescope(this.telescope.scope_id);
+        this.loadTelescope(current.scope_id);
       }
     });
   }
 
   canGoToPreviousScope(): boolean {
-    return this.currentScopeIndex > 0;
+    return this.currentScopeIndex() > 0;
   }
 
   canGoToNextScope(): boolean {
-    return this.currentScopeIndex >= 0 && this.currentScopeIndex < this.telescopesNavigation.length - 1;
+    return this.currentScopeIndex() >= 0 && this.currentScopeIndex() < this.telescopesNavigation().length - 1;
   }
 
   goToPreviousScope(): void {
     if (!this.canGoToPreviousScope()) return;
-    const prev = this.telescopesNavigation[this.currentScopeIndex - 1];
+    const prev = this.telescopesNavigation()[this.currentScopeIndex() - 1];
     this.router.navigate(['/scopes', prev.scope_id]);
     this.loadTelescope(prev.scope_id);
   }
 
   goToNextScope(): void {
     if (!this.canGoToNextScope()) return;
-    const next = this.telescopesNavigation[this.currentScopeIndex + 1];
+    const next = this.telescopesNavigation()[this.currentScopeIndex() + 1];
     this.router.navigate(['/scopes', next.scope_id]);
     this.loadTelescope(next.scope_id);
   }
@@ -147,8 +149,8 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
 
   /** Focal ratio as F/N with one decimal place, or null when inputs are missing. */
   formatFNumber(): string | null {
-    const focal = this.telescope?.focal;
-    const aperture = this.telescope?.aperture;
+    const focal = this.telescope()?.focal;
+    const aperture = this.telescope()?.aperture;
     if (focal == null || aperture == null || aperture <= 0) {
       return null;
     }
@@ -157,7 +159,7 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
 
   /** Sensor resolution as width × height in pixels. */
   formatSensorResolution(): string | null {
-    const s = this.telescope?.sensor;
+    const s = this.telescope()?.sensor;
     if (!s?.resx || !s?.resy) {
       return null;
     }
@@ -166,7 +168,7 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
 
   /** Pixel size in μm; one value when square, otherwise X × Y. */
   formatPixelSize(): string | null {
-    const s = this.telescope?.sensor;
+    const s = this.telescope()?.sensor;
     if (!s?.pixel_x || !s?.pixel_y) {
       return null;
     }
@@ -178,7 +180,7 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
 
   /** FOV width × height in degrees from sensor + focal length. */
   formatFov(): string | null {
-    const t = this.telescope;
+    const t = this.telescope();
     const s = t?.sensor;
     if (!t?.focal || !s?.resx || !s?.resy || !s?.pixel_x || !s?.pixel_y) {
       return null;
@@ -198,7 +200,7 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
 
   /** Angular resolution (plate scale) in arcsec/pixel. */
   formatAngularResolution(): string | null {
-    const t = this.telescope;
+    const t = this.telescope();
     const s = t?.sensor;
     if (!t?.focal || !s?.pixel_x || !s?.pixel_y || t.focal <= 0) {
       return null;
@@ -212,27 +214,27 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   hasMapCoordinates(): boolean {
-    return this.telescope?.lat != null && this.telescope?.lon != null;
+    return this.telescope()?.lat != null && this.telescope()?.lon != null;
   }
 
   getOpenStreetMapUrl(): string | null {
     if (!this.hasMapCoordinates()) return null;
-    const lat = this.telescope!.lat;
-    const lon = this.telescope!.lon;
+    const lat = this.telescope()!.lat;
+    const lon = this.telescope()!.lon;
     return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=13/${lat}/${lon}`;
   }
 
   getAppleMapsUrl(): string | null {
     if (!this.hasMapCoordinates()) return null;
-    const lat = this.telescope!.lat;
-    const lon = this.telescope!.lon;
-    return `https://maps.apple.com/?ll=${lat},${lon}&q=${encodeURIComponent(this.telescope?.name ?? 'Telescope')}`;
+    const lat = this.telescope()!.lat;
+    const lon = this.telescope()!.lon;
+    return `https://maps.apple.com/?ll=${lat},${lon}&q=${encodeURIComponent(this.telescope()?.name ?? 'Telescope')}`;
   }
 
   getGoogleMapsUrl(): string | null {
     if (!this.hasMapCoordinates()) return null;
-    const lat = this.telescope!.lat;
-    const lon = this.telescope!.lon;
+    const lat = this.telescope()!.lat;
+    const lon = this.telescope()!.lon;
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
   }
 
@@ -241,8 +243,8 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
       this.snackBar.open('Coordinates unavailable', 'Close', { duration: 2500 });
       return;
     }
-    const lat = this.telescope!.lat as number;
-    const lon = this.telescope!.lon as number;
+    const lat = this.telescope()!.lat as number;
+    const lon = this.telescope()!.lon as number;
     const text = `${lat}, ${lon}`;
     navigator.clipboard.writeText(text).then(
       () => this.snackBar.open('Coordinates copied', 'Close', { duration: 2500 }),
@@ -253,14 +255,15 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
   private loadTelescopeNavigation(): void {
     this.telescopeService.getTelescopes({ sort_by: 'scope_id', sort_order: 'asc' }).subscribe({
       next: telescopes => {
-        this.telescopesNavigation = telescopes;
-        if (this.telescope) {
-          this.currentScopeIndex = telescopes.findIndex(scope => scope.scope_id === this.telescope!.scope_id);
+        this.telescopesNavigation.set(telescopes);
+        const currentTelescope = this.telescope();
+        if (currentTelescope) {
+          this.currentScopeIndex.set(telescopes.findIndex(scope => scope.scope_id === currentTelescope.scope_id));
         }
       },
       error: () => {
-        this.telescopesNavigation = [];
-        this.currentScopeIndex = -1;
+        this.telescopesNavigation.set([]);
+        this.currentScopeIndex.set(-1);
       }
     });
   }
@@ -269,14 +272,14 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
     if (!this.canGoToPreviousScope()) {
       return null;
     }
-    return this.telescopesNavigation[this.currentScopeIndex - 1]?.name ?? null;
+    return this.telescopesNavigation()[this.currentScopeIndex() - 1]?.name ?? null;
   }
 
   getNextScopeName(): string | null {
     if (!this.canGoToNextScope()) {
       return null;
     }
-    return this.telescopesNavigation[this.currentScopeIndex + 1]?.name ?? null;
+    return this.telescopesNavigation()[this.currentScopeIndex() + 1]?.name ?? null;
   }
 
   private formatDegreesMinutesSeconds(value: number): string {
@@ -296,8 +299,8 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
       return;
     }
 
-    const lat = this.telescope!.lat as number;
-    const lon = this.telescope!.lon as number;
+    const lat = this.telescope()!.lat as number;
+    const lon = this.telescope()!.lon as number;
 
     if (!this.map) {
       this.map = L.map(this.scopeMapElement.nativeElement, {
@@ -334,28 +337,30 @@ export class TelescopeDetailComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   getFilters(): Filter[] {
-    return this.telescope?.filters ?? [];
+    return this.telescope()?.filters ?? [];
   }
 
   openAddFilter(): void {
-    if (!this.telescope) return;
-    const currentFilterIds = (this.telescope.filters ?? []).map(f => f.filter_id);
+    const telescope = this.telescope();
+    if (!telescope) return;
+    const currentFilterIds = (telescope.filters ?? []).map(f => f.filter_id);
     const ref = this.dialog.open(AddFilterToScopeDialogComponent, {
       width: '400px',
-      data: { scopeId: this.telescope.scope_id, currentFilterIds }
+      data: { scopeId: telescope.scope_id, currentFilterIds }
     });
     ref.afterClosed().subscribe((added: boolean) => {
-      if (added) this.loadTelescope(this.telescope!.scope_id);
+      if (added) this.loadTelescope(this.telescope()!.scope_id);
     });
   }
 
   removeFilter(filter: Filter): void {
-    if (!this.telescope) return;
+    const telescope = this.telescope();
+    if (!telescope) return;
     if (!confirm(`Remove filter "${filter.short_name}" from this telescope?`)) return;
-    this.telescopeService.removeFilterFromScope(this.telescope.scope_id, filter.filter_id).subscribe({
+    this.telescopeService.removeFilterFromScope(telescope.scope_id, filter.filter_id).subscribe({
       next: () => {
         this.snackBar.open('Filter removed', 'Close', { duration: 3000 });
-        this.loadTelescope(this.telescope!.scope_id);
+        this.loadTelescope(this.telescope()!.scope_id);
       },
       error: err => {
         this.snackBar.open(err?.error?.msg || 'Failed to remove filter', 'Close', { duration: 5000 });

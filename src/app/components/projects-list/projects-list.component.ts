@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, input, effect, untracked, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, input, signal, effect, untracked, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
@@ -43,7 +43,7 @@ import { ProjectPublicationsComponent } from '../project-publications/project-pu
     ])
   ],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatTableModule,
@@ -74,16 +74,18 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
 
   dataSource = new MatTableDataSource<Project>();
   allProjects: Project[] = [];
+  /** Mirrors `dataSource.data` for the mobile card list, which reads it directly rather than through `<mat-table>`. */
+  readonly filteredProjects = signal<Project[]>([]);
   /** All telescopes for resolving scope names and links. */
-  allScopes: { scope_id: number; name: string }[] = [];
+  readonly allScopes = signal<{ scope_id: number; name: string }[]>([]);
   /** Active telescopes only (filter dropdown). */
-  scopes: { scope_id: number; name: string }[] = [];
+  readonly scopes = signal<{ scope_id: number; name: string }[]>([]);
 
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
   get displayedColumns(): string[] {
-    if (this.isMobile) {
+    if (this.isMobile()) {
       return ['name', 'scope_id', 'integration'];
     }
     return ['name', 'description', 'scope_id', 'summary', 'integration', 'publications', 'last_updated'];
@@ -91,12 +93,12 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
   searchControl = new FormControl('');
   filterForm: FormGroup;
-  isFilterVisible = false;
+  readonly isFilterVisible = signal(false);
   /** Default: most recently updated first (matches GET /api/projects defaults). */
   sortState: { active: string; direction: 'asc' | 'desc' } = {
     active: 'last_updated',
@@ -138,8 +140,8 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     }
     this.telescopeService.getTelescopes().subscribe({
       next: list => {
-        this.allScopes = list.map(t => ({ scope_id: t.scope_id, name: t.name }));
-        this.scopes = list.filter(t => t.active).map(t => ({ scope_id: t.scope_id, name: t.name }));
+        this.allScopes.set(list.map(t => ({ scope_id: t.scope_id, name: t.name })));
+        this.scopes.set(list.filter(t => t.active).map(t => ({ scope_id: t.scope_id, name: t.name })));
       }
     });
     this.filterForm.get('activeOnly')?.valueChanges.subscribe(() => {
@@ -229,6 +231,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
       });
     }
     this.dataSource.data = list;
+    this.filteredProjects.set(list);
     if (!this.embedded()) {
       this.topBarService.updateState({
         title: `${list.length} project${list.length !== 1 ? 's' : ''}`
@@ -264,9 +267,10 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     if (this.embedded()) {
       return;
     }
-    this.isFilterVisible = !this.isFilterVisible;
+    const next = !this.isFilterVisible();
+    this.isFilterVisible.set(next);
     setTimeout(() => {
-      this.topBarService.updateState({ filterVisible: this.isFilterVisible });
+      this.topBarService.updateState({ filterVisible: next });
     });
   }
 
@@ -274,7 +278,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ProjectFormDialogComponent, {
       width: '480px',
       data: {
-        scopes: this.scopes,
+        scopes: this.scopes(),
         existingProjects: this.allProjects.map(p => ({ project_id: p.project_id, name: p.name }))
       }
     });
@@ -290,7 +294,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   }
 
   getScopeName(scopeId: number): string {
-    const s = this.allScopes.find(x => x.scope_id === scopeId);
+    const s = this.allScopes().find(x => x.scope_id === scopeId);
     return s ? s.name : String(scopeId);
   }
 

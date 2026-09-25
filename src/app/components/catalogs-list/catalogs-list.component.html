@@ -1,7 +1,7 @@
 <div class="container">
-  @if (isMobile) {
+  @if (isMobile()) {
     <div class="mobile-cards">
-      @for (c of catalogs; track c.shortname) {
+      @for (c of catalogs(); track c.shortname) {
         <div
           class="catalog-card"
           (click)="openCatalog(c)"
@@ -23,7 +23,7 @@
     <div class="table-container">
       <table
         mat-table
-        [dataSource]="catalogs"
+        [dataSource]="catalogs()"
         matSort
         (matSortChange)="onSortChange($event)"
         class="mat-elevation-z8">

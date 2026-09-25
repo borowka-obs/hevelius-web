@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
@@ -39,7 +39,7 @@ import { ObservabilityConstraints } from '../../models/observability';
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterModule,
     MatCardModule,
@@ -65,10 +65,10 @@ export class ProjectDetailComponent implements OnInit {
   private coordsFormatter = inject(CoordsFormatterService);
   private telescopeService = inject(TelescopeService);
 
-  project: Project | null = null;
-  projectNavigation: Project[] = [];
-  currentProjectIndex = -1;
-  telescope: Telescope | null = null;
+  readonly project = signal<Project | null>(null);
+  readonly projectNavigation = signal<Project[]>([]);
+  readonly currentProjectIndex = signal(-1);
+  readonly telescope = signal<Telescope | null>(null);
 
   /** The night the observability chart is showing; defaults to the night in progress. */
   observabilityDate = currentNightDate();
@@ -80,21 +80,21 @@ export class ProjectDetailComponent implements OnInit {
    * the project or telescope actually changes — a getter building a new array
    * each time would make the chart recompute on every change-detection pass.
    */
-  telescopes: Telescope[] = [];
-  constraints: ObservabilityConstraints = {};
-  observabilityWarnings: string[] = [];
+  readonly telescopes = signal<Telescope[]>([]);
+  readonly constraints = signal<ObservabilityConstraints>({});
+  readonly observabilityWarnings = signal<string[]>([]);
 
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
   /** Must match every `matColumnDef` in the template — extra or missing keys break the table. */
   get subframesColumns(): string[] {
-    if (this.isMobile) {
+    if (this.isMobile()) {
       return ['filter', 'progress', 'actions'];
     }
     return ['filter', 'exposure_time', 'goal_count', 'progress', 'active', 'actions'];
@@ -111,8 +111,8 @@ export class ProjectDetailComponent implements OnInit {
   loadProject(projectId: number): void {
     this.projectsService.getProject(projectId).subscribe({
       next: p => {
-        this.project = p;
-        this.currentProjectIndex = this.projectNavigation.findIndex(project => project.project_id === p.project_id);
+        this.project.set(p);
+        this.currentProjectIndex.set(this.projectNavigation().findIndex(project => project.project_id === p.project_id));
         this.loadScope(p.scope_id);
       },
       error: () => {
@@ -125,11 +125,11 @@ export class ProjectDetailComponent implements OnInit {
   private loadScope(scopeId: number): void {
     this.telescopeService.getTelescope(scopeId).subscribe({
       next: t => {
-        this.telescope = t;
+        this.telescope.set(t);
         this.refreshObservabilityInputs();
       },
       error: () => {
-        this.telescope = null;
+        this.telescope.set(null);
         this.refreshObservabilityInputs();
       }
     });
@@ -140,43 +140,43 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   canGoToPreviousProject(): boolean {
-    return this.currentProjectIndex > 0;
+    return this.currentProjectIndex() > 0;
   }
 
   canGoToNextProject(): boolean {
-    return this.currentProjectIndex >= 0 && this.currentProjectIndex < this.projectNavigation.length - 1;
+    return this.currentProjectIndex() >= 0 && this.currentProjectIndex() < this.projectNavigation().length - 1;
   }
 
   getPreviousProjectName(): string | null {
     if (!this.canGoToPreviousProject()) {
       return null;
     }
-    return this.projectNavigation[this.currentProjectIndex - 1]?.name ?? null;
+    return this.projectNavigation()[this.currentProjectIndex() - 1]?.name ?? null;
   }
 
   getNextProjectName(): string | null {
     if (!this.canGoToNextProject()) {
       return null;
     }
-    return this.projectNavigation[this.currentProjectIndex + 1]?.name ?? null;
+    return this.projectNavigation()[this.currentProjectIndex() + 1]?.name ?? null;
   }
 
   goToPreviousProject(): void {
     if (!this.canGoToPreviousProject()) return;
-    const prev = this.projectNavigation[this.currentProjectIndex - 1];
+    const prev = this.projectNavigation()[this.currentProjectIndex() - 1];
     this.router.navigate(['/projects', prev.project_id]);
     this.loadProject(prev.project_id);
   }
 
   goToNextProject(): void {
     if (!this.canGoToNextProject()) return;
-    const next = this.projectNavigation[this.currentProjectIndex + 1];
+    const next = this.projectNavigation()[this.currentProjectIndex() + 1];
     this.router.navigate(['/projects', next.project_id]);
     this.loadProject(next.project_id);
   }
 
   getSubframes(): ProjectSubframe[] {
-    return this.project?.subframes ?? [];
+    return this.project()?.subframes ?? [];
   }
 
   formatRA(ra: number | undefined): string {
@@ -195,38 +195,39 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   getScopeName(): string {
-    return this.telescope?.name ?? '—';
+    return this.telescope()?.name ?? '—';
   }
 
   editProject(): void {
-    if (!this.project) return;
+    const project = this.project();
+    if (!project) return;
     const ref = this.dialog.open(ProjectEditDialogComponent, {
       width: '520px',
       data: {
-        projectId: this.project.project_id,
-        initialName: this.project.name,
-        initialScopeId: this.project.scope_id,
-        initialDescription: this.project.description ?? null,
-        initialRa: this.project.ra,
-        initialDecl: this.project.decl,
-        initialRotation: this.project.rotation ?? null,
-        initialRegexps: this.project.regexps,
-        initialActive: this.project.active,
-        initialStartDate: this.project.start_date ?? null,
-        initialEndDate: this.project.end_date ?? null,
-        initialPublications: this.project.publications ?? null,
-        initialFocal: this.project.focal ?? null,
-        initialResx: this.project.resx ?? null,
-        initialResy: this.project.resy ?? null,
-        initialPixelX: this.project.pixel_x ?? null,
-        initialPixelY: this.project.pixel_y ?? null
+        projectId: project.project_id,
+        initialName: project.name,
+        initialScopeId: project.scope_id,
+        initialDescription: project.description ?? null,
+        initialRa: project.ra,
+        initialDecl: project.decl,
+        initialRotation: project.rotation ?? null,
+        initialRegexps: project.regexps,
+        initialActive: project.active,
+        initialStartDate: project.start_date ?? null,
+        initialEndDate: project.end_date ?? null,
+        initialPublications: project.publications ?? null,
+        initialFocal: project.focal ?? null,
+        initialResx: project.resx ?? null,
+        initialResy: project.resy ?? null,
+        initialPixelX: project.pixel_x ?? null,
+        initialPixelY: project.pixel_y ?? null
       }
     });
     ref.afterClosed().subscribe((result: boolean | 'deleted' | undefined) => {
       if (result === 'deleted') {
         this.router.navigate(['/projects']);
       } else if (result) {
-        this.loadProject(this.project!.project_id);
+        this.loadProject(this.project()!.project_id);
       }
     });
   }
@@ -239,8 +240,9 @@ export class ProjectDetailComponent implements OnInit {
           data: { filters, mode: 'add' }
         });
         dialogRef.afterClosed().subscribe((payload: { filter_id: number; exposure_time: number; count?: number; goal_count?: number; active: boolean } | undefined) => {
-          if (payload && this.project) {
-            this.projectsService.addSubframe(this.project.project_id, {
+          const project = this.project();
+          if (payload && project) {
+            this.projectsService.addSubframe(project.project_id, {
               filter_id: payload.filter_id,
               exposure_time: payload.exposure_time,
               count: payload.count,
@@ -249,7 +251,7 @@ export class ProjectDetailComponent implements OnInit {
             }).subscribe({
               next: () => {
                 this.snackBar.open('Subframe added', 'Close', { duration: 3000 });
-                this.loadProject(this.project!.project_id);
+                this.loadProject(this.project()!.project_id);
               },
               error: err => {
                 this.snackBar.open(err?.error?.msg || 'Failed to add subframe', 'Close', { duration: 5000 });
@@ -269,11 +271,12 @@ export class ProjectDetailComponent implements OnInit {
           data: { filters, subframe: sub, mode: 'edit' }
         });
         dialogRef.afterClosed().subscribe((payload: { filter_id?: number; exposure_time?: number; count?: number; goal_count?: number; active?: boolean } | undefined) => {
-          if (payload && this.project) {
-            this.projectsService.updateSubframe(this.project.project_id, sub.id, payload).subscribe({
+          const project = this.project();
+          if (payload && project) {
+            this.projectsService.updateSubframe(project.project_id, sub.id, payload).subscribe({
               next: () => {
                 this.snackBar.open('Subframe updated', 'Close', { duration: 3000 });
-                this.loadProject(this.project!.project_id);
+                this.loadProject(this.project()!.project_id);
               },
               error: err => {
                 this.snackBar.open(err?.error?.msg || 'Failed to update subframe', 'Close', { duration: 5000 });
@@ -314,19 +317,21 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   projectCapturedTotalSeconds(): number {
-    return this.project ? projectTotalCapturedSeconds(this.project) : 0;
+    const project = this.project();
+    return project ? projectTotalCapturedSeconds(project) : 0;
   }
 
   /** Prefer `total_integration_time` from the API (see openapi Project schema). */
   formatTotalIntegrationFromProject(): string {
-    if (!this.project) {
+    const project = this.project();
+    if (!project) {
       return '—';
     }
-    const t = this.project.total_integration_time;
+    const t = project.total_integration_time;
     if (t != null && Number.isFinite(Number(t))) {
       return formatIntegrationDuration(Number(t));
     }
-    const fallback = projectTotalCapturedSeconds(this.project);
+    const fallback = projectTotalCapturedSeconds(project);
     return formatIntegrationDuration(fallback);
   }
 
@@ -338,43 +343,48 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   projectGoalTotalSeconds(): number {
-    return this.project ? projectTotalGoalSeconds(this.project) : 0;
+    const project = this.project();
+    return project ? projectTotalGoalSeconds(project) : 0;
   }
 
   projectSummaryLine(): string {
-    return this.project ? projectFilterGoalSummary(this.project) : '';
+    const project = this.project();
+    return project ? projectFilterGoalSummary(project) : '';
   }
 
   get hasFov(): boolean {
-    const p = this.project;
+    const p = this.project();
     return !!(p?.focal && p?.resx && p?.resy && p?.pixel_x && p?.pixel_y && p?.ra != null && p?.decl != null);
   }
 
   get fovWidthDeg(): number {
-    const p = this.project!;
+    const p = this.project()!;
     return computeFovDeg(p.resx!, p.pixel_x!, p.focal!);
   }
 
   get fovHeightDeg(): number {
-    const p = this.project!;
+    const p = this.project()!;
     return computeFovDeg(p.resy!, p.pixel_y!, p.focal!);
   }
 
   /** Rebuild every chart input at once, after the project or telescope changes. */
   private refreshObservabilityInputs(): void {
-    this.telescopes = this.telescope ? [this.telescope] : [];
-    this.constraints = {
-      minAltDeg: this.project?.min_alt ?? null,
-      maxSunAltDeg: this.project?.max_sun_alt ?? null,
-      minMoonSeparationDeg: this.project?.moon_distance ?? null,
-      maxMoonPhasePct: this.project?.max_moon_phase ?? null
-    };
-    this.observabilityWarnings = this.buildObservabilityWarnings();
+    const telescope = this.telescope();
+    const project = this.project();
+    this.telescopes.set(telescope ? [telescope] : []);
+    this.constraints.set({
+      minAltDeg: project?.min_alt ?? null,
+      maxSunAltDeg: project?.max_sun_alt ?? null,
+      minMoonSeparationDeg: project?.moon_distance ?? null,
+      maxMoonPhasePct: project?.max_moon_phase ?? null
+    });
+    this.observabilityWarnings.set(this.buildObservabilityWarnings());
   }
 
   /** A project has coordinates to plot only once both RA and Dec are set. */
   get hasObservabilityTarget(): boolean {
-    return this.project?.ra != null && this.project?.decl != null;
+    const project = this.project();
+    return project?.ra != null && project?.decl != null;
   }
 
   /**
@@ -383,8 +393,8 @@ export class ProjectDetailComponent implements OnInit {
    */
   private buildObservabilityWarnings(): string[] {
     const warnings: string[] = [];
-    const scope = this.telescope;
-    const decl = this.project?.decl;
+    const scope = this.telescope();
+    const decl = this.project()?.decl;
     if (scope && decl != null && (decl < scope.min_dec || decl > scope.max_dec)) {
       warnings.push(
         `Declination ${decl.toFixed(1)}° is outside ${scope.name}'s range ` +
@@ -402,11 +412,12 @@ export class ProjectDetailComponent implements OnInit {
     if (!confirm(`Delete subframe "${sub.filter?.short_name ?? sub.filter_id}"?`)) {
       return;
     }
-    if (!this.project) return;
-    this.projectsService.deleteSubframe(this.project.project_id, sub.id).subscribe({
+    const project = this.project();
+    if (!project) return;
+    this.projectsService.deleteSubframe(project.project_id, sub.id).subscribe({
       next: () => {
         this.snackBar.open('Subframe deleted', 'Close', { duration: 3000 });
-        this.loadProject(this.project!.project_id);
+        this.loadProject(this.project()!.project_id);
       },
       error: err => {
         this.snackBar.open(err?.error?.msg || 'Failed to delete subframe', 'Close', { duration: 5000 });
@@ -417,14 +428,16 @@ export class ProjectDetailComponent implements OnInit {
   private loadProjectNavigation(): void {
     this.projectsService.getProjects({ per_page: 500, sort_by: 'project_id', sort_order: 'asc' }).subscribe({
       next: res => {
-        this.projectNavigation = res.projects ?? [];
-        if (this.project) {
-          this.currentProjectIndex = this.projectNavigation.findIndex(project => project.project_id === this.project!.project_id);
+        const navigation = res.projects ?? [];
+        this.projectNavigation.set(navigation);
+        const project = this.project();
+        if (project) {
+          this.currentProjectIndex.set(navigation.findIndex(p => p.project_id === project.project_id));
         }
       },
       error: () => {
-        this.projectNavigation = [];
-        this.currentProjectIndex = -1;
+        this.projectNavigation.set([]);
+        this.currentProjectIndex.set(-1);
       }
     });
   }

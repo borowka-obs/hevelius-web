@@ -16,7 +16,7 @@ import { fovCorners, raHoursToDegrees } from '../../utils/fov';
   selector: 'app-sky-view',
   standalone: true,
   template: `<div #host class="aladin-host"></div>`,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     :host { display: block; }
     .aladin-host { width: 100%; height: 400px; background: #000; border-radius: 4px; }

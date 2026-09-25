@@ -1,14 +1,4 @@
-@if (loading) {
-  <p class="status-line">Loading…</p>
-} @else if (notFound || !task) {
-  <div class="container">
-    <p class="status-line">Task not found.</p>
-    <button mat-raised-button color="primary" (click)="backToList()">
-      <mat-icon>arrow_back</mat-icon>
-      Back to tasks
-    </button>
-  </div>
-} @else {
+@if (task(); as task) {
   <div class="container">
     <div class="task-actions-top">
       <button mat-raised-button color="primary" (click)="backToList()">
@@ -91,11 +81,11 @@
           [targetName]="task.object || 'Task ' + task.task_id"
           [raHours]="task.ra"
           [decDeg]="task.decl"
-          [telescopes]="telescopes"
+          [telescopes]="telescopes()"
           [scopeId]="task.scope_id ?? null"
           [date]="observabilityDate"
-          [constraints]="constraints"
-          [warnings]="observabilityWarnings"
+          [constraints]="constraints()"
+          [warnings]="observabilityWarnings()"
           (dateChange)="onObservabilityDateChange($event)"></app-observability-card>
       </mat-card-content>
     </mat-card>
@@ -111,10 +101,20 @@
             [dec]="task.decl"
             [fovWidthDeg]="fovWidthDeg"
             [fovHeightDeg]="fovHeightDeg"
-            [rotation]="telescope?.default_rotation ?? 0"
+            [rotation]="telescope()?.default_rotation ?? 0"
             [fovMultiplier]="4" />
         </mat-card-content>
       </mat-card>
     }
+  </div>
+} @else if (loading()) {
+  <p class="status-line">Loading…</p>
+} @else {
+  <div class="container">
+    <p class="status-line">Task not found.</p>
+    <button mat-raised-button color="primary" (click)="backToList()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to tasks
+    </button>
   </div>
 }

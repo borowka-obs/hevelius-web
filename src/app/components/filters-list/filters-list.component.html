@@ -1,5 +1,5 @@
 <div class="container">
-  <div class="filters" [@filterExpand]="isFilterVisible ? 'expanded' : 'collapsed'">
+  <div class="filters" [@filterExpand]="isFilterVisible() ? 'expanded' : 'collapsed'">
     <form [formGroup]="filterForm" class="filter-form">
       <mat-button-toggle-group formControlName="activeFilter" class="filter-field">
         @for (opt of activeFilterOptions; track opt.value) {
@@ -10,7 +10,7 @@
         <mat-label>Telescope</mat-label>
         <mat-select formControlName="scope_id">
           <mat-option [value]="null">All</mat-option>
-          @for (t of telescopes; track t.scope_id) {
+          @for (t of telescopes(); track t.scope_id) {
             <mat-option [value]="t.scope_id">{{ t.name }}</mat-option>
           }
         </mat-select>

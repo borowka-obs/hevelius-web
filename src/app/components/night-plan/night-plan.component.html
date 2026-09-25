@@ -29,16 +29,16 @@
     </mat-slide-toggle>
   </div>
 
-  @if (loading) {
+  @if (loading()) {
     <div class="plan-loading">
       <mat-spinner diameter="24"></mat-spinner>
       <span>Computing the plan…</span>
     </div>
-  } @else if (error) {
+  } @else if (error(); as error) {
     <p class="plan-error" role="alert">{{ error }}</p>
-  } @else if (plan) {
+  } @else if (plan(); as plan) {
     <p class="plan-summary">
-      {{ items.length }} item{{ items.length === 1 ? '' : 's' }} for
+      {{ items().length }} item{{ items().length === 1 ? '' : 's' }} for
       <strong>{{ plan.scope_name || scopeControl.value }}</strong>
       on the night of <strong>{{ plan.night_date }}</strong>.
       @if (plan.night_start_utc && plan.night_end_utc) {
@@ -49,7 +49,7 @@
       }
     </p>
 
-    @if (items.length === 0) {
+    @if (items().length === 0) {
       <p class="plan-empty">
         Nothing is observable on this night for this telescope.
         @if (!explainControl.value) {
@@ -58,7 +58,7 @@
       </p>
     } @else {
       <div class="table-container">
-        <table mat-table [dataSource]="items" [trackBy]="trackItem" class="mat-elevation-z8">
+        <table mat-table [dataSource]="items()" [trackBy]="trackItem" class="mat-elevation-z8">
           <ng-container matColumnDef="kind">
             <th mat-header-cell *matHeaderCellDef>Type</th>
             <td mat-cell *matCellDef="let item">
@@ -123,12 +123,12 @@
 
     @if (explainControl.value) {
       <div class="excluded-section">
-        <h3>Excluded ({{ excluded.length }})</h3>
-        @if (excluded.length === 0) {
+        <h3>Excluded ({{ excluded().length }})</h3>
+        @if (excluded().length === 0) {
           <p class="plan-empty">Nothing was excluded — every candidate made it into the plan.</p>
         } @else {
           <ul class="excluded-list">
-            @for (item of excluded; track trackItem($index, item)) {
+            @for (item of excluded(); track trackItem($index, item)) {
               <li class="excluded-item">
                 <span class="excluded-name">
                   @let link = getItemLink(item);

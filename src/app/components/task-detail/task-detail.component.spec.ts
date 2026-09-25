@@ -106,49 +106,49 @@ describe('TaskDetailComponent', () => {
   it('loads the task named by the route', async () => {
     await setup('42');
     expect(taskService.getTask).toHaveBeenCalledWith(42);
-    expect(component.task?.object).toBe('M31');
-    expect(component.loading).toBe(false);
+    expect(component.task()?.object).toBe('M31');
+    expect(component.loading()).toBe(false);
   });
 
   it('loads the telescope the task is assigned to', async () => {
     await setup('42');
     expect(telescopeService.getTelescope).toHaveBeenCalledWith(3);
-    expect(component.telescopes).toEqual([TELESCOPE]);
+    expect(component.telescopes()).toEqual([TELESCOPE]);
   });
 
   it('reports a task that does not exist', async () => {
     await setup('42', { task: of({ status: false }) });
-    expect(component.notFound).toBe(true);
+    expect(component.notFound()).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('Task not found');
   });
 
   it('reports a failed request as not found rather than hanging on a spinner', async () => {
     await setup('42', { task: throwError(() => new Error('boom')) });
-    expect(component.loading).toBe(false);
-    expect(component.notFound).toBe(true);
+    expect(component.loading()).toBe(false);
+    expect(component.notFound()).toBe(true);
   });
 
   it('rejects a non-numeric id without calling the API', async () => {
     await setup('not-a-number');
     expect(taskService.getTask).not.toHaveBeenCalled();
-    expect(component.notFound).toBe(true);
+    expect(component.notFound()).toBe(true);
   });
 
   it('survives a task with no telescope assigned', async () => {
     await setup('42', { task: of({ status: true, task: { ...TASK, scope_id: undefined } }) });
     expect(telescopeService.getTelescope).not.toHaveBeenCalled();
-    expect(component.telescopes).toEqual([]);
+    expect(component.telescopes()).toEqual([]);
   });
 
   it('keeps rendering when the telescope request fails', async () => {
     await setup('42', { telescope: throwError(() => new Error('boom')) });
-    expect(component.task).not.toBeNull();
-    expect(component.telescope).toBeNull();
+    expect(component.task()).not.toBeNull();
+    expect(component.telescope()).toBeNull();
   });
 
   it('maps the task limits onto chart constraints', async () => {
     await setup('42');
-    expect(component.constraints).toEqual({
+    expect(component.constraints()).toEqual({
       minAltDeg: 30,
       maxSunAltDeg: -15,
       minMoonSeparationDeg: 40,
@@ -169,7 +169,7 @@ describe('TaskDetailComponent', () => {
         }
       })
     });
-    expect(component.constraints).toEqual({
+    expect(component.constraints()).toEqual({
       minAltDeg: null,
       maxSunAltDeg: null,
       minMoonSeparationDeg: null,
@@ -179,18 +179,18 @@ describe('TaskDetailComponent', () => {
 
   it('keeps chart inputs stable across change detection', async () => {
     await setup('42');
-    const telescopes = component.telescopes;
-    const constraints = component.constraints;
-    const warnings = component.observabilityWarnings;
+    const telescopes = component.telescopes();
+    const constraints = component.constraints();
+    const warnings = component.observabilityWarnings();
 
     fixture.detectChanges();
     fixture.detectChanges();
 
     // Identity must survive a render pass: these are bound as inputs, and a new
     // array or object each time would retrigger the curve computation forever.
-    expect(component.telescopes).toBe(telescopes);
-    expect(component.constraints).toBe(constraints);
-    expect(component.observabilityWarnings).toBe(warnings);
+    expect(component.telescopes()).toBe(telescopes);
+    expect(component.constraints()).toBe(constraints);
+    expect(component.observabilityWarnings()).toBe(warnings);
   });
 
   it('lists the task limits for display', async () => {
@@ -222,12 +222,12 @@ describe('TaskDetailComponent', () => {
 
   it('warns when the declination is outside the mount range', async () => {
     await setup('42', { task: of({ status: true, task: { ...TASK, decl: -60 } }) });
-    expect(component.observabilityWarnings.join(' ')).toContain('outside');
+    expect(component.observabilityWarnings().join(' ')).toContain('outside');
   });
 
   it('stays quiet when the declination is reachable', async () => {
     await setup('42');
-    expect(component.observabilityWarnings).toEqual([]);
+    expect(component.observabilityWarnings()).toEqual([]);
   });
 
   it('computes a field of view for the sky view', async () => {
@@ -282,11 +282,11 @@ describe('TaskDetailComponent', () => {
 
     component.editTask();
     fixture.detectChanges();
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
     expect(fixture.nativeElement.querySelector('app-observability-card')).not.toBeNull();
 
     reload.next({ status: true, task: { ...TASK, min_alt: 40 } });
-    expect(component.constraints.minAltDeg).toBe(40);
+    expect(component.constraints().minAltDeg).toBe(40);
     // Same telescope as before, so it isn't fetched again.
     expect(telescopeService.getTelescope).not.toHaveBeenCalled();
   });
@@ -299,8 +299,8 @@ describe('TaskDetailComponent', () => {
     taskService.getTask.mockReturnValue(throwError(() => new Error('boom')));
 
     component.editTask();
-    expect(component.notFound).toBe(false);
-    expect(component.task).not.toBeNull();
+    expect(component.notFound()).toBe(false);
+    expect(component.task()).not.toBeNull();
     expect(open).toHaveBeenCalledWith('Could not reload the task', 'Close', expect.anything());
   });
 

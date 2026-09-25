@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
@@ -98,7 +98,7 @@ function optionalIntegerMinValidator(min: number) {
         MatIconModule
     ],
     templateUrl: './user.component.html',
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     styleUrls: ['./user.component.css']
 })
 export class UserComponent implements OnInit {
@@ -118,21 +118,21 @@ export class UserComponent implements OnInit {
     readonly preferenceFieldLabels = PREFERENCE_FIELD_LABELS;
 
     user: User | null = null;
-    profile: UserProfile | null = null;
-    preferences: UserPreferences | null = null;
-    telescopes: Telescope[] = [];
-    filters: Filter[] = [];
-    avatarUrl = '';
+    readonly profile = signal<UserProfile | null>(null);
+    readonly preferences = signal<UserPreferences | null>(null);
+    readonly telescopes = signal<Telescope[]>([]);
+    readonly filters = signal<Filter[]>([]);
+    readonly avatarUrl = signal('');
 
     /** Field currently switched into edit mode, or null when the panel just shows details. */
-    editingField: ProfileField | null = null;
-    savingField = false;
+    readonly editingField = signal<ProfileField | null>(null);
+    readonly savingField = signal(false);
 
-    editingPreference: PreferenceField | null = null;
-    savingPreference = false;
+    readonly editingPreference = signal<PreferenceField | null>(null);
+    readonly savingPreference = signal(false);
 
-    showPasswordForm = false;
-    changingPassword = false;
+    readonly showPasswordForm = signal(false);
+    readonly changingPassword = signal(false);
     hideCurrentPassword = true;
     hideNewPassword = true;
 
@@ -199,14 +199,14 @@ export class UserComponent implements OnInit {
         });
 
         this.telescopeService.getTelescopes().pipe(first()).subscribe({
-            next: telescopes => this.telescopes = telescopes,
+            next: telescopes => this.telescopes.set(telescopes),
             error: () => {
                 // Dropdown stays empty; existing default_scope value (if any) still displays via displayScope/displayFilter.
             }
         });
 
         this.filtersService.getFilters().pipe(first()).subscribe({
-            next: filters => this.filters = filters,
+            next: filters => this.filters.set(filters),
             error: () => {
                 // Dropdown stays empty.
             }
@@ -214,7 +214,7 @@ export class UserComponent implements OnInit {
     }
 
     private applyProfile(profile: UserProfile): void {
-        this.profile = profile;
+        this.profile.set(profile);
         this.profileForm.patchValue({
             firstname: profile.firstname ?? '',
             lastname: profile.lastname ?? '',
@@ -226,7 +226,7 @@ export class UserComponent implements OnInit {
     }
 
     private applyPreferences(preferences: UserPreferences): void {
-        this.preferences = preferences;
+        this.preferences.set(preferences);
         this.preferencesForm.patchValue({
             default_scope: preferences.default_scope,
             default_filter: preferences.default_filter,
@@ -236,22 +236,22 @@ export class UserComponent implements OnInit {
 
     private updateAvatar(email: string | null | undefined, userId: number | undefined | null): void {
         const fallbackId = userId?.toString() ?? this.user?.firstname ?? 'hevelius-user';
-        this.avatarUrl = this.gravatarService.getAvatarUrl(email, fallbackId, 96);
+        this.avatarUrl.set(this.gravatarService.getAvatarUrl(email, fallbackId, 96));
     }
 
     fieldValue(field: ProfileField): string {
-        return (this.profile?.[field] ?? this.user?.[field] ?? '') as string;
+        return (this.profile()?.[field] ?? this.user?.[field] ?? '') as string;
     }
 
     startEdit(field: ProfileField): void {
         this.profileForm.get(field)?.setValue(this.fieldValue(field));
-        this.editingField = field;
+        this.editingField.set(field);
     }
 
     cancelEdit(field: ProfileField): void {
         this.profileForm.get(field)?.setValue(this.fieldValue(field));
         this.profileForm.get(field)?.markAsUntouched();
-        this.editingField = null;
+        this.editingField.set(null);
     }
 
     saveField(field: ProfileField): void {
@@ -260,19 +260,19 @@ export class UserComponent implements OnInit {
             control?.markAsTouched();
             return;
         }
-        this.savingField = true;
+        this.savingField.set(true);
         const raw = (control.value as string | null)?.trim() ?? '';
         const body: UserProfileUpdate = { [field]: raw || null };
         this.userService.updateProfile(body).pipe(first()).subscribe({
             next: profile => {
-                this.savingField = false;
+                this.savingField.set(false);
                 this.applyProfile(profile);
                 this.mergeIntoStoredUser(profile);
-                this.editingField = null;
+                this.editingField.set(null);
                 this.showMessage(`${this.fieldLabels[field]} updated.`);
             },
             error: (err: HttpErrorResponse) => {
-                this.savingField = false;
+                this.savingField.set(false);
                 this.showMessage(err?.error?.msg || 'Failed to update profile.');
             }
         });
@@ -299,14 +299,14 @@ export class UserComponent implements OnInit {
         if (scopeId == null) {
             return '—';
         }
-        return this.telescopes.find(t => t.scope_id === scopeId)?.name ?? `#${scopeId}`;
+        return this.telescopes().find(t => t.scope_id === scopeId)?.name ?? `#${scopeId}`;
     }
 
     displayFilter(filterId: number | null): string {
         if (filterId == null) {
             return '—';
         }
-        return this.filters.find(f => f.filter_id === filterId)?.short_name ?? `#${filterId}`;
+        return this.filters().find(f => f.filter_id === filterId)?.short_name ?? `#${filterId}`;
     }
 
     displayExposure(exposure: number | null): string {
@@ -314,7 +314,7 @@ export class UserComponent implements OnInit {
     }
 
     displayPreference(field: PreferenceField): string {
-        const value = this.preferences?.[field] ?? null;
+        const value = this.preferences()?.[field] ?? null;
         switch (field) {
             case 'default_scope':
                 return this.displayScope(value);
@@ -326,14 +326,14 @@ export class UserComponent implements OnInit {
     }
 
     startEditPreference(field: PreferenceField): void {
-        this.preferencesForm.get(field)?.setValue(this.preferences?.[field] ?? null);
-        this.editingPreference = field;
+        this.preferencesForm.get(field)?.setValue(this.preferences()?.[field] ?? null);
+        this.editingPreference.set(field);
     }
 
     cancelEditPreference(field: PreferenceField): void {
-        this.preferencesForm.get(field)?.setValue(this.preferences?.[field] ?? null);
+        this.preferencesForm.get(field)?.setValue(this.preferences()?.[field] ?? null);
         this.preferencesForm.get(field)?.markAsUntouched();
-        this.editingPreference = null;
+        this.editingPreference.set(null);
     }
 
     savePreference(field: PreferenceField): void {
@@ -342,7 +342,7 @@ export class UserComponent implements OnInit {
             control?.markAsTouched();
             return;
         }
-        this.savingPreference = true;
+        this.savingPreference.set(true);
         let value = control.value;
         if (field === 'default_exposure' && (value === '' || value == null)) {
             value = null;
@@ -350,21 +350,22 @@ export class UserComponent implements OnInit {
         const body: UserPreferencesUpdate = { [field]: value };
         this.userService.updatePreferences(body).pipe(first()).subscribe({
             next: preferences => {
-                this.savingPreference = false;
+                this.savingPreference.set(false);
                 this.applyPreferences(preferences);
-                this.editingPreference = null;
+                this.editingPreference.set(null);
                 this.showMessage(`${this.preferenceFieldLabels[field]} updated.`);
             },
             error: (err: HttpErrorResponse) => {
-                this.savingPreference = false;
+                this.savingPreference.set(false);
                 this.showMessage(err?.error?.message || 'Failed to update preferences.');
             }
         });
     }
 
     togglePasswordForm(): void {
-        this.showPasswordForm = !this.showPasswordForm;
-        if (!this.showPasswordForm) {
+        const next = !this.showPasswordForm();
+        this.showPasswordForm.set(next);
+        if (!next) {
             this.passwordForm.reset();
         }
     }
@@ -374,20 +375,20 @@ export class UserComponent implements OnInit {
             this.passwordForm.markAllAsTouched();
             return;
         }
-        this.changingPassword = true;
+        this.changingPassword.set(true);
         const v = this.passwordForm.getRawValue();
         this.userService
             .changePassword({ current_password: v.current_password, new_password: v.new_password })
             .pipe(first())
             .subscribe({
                 next: () => {
-                    this.changingPassword = false;
+                    this.changingPassword.set(false);
                     this.passwordForm.reset();
-                    this.showPasswordForm = false;
+                    this.showPasswordForm.set(false);
                     this.showMessage('Password changed.');
                 },
                 error: (err: HttpErrorResponse) => {
-                    this.changingPassword = false;
+                    this.changingPassword.set(false);
                     this.showMessage(err?.error?.msg || 'Failed to change password.');
                 }
             });

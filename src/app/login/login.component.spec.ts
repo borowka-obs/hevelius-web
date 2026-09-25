@@ -85,7 +85,7 @@ describe('LoginComponent', () => {
     await fixture.whenStable();
 
     expect(loginService.getBackendVersion).toHaveBeenCalled();
-    expect(component.backendVersion).toBe('1.2.3');
+    expect(component.backendVersion()).toBe('1.2.3');
   });
 
   it('should handle backend version fetch error', async () => {
@@ -96,7 +96,7 @@ describe('LoginComponent', () => {
     await fixture.whenStable();
 
     expect(loginService.getBackendVersion).toHaveBeenCalled();
-    expect(component.backendVersion).toBe('Unresponsive');
+    expect(component.backendVersion()).toBe('Unresponsive');
   });
 
   it('navigates to projects after successful login', async () => {

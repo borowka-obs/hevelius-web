@@ -6,6 +6,7 @@ import {
   ElementRef,
   ViewChild,
   inject,
+  signal,
   NgZone,
   ChangeDetectionStrategy
 } from '@angular/core';
@@ -41,7 +42,7 @@ function scopeColor(scopeId: number): string {
     MatIconModule
   ],
   templateUrl: './sky-map.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./sky-map.component.css']
 })
 export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -51,9 +52,9 @@ export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
   private zone = inject(NgZone);
   private destroy$ = new Subject<void>();
 
-  projects: Project[] = [];
-  loading = true;
-  errorMsg: string | null = null;
+  readonly projects = signal<Project[]>([]);
+  readonly loading = signal(true);
+  readonly errorMsg = signal<string | null>(null);
   hiddenScopes = new Set<number>();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,7 +66,7 @@ export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroyed = false;
 
   get scopeIds(): number[] {
-    return [...new Set(this.projects.map(p => p.scope_id))].sort((a, b) => a - b);
+    return [...new Set(this.projects().map(p => p.scope_id))].sort((a, b) => a - b);
   }
 
   scopeColor(id: number): string { return scopeColor(id); }
@@ -92,14 +93,14 @@ export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe({
       next: all => {
-        this.projects = all.filter(p => p.active);
-        this.loading = false;
+        this.projects.set(all.filter(p => p.active));
+        this.loading.set(false);
         this.projectsReady = true;
         this.maybeRender();
       },
       error: () => {
-        this.errorMsg = 'Failed to load projects';
-        this.loading = false;
+        this.errorMsg.set('Failed to load projects');
+        this.loading.set(false);
       }
     });
   }
@@ -159,7 +160,7 @@ export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const overlays = new Map<number, any>();
 
-    for (const p of this.projects) {
+    for (const p of this.projects()) {
       if (this.hiddenScopes.has(p.scope_id)) continue;
       if (p.ra == null || p.decl == null) continue;
 

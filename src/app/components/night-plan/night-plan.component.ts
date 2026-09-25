@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { EMPTY, Subject, forkJoin, of } from 'rxjs';
@@ -49,7 +49,7 @@ const EXCLUSION_REASON_LABELS: Record<string, string> = {
     templateUrl: './night-plan.component.html',
     styleUrls: ['./night-plan.component.css'],
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
     ReactiveFormsModule,
     RouterModule,
@@ -79,13 +79,13 @@ export class NightPlanComponent implements OnInit, OnDestroy {
     dateControl = new FormControl<Date>(currentNightDate());
     explainControl = new FormControl<boolean>(false, { nonNullable: true });
 
-    telescopes: Telescope[] = [];
-    plan: NightPlanResponse | null = null;
-    items: NightPlanItem[] = [];
-    excluded: NightPlanExcludedItem[] = [];
+    readonly telescopes = signal<Telescope[]>([]);
+    readonly plan = signal<NightPlanResponse | null>(null);
+    readonly items = signal<NightPlanItem[]>([]);
+    readonly excluded = signal<NightPlanExcludedItem[]>([]);
 
-    loading = false;
-    error: string | null = null;
+    readonly loading = signal(false);
+    readonly error = signal<string | null>(null);
 
     /**
      * When set, sent as the `date` query param. When null, the param is omitted
@@ -97,15 +97,15 @@ export class NightPlanComponent implements OnInit, OnDestroy {
     private readonly destroy$ = new Subject<void>();
 
     private readonly MOBILE_BREAKPOINT = 640;
-    isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+    readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
     @HostListener('window:resize')
     onResize(): void {
-        this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+        this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
     }
 
     get displayedColumns(): string[] {
-        if (this.isMobile) {
+        if (this.isMobile()) {
             return ['kind', 'object', 'max_altitude', 'best_time'];
         }
         return [
@@ -122,7 +122,7 @@ export class NightPlanComponent implements OnInit, OnDestroy {
     }
 
     get activeTelescopes(): Telescope[] {
-        return this.telescopes.filter(t => t.active);
+        return this.telescopes().filter(t => t.active);
     }
 
     ngOnInit(): void {
@@ -134,16 +134,16 @@ export class NightPlanComponent implements OnInit, OnDestroy {
             switchMap(() => this.fetchNightPlan()),
             takeUntil(this.destroy$)
         ).subscribe(response => {
-            this.loading = false;
-            this.plan = response;
-            this.items = response?.items ?? [];
-            this.excluded = response?.excluded ?? [];
+            this.loading.set(false);
+            this.plan.set(response);
+            this.items.set(response?.items ?? []);
+            this.excluded.set(response?.excluded ?? []);
             this.syncDateControlFromPlan(response);
             this.ensureScopeLabel(response);
             this.updateTitle();
         });
 
-        this.loading = true;
+        this.loading.set(true);
         // Telescope list and the user's default_scope are both needed before the
         // first plan request; a missing preferences call must not block the page.
         forkJoin({
@@ -157,21 +157,21 @@ export class NightPlanComponent implements OnInit, OnDestroy {
         }).pipe(
             takeUntil(this.destroy$)
         ).subscribe(({ telescopes, preferences }) => {
-            this.telescopes = telescopes.list;
-            this.loading = false;
+            this.telescopes.set(telescopes.list);
+            this.loading.set(false);
 
             const defaultScope = preferences?.default_scope ?? null;
             const scopeId = this.pickInitialScope(defaultScope, telescopes.ok);
             if (scopeId === null) {
-                this.error = telescopes.ok
+                this.error.set(telescopes.ok
                     ? 'No active telescope available to plan for.'
-                    : 'Could not load telescopes.';
+                    : 'Could not load telescopes.');
                 return;
             }
 
             if (!telescopes.ok) {
                 // List failed, but default_scope is still usable for the plan request.
-                this.telescopes = [this.makeScopePlaceholder(scopeId)];
+                this.telescopes.set([this.makeScopePlaceholder(scopeId)]);
             }
 
             this.scopeControl.setValue(scopeId);
@@ -252,8 +252,8 @@ export class NightPlanComponent implements OnInit, OnDestroy {
             return EMPTY;
         }
 
-        this.loading = true;
-        this.error = null;
+        this.loading.set(true);
+        this.error.set(null);
 
         const params: NightPlanParams = {
             scope_id: scopeId,
@@ -265,11 +265,11 @@ export class NightPlanComponent implements OnInit, OnDestroy {
 
         return this.nightPlanService.getNightPlan(params).pipe(
             catchError(err => {
-                this.loading = false;
-                this.plan = null;
-                this.items = [];
-                this.excluded = [];
-                this.error = err?.error?.msg || err?.error?.message || 'Could not load the night plan.';
+                this.loading.set(false);
+                this.plan.set(null);
+                this.items.set([]);
+                this.excluded.set([]);
+                this.error.set(err?.error?.msg || err?.error?.message || 'Could not load the night plan.');
                 this.updateTitle();
                 return EMPTY;
             })
@@ -289,15 +289,17 @@ export class NightPlanComponent implements OnInit, OnDestroy {
         if (!response?.scope_name) {
             return;
         }
-        const scope = this.telescopes.find(t => t.scope_id === response.scope_id);
+        const scope = this.telescopes().find(t => t.scope_id === response.scope_id);
         if (scope && scope.name === `Scope ${response.scope_id}`) {
-            scope.name = response.scope_name;
+            this.telescopes.set(
+                this.telescopes().map(t => t.scope_id === response.scope_id ? { ...t, name: response.scope_name! } : t)
+            );
         }
     }
 
     private updateTitle(): void {
         this.topBarService.updateState({
-            title: `Night plan: ${this.items.length} items`
+            title: `Night plan: ${this.items().length} items`
         });
     }
 

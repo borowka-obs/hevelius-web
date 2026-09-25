@@ -19,7 +19,7 @@ export interface FilterFormDialogData {
   templateUrl: './filter-form-dialog.component.html',
   styleUrls: ['./filter-form-dialog.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,

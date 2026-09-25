@@ -44,14 +44,14 @@ describe('CatalogsListComponent', () => {
 
   it('should load installed catalogs on init', () => {
     expect(catalogsService.listInstalledCatalogs).toHaveBeenCalledWith('entries');
-    expect(component.catalogs).toEqual(mockCatalogs);
+    expect(component.catalogs()).toEqual(mockCatalogs);
   });
 
   it('should sort catalogs when a column header is clicked', () => {
     component.onSortChange({ active: 'object_count', direction: 'asc' });
-    expect(component.catalogs[0].shortname).toBe('M');
+    expect(component.catalogs()[0].shortname).toBe('M');
     component.onSortChange({ active: 'object_count', direction: 'desc' });
-    expect(component.catalogs[0].shortname).toBe('NGC');
+    expect(component.catalogs()[0].shortname).toBe('NGC');
   });
 
   it('should navigate to objects with catalog filter', () => {

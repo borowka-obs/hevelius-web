@@ -1,18 +1,18 @@
 <mat-toolbar color="primary">
-  <span>{{ title }}</span>
+  <span>{{ title() }}</span>
   <span class="spacer"></span>
-  @if (showFilter) {
-    <button mat-icon-button (click)="toggleFilter()" [matTooltip]="filterVisible ? 'Hide filters' : 'Show filters'">
+  @if (showFilter()) {
+    <button mat-icon-button (click)="toggleFilter()" [matTooltip]="filterVisible() ? 'Hide filters' : 'Show filters'">
       <mat-icon>filter_list</mat-icon>
     </button>
   }
-  @if (showAdd) {
-    <button mat-icon-button (click)="onAddClickHandler()" [matTooltip]="addTooltip" aria-label="Add">
+  @if (showAdd()) {
+    <button mat-icon-button (click)="onAddClickHandler()" [matTooltip]="addTooltip()" aria-label="Add">
       <mat-icon>add</mat-icon>
     </button>
   }
   <button mat-icon-button (click)="navigateToUser()" matTooltip="User profile" aria-label="User profile">
-    <img [src]="avatarUrl" alt="User avatar" class="avatar-icon">
+    <img [src]="avatarUrl()" alt="User avatar" class="avatar-icon">
   </button>
   <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menu">
     <mat-icon>menu</mat-icon>

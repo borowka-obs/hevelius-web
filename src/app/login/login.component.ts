@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { UntypedFormGroup, Validators, UntypedFormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
@@ -19,7 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
     templateUrl: './login.component.html',
     styleUrls: ['./login.component.css'],
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
     FormsModule,
     ReactiveFormsModule,
@@ -39,7 +39,7 @@ export class LoginComponent implements OnInit {
 
     title: string;
     version: string;
-    backendVersion: string = 'Unknown';
+    readonly backendVersion = signal('Unknown');
     hide: boolean;
 
     loginForm: UntypedFormGroup;
@@ -63,10 +63,10 @@ export class LoginComponent implements OnInit {
   private fetchBackendVersion() {
       this.loginService.getBackendVersion().pipe(first()).subscribe({
           next: (version: string) => {
-              this.backendVersion = version;
+              this.backendVersion.set(version);
           },
           error: (error: HttpErrorResponse) => {
-              this.backendVersion = 'Unresponsive';
+              this.backendVersion.set('Unresponsive');
               if (error.status === 0) {
                   console.warn('Backend is unreachable');
               }

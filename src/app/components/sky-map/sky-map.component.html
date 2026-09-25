@@ -1,15 +1,15 @@
 <div class="sky-map-page">
-  @if (loading) {
+  @if (loading()) {
     <div class="center-spinner">
       <mat-spinner diameter="48"></mat-spinner>
     </div>
   }
 
-  @if (errorMsg) {
+  @if (errorMsg(); as errorMsg) {
     <div class="error-msg">{{ errorMsg }}</div>
   }
 
-  @if (!loading && !errorMsg && scopeIds.length > 1) {
+  @if (!loading() && !errorMsg() && scopeIds.length > 1) {
     <div class="scope-chips">
       <mat-chip-set>
         @for (id of scopeIds; track id) {
@@ -27,5 +27,5 @@
   }
 
   <!-- Aladin host must always be in the DOM so ViewChild resolves on ngAfterViewInit -->
-  <div #host class="aladin-host" [class.hidden]="loading || !!errorMsg"></div>
+  <div #host class="aladin-host" [class.hidden]="loading() || !!errorMsg()"></div>
 </div>

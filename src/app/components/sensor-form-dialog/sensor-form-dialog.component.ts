@@ -19,7 +19,7 @@ export interface SensorFormDialogData {
   templateUrl: './sensor-form-dialog.component.html',
   styleUrls: ['./sensor-form-dialog.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,

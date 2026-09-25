@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -98,7 +98,7 @@ function minMaxDecOrderValidator(g: AbstractControl): ValidationErrors | null {
   templateUrl: './telescope-form-dialog.component.html',
   styleUrls: ['./telescope-form-dialog.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,
@@ -120,7 +120,7 @@ export class TelescopeFormDialogComponent {
 
   form: FormGroup;
   mode: 'add' | 'edit' = 'add';
-  sensors: Sensor[] = [];
+  readonly sensors = signal<Sensor[]>([]);
 
   constructor() {
     const d = this.data;
@@ -147,7 +147,7 @@ export class TelescopeFormDialogComponent {
     );
     this.sensorsService.getSensors({ active: true }).subscribe({
       next: list => {
-        this.sensors = list;
+        this.sensors.set(list);
       }
     });
   }

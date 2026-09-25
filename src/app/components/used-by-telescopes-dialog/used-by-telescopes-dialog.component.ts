@@ -14,7 +14,7 @@ export interface UsedByTelescopesDialogData {
   templateUrl: './used-by-telescopes-dialog.component.html',
   styleUrls: ['./used-by-telescopes-dialog.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatDialogModule, MatButtonModule]
 })
 export class UsedByTelescopesDialogComponent {

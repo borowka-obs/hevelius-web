@@ -20,7 +20,7 @@ export interface SubframeFormDialogData {
   templateUrl: './subframe-form-dialog.component.html',
   styleUrls: ['./subframe-form-dialog.component.css'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,

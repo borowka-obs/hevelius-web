@@ -29,7 +29,7 @@ import {
       <span class="publication-empty">—</span>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .publication-icons {

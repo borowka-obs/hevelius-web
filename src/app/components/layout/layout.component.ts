@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskViewComponent } from '../task-view/task-view.component';
 import { Router, RouterModule } from '@angular/router';
@@ -21,7 +21,7 @@ import { GravatarService } from '../../services/gravatar.service';
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.css'],
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
     RouterModule,
     MatMenuModule,
@@ -41,30 +41,30 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private topBarService = inject(TopBarService);
   private gravatarService = inject(GravatarService);
 
-  title = '';
-  showFilter = false;
-  filterVisible = false;
+  readonly title = signal('');
+  readonly showFilter = signal(false);
+  readonly filterVisible = signal(false);
   onFilterToggle?: () => void;
-  showAdd = false;
+  readonly showAdd = signal(false);
   onAddClick?: () => void;
-  addTooltip = '';
-  avatarUrl = '';
+  readonly addTooltip = signal('');
+  readonly avatarUrl = signal('');
   private subscription: Subscription;
   private userSubscription: Subscription;
 
   constructor() {
     this.subscription = this.topBarService.state$.subscribe(state => {
-      this.title = state.title;
-      this.showFilter = state.showFilter;
-      this.filterVisible = state.filterVisible;
+      this.title.set(state.title);
+      this.showFilter.set(state.showFilter);
+      this.filterVisible.set(state.filterVisible);
       this.onFilterToggle = state.onFilterToggle;
-      this.showAdd = state.showAdd ?? false;
+      this.showAdd.set(state.showAdd ?? false);
       this.onAddClick = state.onAddClick;
-      this.addTooltip = state.addTooltip ?? 'Add';
+      this.addTooltip.set(state.addTooltip ?? 'Add');
     });
     this.userSubscription = this.loginService.currentUser$.subscribe(user => {
       const fallbackId = user?.user_id?.toString() ?? user?.username ?? user?.firstname ?? 'hevelius-user';
-      this.avatarUrl = this.gravatarService.getAvatarUrl(user?.email, fallbackId, 32);
+      this.avatarUrl.set(this.gravatarService.getAvatarUrl(user?.email, fallbackId, 32));
     });
   }
 

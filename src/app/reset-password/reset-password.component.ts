@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
     AbstractControl,
     UntypedFormGroup,
@@ -32,7 +32,7 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
     templateUrl: './reset-password.component.html',
     styleUrls: ['./reset-password.component.css'],
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         ReactiveFormsModule,
         MatFormFieldModule,
@@ -52,7 +52,7 @@ export class ResetPasswordComponent implements OnInit {
 
     title: string;
     token: string | null = null;
-    submitting = false;
+    readonly submitting = signal(false);
     hide = true;
     form: UntypedFormGroup;
 
@@ -82,13 +82,13 @@ export class ResetPasswordComponent implements OnInit {
             return;
         }
 
-        this.submitting = true;
+        this.submitting.set(true);
         this.loginService
             .resetPassword(this.token, this.form.controls.new_password.value)
             .pipe(first())
             .subscribe({
                 next: (data: StatusMsgResponse) => {
-                    this.submitting = false;
+                    this.submitting.set(false);
                     if (data.status) {
                         this.showMessage('Password updated. Please sign in with your new password.');
                         this.router.navigateByUrl('/login');
@@ -97,7 +97,7 @@ export class ResetPasswordComponent implements OnInit {
                     }
                 },
                 error: (error: HttpErrorResponse) => {
-                    this.submitting = false;
+                    this.submitting.set(false);
                     if (error.status === 0) {
                         this.showMessage('Backend is unresponsive. Please check the server.');
                     } else {

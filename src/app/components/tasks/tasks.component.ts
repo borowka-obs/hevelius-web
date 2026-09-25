@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, HostListener, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, HostListener, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { LoginService } from '../../services/login.service';
 import { TasksService } from '../../services/tasks.service';
 import { CoordsFormatterService } from '../../services/coords-formatter.service';
@@ -49,7 +49,7 @@ import { TaskParams } from '../../models/task-response';
         ])
     ],
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
     ReactiveFormsModule,
     MatTableModule,
@@ -92,10 +92,10 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   dataSource = inject(TasksService);
   private readonly MOBILE_BREAKPOINT = 640;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT;
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= this.MOBILE_BREAKPOINT);
 
   get displayedColumns(): string[] {
-    if (this.isMobile) {
+    if (this.isMobile()) {
       return ['scope_id', 'state', 'object', 'actions'];
     }
     return ['user_id', 'scope_id', 'state', 'object', 'ra', 'decl', 'exposure', 'actions'];
@@ -103,15 +103,15 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onResize(): void {
-    this.isMobile = window.innerWidth <= this.MOBILE_BREAKPOINT;
+    this.isMobile.set(window.innerWidth <= this.MOBILE_BREAKPOINT);
   }
 
-  totalTasks = 0;
+  readonly totalTasks = signal(0);
   currentPage = 1;
   pageSize = 50;
   private subscriptions: Subscription[] = [];
   filterForm: FormGroup;
-  isFilterVisible = false;
+  readonly isFilterVisible = signal(false);
 
   get stateFilterOptions(): { value: number; label: string }[] {
     return this.dataSource.states.getStateFilterOptions();
@@ -184,7 +184,7 @@ export class TasksComponent implements OnInit, OnDestroy {
       this.dataSource.getTotalTasks().subscribe(total => {
         // Only update title if we have actual data (not 0)
         if (total > 0) {
-          this.totalTasks = total;
+          this.totalTasks.set(total);
           if (!this.embedded()) {
             this.updateTitle();
           }
@@ -208,7 +208,7 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   private updateTitle() {
     this.topBarService.updateState({
-      title: `Tasks: ${this.totalTasks} items`
+      title: `Tasks: ${this.totalTasks()} items`
     });
   }
 
@@ -371,12 +371,13 @@ export class TasksComponent implements OnInit, OnDestroy {
     if (this.embedded()) {
       return;
     }
-    this.isFilterVisible = !this.isFilterVisible;
+    const next = !this.isFilterVisible();
+    this.isFilterVisible.set(next);
 
     // Use setTimeout to defer the state update
     setTimeout(() => {
       this.topBarService.updateState({
-        filterVisible: this.isFilterVisible
+        filterVisible: next
       });
     });
   }
