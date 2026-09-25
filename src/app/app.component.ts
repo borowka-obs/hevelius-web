@@ -9,7 +9,7 @@ import { ThemeService } from './services/theme.service';
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.css'],
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
     RouterModule,
     LayoutComponent
