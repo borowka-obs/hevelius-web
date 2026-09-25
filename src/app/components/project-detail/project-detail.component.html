@@ -21,69 +21,71 @@
       </button>
     </div>
 
-    <mat-card class="project-card">
-      <mat-card-header>
-        <mat-card-title>{{ project.name }}</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p><strong>Description:</strong> {{ project.description || '–' }}</p>
-        <p>
-          <strong>Telescope:</strong>
-          <a [routerLink]="['/scopes', project.scope_id]">{{ getScopeName() }}</a>
-          (<strong>ID:</strong>
-          <a [routerLink]="['/scopes', project.scope_id]">{{ project.scope_id }}</a>)
-        </p>
-        <p><strong>RA:</strong> {{ formatRA(project.ra) }} <strong>Dec:</strong> {{ formatDec(project.decl) }} <strong>Rotation:</strong> {{ formatRotation(project.rotation) }}</p>
-        <p><strong>Start date:</strong> {{ formatCalendarDate(project.start_date) }}</p>
-        <p><strong>End date:</strong> {{ formatCalendarDate(project.end_date) }}</p>
-        <p class="publications-row">
-          <strong>Publications:</strong>
-          <app-project-publications [publications]="project.publications" />
-        </p>
-        <p>
-          <strong>Last updated:</strong>
-          @if (project.last_updated) {
-            {{ project.last_updated | date: 'medium' }}
-          } @else {
-            —
-          }
-        </p>
-        @if (getSubframes().length) {
-          <p>
-            <strong>Total integration (captured):</strong>
-            {{ formatTotalIntegrationFromProject() }}
-            @if (project.total_integration_time === null || project.total_integration_time === undefined) {
-              <span class="muted">(from subframes; API field missing)</span>
-            }
-          </p>
-          <p>
-            <strong>Total integration (goal):</strong>
-            {{ formatDurationSeconds(projectGoalTotalSeconds()) }}
-          </p>
-          @if (projectSummaryLine()) {
-            <p><strong>Plan by filter:</strong> {{ projectSummaryLine() }}</p>
-          }
-        }
-      </mat-card-content>
-    </mat-card>
-
-    @if (hasFov) {
-      <mat-card class="sky-view-card">
+    <div class="project-overview">
+      <mat-card class="project-card">
         <mat-card-header>
-          <mat-card-title>Sky View</mat-card-title>
+          <mat-card-title>{{ project.name }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <app-sky-view
-            [ra]="project.ra!"
-            [dec]="project.decl!"
-            [fovWidthDeg]="fovWidthDeg"
-            [fovHeightDeg]="fovHeightDeg"
-            [rotation]="project.rotation ?? 0"
-            [fovMultiplier]="4"
-          />
+          <p><strong>Description:</strong> {{ project.description || '–' }}</p>
+          <p>
+            <strong>Telescope:</strong>
+            <a [routerLink]="['/scopes', project.scope_id]">{{ getScopeName() }}</a>
+            (<strong>ID:</strong>
+            <a [routerLink]="['/scopes', project.scope_id]">{{ project.scope_id }}</a>)
+          </p>
+          <p><strong>RA:</strong> {{ formatRA(project.ra) }} <strong>Dec:</strong> {{ formatDec(project.decl) }} <strong>Rotation:</strong> {{ formatRotation(project.rotation) }}</p>
+          <p><strong>Start date:</strong> {{ formatCalendarDate(project.start_date) }}</p>
+          <p><strong>End date:</strong> {{ formatCalendarDate(project.end_date) }}</p>
+          <p class="publications-row">
+            <strong>Publications:</strong>
+            <app-project-publications [publications]="project.publications" />
+          </p>
+          <p>
+            <strong>Last updated:</strong>
+            @if (project.last_updated) {
+              {{ project.last_updated | date: 'medium' }}
+            } @else {
+              —
+            }
+          </p>
+          @if (getSubframes().length) {
+            <p>
+              <strong>Total integration (captured):</strong>
+              {{ formatTotalIntegrationFromProject() }}
+              @if (project.total_integration_time === null || project.total_integration_time === undefined) {
+                <span class="muted">(from subframes; API field missing)</span>
+              }
+            </p>
+            <p>
+              <strong>Total integration (goal):</strong>
+              {{ formatDurationSeconds(projectGoalTotalSeconds()) }}
+            </p>
+            @if (projectSummaryLine()) {
+              <p><strong>Plan by filter:</strong> {{ projectSummaryLine() }}</p>
+            }
+          }
         </mat-card-content>
       </mat-card>
-    }
+
+      @if (hasFov) {
+        <mat-card class="sky-view-card">
+          <mat-card-header>
+            <mat-card-title>Sky View</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <app-sky-view
+              [ra]="project.ra!"
+              [dec]="project.decl!"
+              [fovWidthDeg]="fovWidthDeg"
+              [fovHeightDeg]="fovHeightDeg"
+              [rotation]="project.rotation ?? 0"
+              [fovMultiplier]="4"
+            />
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
 
     <div class="subframes-section">
       <div class="subframes-header">

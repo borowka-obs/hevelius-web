@@ -9,13 +9,36 @@
   flex-wrap: wrap;
 }
 
-.project-card {
+.project-overview {
+  display: flex;
+  flex-direction: column;
   margin: 1rem 0;
+}
+
+.project-card {
   max-width: 600px;
 }
 
 .sky-view-card {
   overflow: hidden;
+  margin-top: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .project-overview {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .project-card {
+    flex: 0 1 600px;
+  }
+
+  .sky-view-card {
+    flex: 1 1 auto;
+    margin-top: 0;
+  }
 }
 
 .sky-view-card mat-card-content.mat-mdc-card-content {
