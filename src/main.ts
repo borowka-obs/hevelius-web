@@ -1,4 +1,4 @@
-import { enableProdMode, provideZoneChangeDetection } from '@angular/core';
+import { enableProdMode, provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 
 import { AppComponent } from './app/app.component';
@@ -20,7 +20,8 @@ if (environment.production) {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideZoneChangeDetection(),provideRouter(routes),
+    provideZonelessChangeDetection(),
+    provideRouter(routes),
     provideAnimations(),
     provideHttpClient(withXhr(), withInterceptorsFromDi()),
     {
