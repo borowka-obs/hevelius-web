@@ -142,7 +142,8 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
       next: list => {
         this.allScopes.set(list.map(t => ({ scope_id: t.scope_id, name: t.name })));
         this.scopes.set(list.filter(t => t.active).map(t => ({ scope_id: t.scope_id, name: t.name })));
-      }
+      },
+      error: err => console.error('Error loading telescopes:', err)
     });
     this.filterForm.get('activeOnly')?.valueChanges.subscribe(() => {
       this.applyClientFilterAndSort();
