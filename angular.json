@@ -17,9 +17,7 @@
               "base": "dist/hevelius"
             },
             "index": "src/index.html",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": [],
             "tsConfig": "src/tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
@@ -37,12 +35,7 @@
             "browser": "src/main.ts"
           },
           "configurations": {
-            "development": {
-              "polyfills": [
-                "zone.js",
-                "zone.js/testing"
-              ]
-            },
+            "development": {},
             "production": {
               "fileReplacements": [
                 {
@@ -89,7 +82,8 @@
           "options": {
             "buildTarget": "hevelius:build:development",
             "tsConfig": "src/tsconfig.spec.json",
-            "runnerConfig": false
+            "runnerConfig": false,
+            "providersFile": "src/test-providers.ts"
           },
           "configurations": {
             "watch": {
