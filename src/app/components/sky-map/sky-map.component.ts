@@ -129,6 +129,11 @@ export class SkyMapComponent implements OnInit, AfterViewInit, OnDestroy {
           });
           this.aladinReady = true;
           this.maybeRender();
+        }).catch(err => {
+          console.error('Failed to initialize Aladin Lite:', err);
+          if (!this.destroyed) {
+            this.errorMsg.set('Failed to initialize sky map');
+          }
         });
       });
     });

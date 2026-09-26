@@ -68,7 +68,7 @@ export class SkyViewComponent implements AfterViewInit, OnChanges, OnDestroy {
           });
           this.ready = true;
           this.drawOverlay();
-        });
+        }).catch(err => console.error('Failed to initialize Aladin Lite:', err));
       });
     });
   }
