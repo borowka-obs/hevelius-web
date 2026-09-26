@@ -83,7 +83,8 @@
             "buildTarget": "hevelius:build:development",
             "tsConfig": "src/tsconfig.spec.json",
             "runnerConfig": false,
-            "providersFile": "src/test-providers.ts"
+            "providersFile": "src/test-providers.ts",
+            "setupFiles": ["src/test-aladin-init.ts"]
           },
           "configurations": {
             "watch": {
