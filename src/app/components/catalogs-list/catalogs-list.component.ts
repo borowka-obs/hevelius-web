@@ -41,12 +41,15 @@ export class CatalogsListComponent implements OnInit, OnDestroy {
   }
 
   loadCatalogs() {
-    this.catalogsService.listInstalledCatalogs('entries').subscribe(catalogs => {
-      this.catalogs.set(catalogs);
-      const totalObjects = catalogs.reduce((sum, c) => sum + c.object_count, 0);
-      this.topBarService.updateState({
-        title: `Catalogs: ${catalogs.length} (${totalObjects.toLocaleString()} objects)`
-      });
+    this.catalogsService.listInstalledCatalogs('entries').subscribe({
+      next: catalogs => {
+        this.catalogs.set(catalogs);
+        const totalObjects = catalogs.reduce((sum, c) => sum + c.object_count, 0);
+        this.topBarService.updateState({
+          title: `Catalogs: ${catalogs.length} (${totalObjects.toLocaleString()} objects)`
+        });
+      },
+      error: err => console.error('Error loading catalogs:', err)
     });
   }
 

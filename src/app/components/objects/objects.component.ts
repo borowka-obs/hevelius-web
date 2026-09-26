@@ -167,8 +167,9 @@ export class ObjectsComponent implements OnInit, OnDestroy {
       this.catalogsService.getCurrentPage().subscribe(page => {
         this.currentPage.set(page);
       }),
-      this.catalogsService.listInstalledCatalogs().subscribe(catalogs => {
-        this.installedCatalogs.set(catalogs);
+      this.catalogsService.listInstalledCatalogs().subscribe({
+        next: catalogs => this.installedCatalogs.set(catalogs),
+        error: err => console.error('Error loading installed catalogs:', err)
       })
     );
 

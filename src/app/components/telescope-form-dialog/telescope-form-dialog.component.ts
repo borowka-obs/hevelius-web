@@ -148,7 +148,8 @@ export class TelescopeFormDialogComponent {
     this.sensorsService.getSensors({ active: true }).subscribe({
       next: list => {
         this.sensors.set(list);
-      }
+      },
+      error: err => console.error('Error loading sensors:', err)
     });
   }
 
