@@ -1,0 +1,70 @@
+<div class="sky-heatmap-page">
+  <div class="filters" [@filterExpand]="isFilterVisible() ? 'expanded' : 'collapsed'">
+    <form [formGroup]="filterForm" class="filter-form">
+      <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
+        <mat-label>Resolution</mat-label>
+        <mat-select formControlName="resolution_deg">
+          @for (res of resolutionOptions; track res) {
+            <mat-option [value]="res">{{ res }}&deg; &times; {{ res }}&deg;</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="filter-field filter-field-narrow" subscriptSizing="dynamic">
+        <mat-label>Tasks</mat-label>
+        <mat-select formControlName="mode">
+          <mat-option value="completed">Completed only</mat-option>
+          <mat-option value="all">All tasks</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Telescope</mat-label>
+        <mat-select formControlName="scope_id">
+          <mat-option [value]="null">All telescopes</mat-option>
+          @for (telescope of telescopes(); track telescope.scope_id) {
+            <mat-option [value]="telescope.scope_id">{{ telescope.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-slide-toggle formControlName="show_projects" class="filter-toggle">
+        Color by project count
+      </mat-slide-toggle>
+    </form>
+  </div>
+
+  @if (initializing()) {
+    <div class="center-spinner">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  }
+
+  @if (errorMsg(); as errorMsg) {
+    <div class="error-msg">{{ errorMsg }}</div>
+  }
+
+  <div class="map-container" [class.hidden]="initializing()">
+    <!-- Aladin host must always be in the DOM so ViewChild resolves on ngAfterViewInit -->
+    <div #host class="aladin-host"></div>
+    <!-- Constellation name labels are positioned over the host via aladin.world2pix(); see ConstellationLayer. -->
+    <div #labelLayer class="constellation-label-layer"></div>
+
+    @if (loading()) {
+      <div class="refresh-indicator">
+        <mat-spinner diameter="24"></mat-spinner>
+      </div>
+    }
+
+    @if (!initializing() && !errorMsg()) {
+      <div class="legend">
+        <span class="legend-label">{{ legendLabel() }}</span>
+        <div class="legend-scale"></div>
+        <div class="legend-ticks">
+          <span>0</span>
+          <span>{{ legendMax() }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

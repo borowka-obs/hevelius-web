@@ -18,6 +18,7 @@ import { AsteroidsListComponent } from './components/asteroids-list/asteroids-li
 import { AsteroidDetailComponent } from './components/asteroid-detail/asteroid-detail.component';
 import { UserComponent } from './components/user/user.component';
 import { SkyMapComponent } from './components/sky-map/sky-map.component';
+import { SkyHeatmapComponent } from './components/sky-heatmap/sky-heatmap.component';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -44,6 +45,7 @@ export const routes: Routes = [
       { path: 'asteroids/:id', component: AsteroidDetailComponent },
       { path: 'user', component: UserComponent },
       { path: 'sky-map', component: SkyMapComponent },
+      { path: 'sky-heatmap', component: SkyHeatmapComponent },
       { path: '', redirectTo: 'projects', pathMatch: 'full' }
     ]
   },
