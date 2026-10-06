@@ -2,6 +2,20 @@
 
 unreleased
 
+- **Sky Heatmap** page (`/sky-heatmap`) showing a whole-sky density grid of
+  tasks, backed by the backend's SQL-side aggregation
+  (`GET /api/tasks/histogram`). Filters: grid resolution (1/2/5/10 degrees,
+  default 1), all tasks vs. completed only, an optional telescope filter,
+  and a toggle to color by distinct project count instead of task count.
+  Constellation lines and name labels are drawn as an overlay from a new
+  static asset (`src/assets/constellations.json`, derived from
+  [d3-celestial](https://github.com/ofrohn/d3-celestial), BSD-3-Clause) —
+  aladin-lite has no constellation support built in. Built as a generic,
+  reusable sky-visualization module (`src/app/utils/sky-viz/`: a
+  `SkyVizLayer` interface, plus a `HeatmapLayer` and `ConstellationLayer`
+  that each own their own Aladin overlay and can be toggled independently)
+  so future layers — e.g. an asteroid density overlay — can plug into the
+  same `AladinHostService`-hosted view without a rewrite.
 - **Observability charts** for tasks, projects and asteroids (#171). Every
   target now gets an elevation-versus-time chart for the night, showing the
   altitude track against shaded twilight, the horizon, the Moon's track and its
