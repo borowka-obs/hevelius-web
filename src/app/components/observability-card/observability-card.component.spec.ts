@@ -158,6 +158,24 @@ describe('ObservabilityCardComponent', () => {
     expect(component.date.getDate()).toBe(20);
   });
 
+  it('steps the night backwards and forwards by a week', async () => {
+    await setInputs(fixedTarget);
+    component.shiftWeek(1);
+    expect(component.date.getDate()).toBe(27);
+    component.shiftWeek(-1);
+    expect(component.date.getDate()).toBe(20);
+  });
+
+  it('steps the night backwards and forwards by a month', async () => {
+    await setInputs(fixedTarget);
+    component.shiftMonth(1);
+    expect(component.date.getMonth()).toBe(9);
+    expect(component.date.getDate()).toBe(20);
+    component.shiftMonth(-1);
+    expect(component.date.getMonth()).toBe(8);
+    expect(component.date.getDate()).toBe(20);
+  });
+
   it('ignores a cleared date rather than computing a broken night', async () => {
     await setInputs(fixedTarget);
     const before = component.date;

@@ -16,6 +16,24 @@
     <button
       type="button"
       mat-icon-button
+      aria-label="Previous month"
+      matTooltip="Previous month"
+      (click)="shiftMonth(-1)">
+      <mat-icon>skip_previous</mat-icon>
+    </button>
+
+    <button
+      type="button"
+      mat-icon-button
+      aria-label="Previous week"
+      matTooltip="Previous week"
+      (click)="shiftWeek(-1)">
+      <mat-icon>fast_rewind</mat-icon>
+    </button>
+
+    <button
+      type="button"
+      mat-icon-button
       aria-label="Previous night"
       matTooltip="Previous night"
       (click)="shiftNight(-1)">
@@ -40,6 +58,24 @@
       matTooltip="Next night"
       (click)="shiftNight(1)">
       <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <button
+      type="button"
+      mat-icon-button
+      aria-label="Next week"
+      matTooltip="Next week"
+      (click)="shiftWeek(1)">
+      <mat-icon>fast_forward</mat-icon>
+    </button>
+
+    <button
+      type="button"
+      mat-icon-button
+      aria-label="Next month"
+      matTooltip="Next month"
+      (click)="shiftMonth(1)">
+      <mat-icon>skip_next</mat-icon>
     </button>
   </div>
 </div>

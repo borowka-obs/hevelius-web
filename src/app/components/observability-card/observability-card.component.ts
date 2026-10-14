@@ -240,8 +240,22 @@ export class ObservabilityCardComponent implements OnChanges {
 
   /** Step the plotted night back or forward by a day. */
   shiftNight(days: number): void {
+    this.shiftDate(next => next.setDate(next.getDate() + days));
+  }
+
+  /** Step the plotted night back or forward by a week. */
+  shiftWeek(weeks: number): void {
+    this.shiftDate(next => next.setDate(next.getDate() + weeks * 7));
+  }
+
+  /** Step the plotted night back or forward by a month. */
+  shiftMonth(months: number): void {
+    this.shiftDate(next => next.setMonth(next.getMonth() + months));
+  }
+
+  private shiftDate(mutate: (date: Date) => void): void {
     const next = new Date(this.date);
-    next.setDate(next.getDate() + days);
+    mutate(next);
     this.onDateChange(next);
   }
 
