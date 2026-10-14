@@ -176,6 +176,65 @@ describe('ObservabilityCardComponent', () => {
     expect(component.date.getDate()).toBe(20);
   });
 
+  function pressKey(key: string, target: Element | Document = document): void {
+    target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  }
+
+  it('shifts by a day, a week and a month on W/S, A/D and Q/E', async () => {
+    await setInputs(fixedTarget);
+
+    pressKey('s');
+    expect(component.date.getDate()).toBe(21);
+
+    pressKey('w');
+    expect(component.date.getDate()).toBe(20);
+
+    pressKey('d');
+    expect(component.date.getDate()).toBe(27);
+
+    pressKey('a');
+    expect(component.date.getDate()).toBe(20);
+
+    pressKey('e');
+    expect(component.date.getMonth()).toBe(9);
+
+    pressKey('q');
+    expect(component.date.getMonth()).toBe(8);
+  });
+
+  it('responds to shortcuts even when focus is elsewhere on the page, not just inside the card', async () => {
+    await setInputs(fixedTarget);
+
+    document.body.focus();
+    pressKey('s', document.body);
+
+    expect(component.date.getDate()).toBe(21);
+  });
+
+  it('ignores keys it does not handle and leaves modified key presses alone', async () => {
+    await setInputs(fixedTarget);
+    const before = component.date.getTime();
+
+    pressKey('Enter');
+    expect(component.date.getTime()).toBe(before);
+
+    fixture.nativeElement.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 's', bubbles: true, cancelable: true, ctrlKey: true })
+    );
+    expect(component.date.getTime()).toBe(before);
+  });
+
+  it('leaves shortcut keys alone inside a form control, such as the date input', async () => {
+    await setInputs(fixedTarget);
+    const before = component.date.getTime();
+
+    const input = fixture.nativeElement.querySelector('input');
+    expect(input.isConnected).toBe(true); // otherwise the keydown never reaches the document listener below
+    pressKey('s', input);
+
+    expect(component.date.getTime()).toBe(before);
+  });
+
   it('ignores a cleared date rather than computing a broken night', async () => {
     await setInputs(fixedTarget);
     const before = component.date;
