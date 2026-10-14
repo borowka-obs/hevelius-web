@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
+  HostListener,
   Input,
   OnChanges,
   Output,
@@ -257,6 +258,62 @@ export class ObservabilityCardComponent implements OnChanges {
     const next = new Date(this.date);
     mutate(next);
     this.onDateChange(next);
+  }
+
+  /**
+   * W/S step by a day, A/D by a week, Q/E by a month.
+   *
+   * Bound on the document rather than the host, so the shortcuts work no matter
+   * where on the page focus happens to be — a detail page has exactly one of
+   * these cards, so there is no ambiguity about which one a key press means.
+   * Skipped entirely while a form control has focus, so typing in the date
+   * input or elsewhere on the page, and arrow/page navigation in the telescope
+   * `mat-select`, are untouched. Letters rather than arrow/page keys throughout,
+   * since the browser treats those as page-scroll commands first and would win
+   * the race whenever nothing inside the card happens to be focused.
+   */
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest('input, textarea, select, mat-select, [contenteditable="true"]')
+    ) {
+      return;
+    }
+
+    switch (event.key) {
+      case 'w':
+      case 'W':
+        this.shiftNight(-1);
+        break;
+      case 's':
+      case 'S':
+        this.shiftNight(1);
+        break;
+      case 'a':
+      case 'A':
+        this.shiftWeek(-1);
+        break;
+      case 'd':
+      case 'D':
+        this.shiftWeek(1);
+        break;
+      case 'q':
+      case 'Q':
+        this.shiftMonth(-1);
+        break;
+      case 'e':
+      case 'E':
+        this.shiftMonth(1);
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
   }
 
   /** Summary line: where the target peaks and when it is usable. */

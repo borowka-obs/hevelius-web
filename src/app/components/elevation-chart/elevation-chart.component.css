@@ -109,6 +109,11 @@
   font-weight: 600;
 }
 
+.y-axis-label,
+.x-axis-label {
+  font-size: 9px;
+}
+
 .y-axis-label { text-anchor: end; }
 .x-axis-label { text-anchor: middle; }
 .threshold-label {
