@@ -3,6 +3,7 @@ export const PUBLICATION_PLATFORMS = [
   { id: 'astrobin', label: 'AstroBin', hostPatterns: ['astrobin.com'] },
   { id: 'astropolis', label: 'Astropolis', hostPatterns: ['astropolis.pl', 'astropolis.org'] },
   { id: 'facebook', label: 'Facebook', hostPatterns: ['facebook.com', 'fb.com', 'fb.me'] },
+  { id: 'instagram', label: 'Instagram', hostPatterns: ['instagram.com', 'instagr.am'] },
   { id: 'flickr', label: 'Flickr', hostPatterns: ['flickr.com'] },
   { id: 'x', label: 'X', hostPatterns: ['x.com', 'twitter.com'] },
   { id: 'borowka', label: 'Borowka', hostPatterns: ['borowka.space'] }

@@ -24,7 +24,7 @@ As of July 2026, the following features are available:
   detailed view (optics, sensor, FOV, location map), default camera
   rotation; filters and sensors management
 - Projects: create/edit/delete, subframes and integration progress, publications
-  (AstroBin, Facebook, X, Flickr, and more), catalog lookup for RA/Dec on create.
+  (AstroBin, Facebook, Instagram, X, Flickr, and more), catalog lookup for RA/Dec on create.
 - Objects (`/objects`): search and filter by catalog, name, constellation, and
   sky proximity; Catalogs page (`/catalogs`) lists installed catalogs
 - Sky Map (`/sky-map`): Aladin Lite all-sky view of active projects with FOV

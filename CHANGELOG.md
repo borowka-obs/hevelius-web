@@ -2,6 +2,8 @@
 
 unreleased
 
+- Project publications now recognize Instagram links (`instagram.com`,
+  `instagr.am`) and show an Instagram icon.
 - **Sky Heatmap** page (`/sky-heatmap`) showing a whole-sky density grid of
   tasks, backed by the backend's SQL-side aggregation
   (`GET /api/tasks/histogram`). Filters: grid resolution (1/2/5/10 degrees,
