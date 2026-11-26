@@ -5,6 +5,7 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
 import { LayoutComponent } from './components/layout/layout.component';
 import { TasksComponent } from './components/tasks/tasks.component';
 import { TaskDetailComponent } from './components/task-detail/task-detail.component';
+import { ObservationPlanningComponent } from './components/observation-planning/observation-planning.component';
 import { NightPlanComponent } from './components/night-plan/night-plan.component';
 import { TelescopeListComponent } from './components/telescope-list/telescope-list.component';
 import { TelescopeDetailComponent } from './components/telescope-detail/telescope-detail.component';
@@ -32,6 +33,7 @@ export const routes: Routes = [
     children: [
       { path: 'tasks', component: TasksComponent },
       { path: 'tasks/:id', component: TaskDetailComponent },
+      { path: 'planning', component: ObservationPlanningComponent },
       { path: 'night-plan', component: NightPlanComponent },
       { path: 'scopes', component: TelescopeListComponent },
       { path: 'scopes/:id', component: TelescopeDetailComponent },

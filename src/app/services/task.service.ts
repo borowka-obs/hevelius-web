@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { Hevelius } from 'src/hevelius';
 import { Task } from '../models/task';
+import { TaskStatesService } from './task-states.service';
 
 interface TaskResponse {
   status: boolean;
@@ -36,6 +38,18 @@ export interface TaskRequest {
   max_sun_alt?: number;
 }
 
+export interface BulkTaskResult {
+  succeeded: number[];
+  failed: { id: number; error: string }[];
+}
+
+function toBulkResult(items: { id: number; error: string | null }[]): BulkTaskResult {
+  return {
+    succeeded: items.filter(i => i.error === null).map(i => i.id),
+    failed: items.filter(i => i.error !== null).map(i => ({ id: i.id, error: i.error as string }))
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -49,6 +63,29 @@ export class TaskService {
 
   updateTask(task: TaskRequest & { task_id: number }): Observable<TaskResponse> {
     return this.http.post<TaskResponse>(`${Hevelius.apiUrl}/task-update`, task);
+  }
+
+  /**
+   * Soft delete: sets state to -1 (DELETED). Tasks in that state are left out of
+   * the default GET /api/tasks listing. Requires the backend to accept state -1
+   * in POST /task-update.
+   */
+  deleteTask(taskId: number): Observable<TaskResponse> {
+    return this.http.post<TaskResponse>(`${Hevelius.apiUrl}/task-update`, {
+      task_id: taskId,
+      state: TaskStatesService.DELETED
+    });
+  }
+
+  /** Soft-deletes several tasks; a failure of one does not stop the others. */
+  deleteTasks(taskIds: number[]): Observable<BulkTaskResult> {
+    if (taskIds.length === 0) {
+      return of({ succeeded: [], failed: [] });
+    }
+    return forkJoin(taskIds.map(id => this.deleteTask(id).pipe(
+      map(res => ({ id, error: res.status ? null : (res.msg ?? 'Unknown error') })),
+      catchError(err => of({ id, error: err?.error?.msg ?? err?.message ?? 'Request failed' }))
+    ))).pipe(map(toBulkResult));
   }
 
   getTask(taskId: number): Observable<TaskResponse> {

@@ -27,6 +27,8 @@ export interface Task {
     scope_name?: string | null;
     /** Projects this task belongs to (when returned by API). */
     project_ids?: number[];
+    /** Ordering signal for planning (higher first). See api/openapi.yaml, Task.priority. */
+    priority?: number;
     activated?: string;
     auto_center?: boolean;
     binning?: number;

@@ -50,6 +50,12 @@ export interface Project {
   moon_distance?: number | null;
   max_moon_phase?: number | null;
   max_sun_alt?: number | null;
+  /** Ordering signal for planning (higher first). */
+  priority?: number;
+  /** Computed by the backend: no active subframe has anything left to shoot. */
+  is_complete?: boolean;
+  /** Computed by the backend: frames still to capture (sum of goal_count - count). */
+  subframes_remaining?: number;
   subframes?: ProjectSubframe[];
   user_ids?: number[];
 }

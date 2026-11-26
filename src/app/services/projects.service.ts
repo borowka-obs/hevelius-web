@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { BulkTaskResult } from './task.service';
 import { Hevelius } from 'src/hevelius';
 import {
   Project,
@@ -103,6 +104,20 @@ export class ProjectsService {
   /** POST /api/projects/{project_id}/tasks/{task_id} */
   addTaskToProject(projectId: number, taskId: number): Observable<{ status: boolean; msg?: string }> {
     return this.http.post<{ status: boolean; msg?: string }>(`${this.apiUrl}/${projectId}/tasks/${taskId}`, {});
+  }
+
+  /** Adds several tasks to a project; a failure of one does not stop the others. */
+  addTasksToProject(projectId: number, taskIds: number[]): Observable<BulkTaskResult> {
+    if (taskIds.length === 0) {
+      return of({ succeeded: [], failed: [] });
+    }
+    return forkJoin(taskIds.map(id => this.addTaskToProject(projectId, id).pipe(
+      map(res => ({ id, error: res.status ? null : (res.msg ?? 'Unknown error') })),
+      catchError(err => of({ id, error: err?.error?.msg ?? err?.message ?? 'Request failed' }))
+    ))).pipe(map(items => ({
+      succeeded: items.filter(i => i.error === null).map(i => i.id),
+      failed: items.filter(i => i.error !== null).map(i => ({ id: i.id, error: i.error as string }))
+    })));
   }
 
   deleteProject(projectId: number): Observable<void> {

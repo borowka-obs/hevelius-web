@@ -5,7 +5,11 @@ import { Injectable } from '@angular/core';
 })
 export class TaskStatesService {
 
+	/** State assigned by a soft delete (see TaskService.deleteTask). */
+	public static readonly DELETED = -1;
+
 	private readonly states: Record<number, string> = {
+		[-1]: 'deleted',
 		0: 'templ',
 		1: 'new',
 		2: 'active',
@@ -28,6 +32,7 @@ export class TaskStatesService {
 	public getStateFilterOptions(): { value: number; label: string }[] {
 		return Object.keys(this.states)
 			.map(k => Number(k))
+			.filter(v => v !== TaskStatesService.DELETED)
 			.sort((a, b) => a - b)
 			.map(value => ({ value, label: this.states[value] }));
 	}
